@@ -9,15 +9,15 @@ namespace UniformAndEquipmentManagementSystem.Models
         public int Id { get; set; }
 
         [Required]
-        [Display(Name = "First Name")]
+        public string EmployeeId { get; set; }
+
+        [Required]
         public string FirstName { get; set; }
 
         [Required]
-        [Display(Name = "Last Name")]
         public string LastName { get; set; }
 
         [Required]
-        [Display(Name = "User Name")]
         public string UserName { get; set; }
 
         [Required]
@@ -28,8 +28,7 @@ namespace UniformAndEquipmentManagementSystem.Models
         public string Address { get; set; }
 
         [Required]
-        [Phone]
-        public string Mobile { get; set; }
+        public string Phone { get; set; }
 
         [Required]
         public string Gender { get; set; }
@@ -38,12 +37,24 @@ namespace UniformAndEquipmentManagementSystem.Models
         public string Role { get; set; }
 
         [Required]
-        [ForeignKey("Department")]
+        public string NIC { get; set; }
+
+        [Required]
+        public DateTime DateOfBirth { get; set; }
+
+        [Required]
+        public DateTime EmploymentDate { get; set; }
+
+        [Required]
+        public string Position { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        [Required]
         public int DepartmentId { get; set; }
 
-        [ValidateNever]
-        [Display(Name = "Department")]
-        public virtual Department Department { get; set; }
+        [ForeignKey("DepartmentId")]
+        public Department Department { get; set; }
 
         public string? ImagePath { get; set; }
 

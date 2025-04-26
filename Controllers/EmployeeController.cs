@@ -8,23 +8,33 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using UniformAndEquipmentManagementSystem.Services;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using iText.Kernel.Pdf;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
+    [Authorize]
     public class EmployeeController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IPdfService _pdfService;
 
         public EmployeeController(
             ApplicationDbContext context, 
             IWebHostEnvironment webHostEnvironment,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IPdfService pdfService)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
             _userManager = userManager;
+            _pdfService = pdfService;
         }
 
         public async Task<IActionResult> Index()
@@ -211,6 +221,100 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 TempData["Success"] = "Employee deleted successfully!";
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var employee = await _context.Employees
+                .Include(e => e.Department)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            return View(employee);
+        }
+
+        public async Task<IActionResult> DownloadPdf(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var employee = await _context.Employees
+                .Include(e => e.Department)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            var memoryStream = new MemoryStream();
+            _pdfService.GenerateDocument(doc =>
+            {
+                // Add title
+                var title = new Paragraph($"Employee Details - {employee.FirstName} {employee.LastName}")
+                    .SetFontSize(20)
+                    .SetTextAlignment(TextAlignment.CENTER)
+                    .SetMarginBottom(20);
+                doc.Add(title);
+
+                // Personal Information Section
+                var personalInfoTitle = new Paragraph("Personal Information")
+                    .SetFontSize(16)
+                    .SetMarginBottom(10);
+                doc.Add(personalInfoTitle);
+
+                var personalInfoTable = new Table(2).UseAllAvailableWidth();
+                personalInfoTable.AddCell("Employee ID").AddCell(employee.EmployeeId);
+                personalInfoTable.AddCell("Full Name").AddCell($"{employee.FirstName} {employee.LastName}");
+                personalInfoTable.AddCell("Gender").AddCell(employee.Gender);
+                personalInfoTable.AddCell("Date of Birth").AddCell(employee.DateOfBirth.ToString("d"));
+                personalInfoTable.AddCell("NIC").AddCell(employee.NIC);
+                doc.Add(personalInfoTable);
+                doc.Add(new Paragraph().SetMarginBottom(20));
+
+                // Contact Information Section
+                var contactInfoTitle = new Paragraph("Contact Information")
+                    .SetFontSize(16)
+                    .SetMarginBottom(10);
+                doc.Add(contactInfoTitle);
+
+                var contactInfoTable = new Table(2).UseAllAvailableWidth();
+                contactInfoTable.AddCell("Email").AddCell(employee.Email);
+                contactInfoTable.AddCell("Phone").AddCell(employee.Phone);
+                contactInfoTable.AddCell("Address").AddCell(employee.Address);
+                doc.Add(contactInfoTable);
+                doc.Add(new Paragraph().SetMarginBottom(20));
+
+                // Employment Information Section
+                var employmentInfoTitle = new Paragraph("Employment Information")
+                    .SetFontSize(16)
+                    .SetMarginBottom(10);
+                doc.Add(employmentInfoTitle);
+
+                var employmentInfoTable = new Table(2).UseAllAvailableWidth();
+                employmentInfoTable.AddCell("Department").AddCell(employee.Department?.Name ?? "Not Assigned");
+                employmentInfoTable.AddCell("Position").AddCell(employee.Position);
+                employmentInfoTable.AddCell("Employment Date").AddCell(employee.EmploymentDate.ToString("d"));
+                employmentInfoTable.AddCell("Status").AddCell(employee.IsActive ? "Active" : "Inactive");
+                doc.Add(employmentInfoTable);
+            });
+
+            return File(
+                memoryStream.ToArray(),
+                "application/pdf",
+                $"Employee_{employee.EmployeeId}_{DateTime.Now:yyyyMMdd}.pdf"
+            );
         }
     }
 } 

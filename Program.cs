@@ -2,11 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using UniformAndEquipmentManagementSystem.Data;
 using Microsoft.AspNetCore.Identity;
 using UniformAndEquipmentManagementSystem.Models;
+using UniformAndEquipmentManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IPdfService, PdfService>();
 
 // Configure database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

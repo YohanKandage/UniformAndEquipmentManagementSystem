@@ -19,5 +19,6 @@ namespace UniformAndEquipmentManagementSystem.Data
         public DbSet<Department> Departments { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Item> Items { get; set; }
+        public DbSet<Supplier> Suppliers { get; set; }
     }
 } 

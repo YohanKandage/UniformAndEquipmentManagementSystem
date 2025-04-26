@@ -1,16 +1,16 @@
-@model IEnumerable<UniformAndEquipmentManagementSystem.Models.Employee>
+@model IEnumerable<UniformAndEquipmentManagementSystem.Models.Supplier>
 
 @{
-    ViewData["Title"] = "Employee Data";
+    ViewData["Title"] = "Suppliers";
 }
 
 <div class="page-container">
     <div class="page-header">
-        <h1 class="page-title">Employee Data</h1>
+        <h1 class="page-title">Suppliers</h1>
         <div class="header-actions">
             <a asp-action="Create" class="btn-add">
                 <i class="fas fa-plus"></i>
-                Add New Employee
+                Add New Supplier
             </a>
         </div>
     </div>
@@ -19,48 +19,41 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Image</th>
-                    <th>Name</th>
+                    <th>Company Name</th>
+                    <th>Company Code</th>
                     <th>Email</th>
-                    <th>Department</th>
-                    <th>Role</th>
-                    <th>Phone</th>
+                    <th>Contact Person</th>
+                    <th>Contact No</th>
+                    <th>Category</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
+                @foreach (var supplier in Model)
                 {
                     <tr>
+                        <td>@supplier.CompanyName</td>
+                        <td>@supplier.CompanyCode</td>
+                        <td>@supplier.Email</td>
+                        <td>@supplier.ContactPerson</td>
+                        <td>@supplier.ContactNo</td>
+                        <td>@supplier.SupplierCategory</td>
                         <td>
-                            @if (!string.IsNullOrEmpty(item.ImagePath))
-                            {
-                                <img src="@item.ImagePath" alt="Profile" class="profile-thumb" />
-                            }
-                            else
-                            {
-                                <div class="profile-placeholder">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                            }
+                            <span class="status-badge @(supplier.IsActive ? "active" : "inactive")">
+                                @(supplier.IsActive ? "Active" : "Inactive")
+                            </span>
                         </td>
-                        <td>@item.FirstName @item.LastName</td>
-                        <td>@item.Email</td>
-                        <td>@(item.Department?.Name ?? "Not Assigned")</td>
-                        <td>@item.Role</td>
-                        <td>@item.Phone</td>
-                        <td>
-                            <div class="action-buttons">
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn-action" title="Details">
-                                    <i class="fas fa-info-circle"></i>
-                                </a>
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action text-danger" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </div>
+                        <td class="actions">
+                            <a asp-action="Edit" asp-route-id="@supplier.Id" class="btn-action">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a asp-action="Details" asp-route-id="@supplier.Id" class="btn-action">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@supplier.Id" class="btn-action delete">
+                                <i class="fas fa-trash"></i>
+                            </a>
                         </td>
                     </tr>
                 }
@@ -140,25 +133,7 @@
         border-bottom: none;
     }
 
-    .profile-thumb {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .profile-placeholder {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: #f8f9fa;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #9497A8;
-    }
-
-    .action-buttons {
+    .actions {
         display: flex;
         gap: 8px;
     }
@@ -181,7 +156,24 @@
         color: white;
     }
 
-    .btn-action.text-danger:hover {
+    .btn-action.delete:hover {
         background-color: #dc3545;
+    }
+
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .status-badge.active {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .status-badge.inactive {
+        background-color: #ffebee;
+        color: #c62828;
     }
 </style> 

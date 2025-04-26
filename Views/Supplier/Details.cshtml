@@ -1,0 +1,127 @@
+@model UniformAndEquipmentManagementSystem.Models.Supplier
+
+@{
+    ViewData["Title"] = "Supplier Details";
+}
+
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Supplier Details</h1>
+    </div>
+
+    <div class="details-container">
+        <div class="details-grid">
+            <div class="details-section">
+                <h2 class="section-title">Company Information</h2>
+                <div class="detail-item">
+                    <label>Company Name</label>
+                    <span>@Model.CompanyName</span>
+                </div>
+                <div class="detail-item">
+                    <label>Company Code</label>
+                    <span>@Model.CompanyCode</span>
+                </div>
+                <div class="detail-item">
+                    <label>Email</label>
+                    <span>@Model.Email</span>
+                </div>
+                <div class="detail-item">
+                    <label>Contact Number</label>
+                    <span>@Model.ContactNo</span>
+                </div>
+                <div class="detail-item">
+                    <label>Category</label>
+                    <span>@Model.SupplierCategory</span>
+                </div>
+                <div class="detail-item">
+                    <label>Status</label>
+                    <span class="status-badge @(Model.IsActive ? "active" : "inactive")">
+                        @(Model.IsActive ? "Active" : "Inactive")
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <label>Approval State</label>
+                    <span class="approval-badge @Model.ApprovalState.ToLower()">@Model.ApprovalState</span>
+                </div>
+            </div>
+
+            <div class="details-section">
+                <h2 class="section-title">Contact Information</h2>
+                <div class="detail-item">
+                    <label>Contact Person</label>
+                    <span>@Model.ContactPerson</span>
+                </div>
+                <div class="detail-item">
+                    <label>Contact Person Email</label>
+                    <span>@Model.ContactPersonEmail</span>
+                </div>
+                <div class="detail-item">
+                    <label>Address</label>
+                    <span>@Model.Address</span>
+                </div>
+                <div class="detail-item">
+                    <label>Province</label>
+                    <span>@Model.Province</span>
+                </div>
+                <div class="detail-item">
+                    <label>District</label>
+                    <span>@Model.District</span>
+                </div>
+                <div class="detail-item">
+                    <label>Postal Code</label>
+                    <span>@Model.PostalCode</span>
+                </div>
+            </div>
+
+            <div class="details-section">
+                <h2 class="section-title">Contract Information</h2>
+                <div class="detail-item">
+                    <label>Contract Start Date</label>
+                    <span>@Model.ContractStartDate.ToString("MMMM dd, yyyy")</span>
+                </div>
+                <div class="detail-item">
+                    <label>Contract End Date</label>
+                    <span>@Model.ContractEndDate.ToString("MMMM dd, yyyy")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="details-actions">
+            <a asp-action="Index" class="btn-secondary">Back to List</a>
+            <a asp-action="DownloadPdf" asp-route-id="@Model.Id" class="btn-secondary">
+                <i class="fas fa-file-pdf"></i> Download PDF
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-primary">Edit</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .page-container { padding: 20px; }
+    .page-header { margin-bottom: 20px; }
+    .page-title { font-size: 24px; font-weight: 500; color: #333; margin: 0; }
+    .details-container { background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; margin: 20px 0; }
+    .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+    .details-section { margin-bottom: 30px; }
+    .section-title { font-size: 18px; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+    .detail-item { margin-bottom: 15px; }
+    .detail-item label { display: block; color: #666; font-size: 14px; margin-bottom: 5px; }
+    .detail-item span { display: block; color: #333; font-size: 15px; }
+    .status-badge, .approval-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+    .status-badge.active { background-color: #e6f4ea; color: #1e7e34; }
+    .status-badge.inactive { background-color: #fbe9e7; color: #d32f2f; }
+    .approval-badge { text-transform: capitalize; }
+    .approval-badge.pending { background-color: #fff3e0; color: #f57c00; }
+    .approval-badge.approved { background-color: #e6f4ea; color: #1e7e34; }
+    .approval-badge.rejected { background-color: #fbe9e7; color: #d32f2f; }
+    .details-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+    .btn-primary { background-color: #9497A8; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; transition: background-color 0.2s; }
+    .btn-primary:hover { background-color: #7a7c8c; color: white; text-decoration: none; }
+    .btn-secondary { background-color: #f8f9fa; color: #666; padding: 10px 20px; border: 1px solid #ddd; border-radius: 4px; text-decoration: none; font-size: 14px; transition: all 0.2s; }
+    .btn-secondary:hover { background-color: #e9ecef; color: #333; text-decoration: none; }
+    .btn-secondary i { margin-right: 5px; }
+</style>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+} 
