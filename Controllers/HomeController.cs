@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using UniformAndEquipmentManagementSystem.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
@@ -13,6 +14,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             _logger = logger;
         }
 
+        [Authorize]
         public IActionResult Index()
         {
             return View();

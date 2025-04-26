@@ -1,0 +1,111 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+}
+
+<div class="side-nav">
+    <div class="nav-logo">
+        <img src="~/images/fmi-logo.png.jpeg" alt="FMI Logo" class="fmi-logo" />
+    </div>
+    
+    <div class="nav-items">
+        <div class="nav-item @(currentController == "Dashboard" ? "active" : "")">
+            <a asp-controller="Dashboard" asp-action="Index">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+        <div class="nav-item @(currentController == "Employee" ? "active" : "")">
+            <a asp-controller="Employee" asp-action="Index">
+                <i class="fas fa-users"></i>
+                <span>Employee Data</span>
+            </a>
+        </div>
+        <div class="nav-item @(currentController == "Request" ? "active" : "")">
+            <a asp-controller="Request" asp-action="Index">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Requests</span>
+            </a>
+        </div>
+        <div class="nav-item @(currentController == "Inventory" ? "active" : "")">
+            <a asp-controller="Inventory" asp-action="Index">
+                <i class="fas fa-box-open"></i>
+                <span>Inventory</span>
+            </a>
+        </div>
+        <div class="nav-item @(currentController == "Supplier" ? "active" : "")">
+            <a asp-controller="Supplier" asp-action="Index">
+                <i class="fas fa-truck"></i>
+                <span>Suppliers</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .side-nav {
+        background-color: #9497A8;
+        width: 250px;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        overflow-y: auto;
+    }
+
+    .nav-logo {
+        padding: 6px;
+        background-color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+        height: 50px;
+    }
+
+    .fmi-logo {
+        max-width: 110px;
+        max-height: 38px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .nav-items {
+        padding: 20px 0;
+        flex: 1;
+    }
+
+    .nav-item {
+        padding: 12px 24px;
+        margin: 5px 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .nav-item a {
+        color: white;
+        text-decoration: none;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-item i {
+        width: 20px;
+        text-align: center;
+    }
+
+    .nav-item:hover, .nav-item.active {
+        background-color: #FFFFFF;
+        transform: translateX(5px);
+    }
+
+    .nav-item:hover a, .nav-item.active a {
+        color: #9497A8;
+        font-weight: 500;
+    }
+</style> 

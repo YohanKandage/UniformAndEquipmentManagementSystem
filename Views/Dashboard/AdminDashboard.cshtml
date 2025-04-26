@@ -1,0 +1,619 @@
+@{
+    ViewData["Title"] = "";
+}
+
+<div class="dashboard-container">
+    <h1 class="page-title">Dashboard</h1>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-value">156</span>
+                <span class="stat-label">Total Employees</span>
+                <span class="stat-change positive">+12% from last month</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-value">24</span>
+                <span class="stat-label">Total Requests</span>
+                <span class="stat-change">This month</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-value">8</span>
+                <span class="stat-label">Pending Requests</span>
+                <span class="stat-change urgent">Requires attention</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-value">12</span>
+                <span class="stat-label">Low Stock Items</span>
+                <span class="stat-change negative">Critical items</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="info-header">
+                <h3><i class="fas fa-building"></i> Department Overview</h3>
+            </div>
+            <div class="info-content">
+                <div class="info-item">
+                    <span class="info-label">IT Department</span>
+                    <span class="info-value">45 employees</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">HR Department</span>
+                    <span class="info-value">28 employees</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Operations</span>
+                    <span class="info-value">83 employees</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-header">
+                <h3><i class="fas fa-tshirt"></i> Uniform Status</h3>
+            </div>
+            <div class="info-content">
+                <div class="info-item">
+                    <span class="info-label">Total Uniforms</span>
+                    <span class="info-value">312 sets</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Assigned</span>
+                    <span class="info-value">285 sets</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Available</span>
+                    <span class="info-value">27 sets</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-header">
+                <h3><i class="fas fa-tools"></i> Equipment Status</h3>
+            </div>
+            <div class="info-content">
+                <div class="info-item">
+                    <span class="info-label">Total Equipment</span>
+                    <span class="info-value">450 items</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">In Use</span>
+                    <span class="info-value">398 items</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Under Maintenance</span>
+                    <span class="info-value">12 items</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>Request Status Distribution</h3>
+            <canvas id="requestChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Monthly Inventory Movement</h3>
+            <canvas id="inventoryChart"></canvas>
+        </div>
+    </div>
+
+    <div class="recent-activities">
+        <div class="section-header">
+            <h3>Recent Activities</h3>
+            <button class="btn-link">View All</button>
+        </div>
+        <div class="activity-list">
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="activity-details">
+                    <span class="activity-title">New Uniform Request - IT Department</span>
+                    <span class="activity-desc">John Doe requested 2 sets of uniforms</span>
+                    <span class="activity-time">2 hours ago</span>
+                </div>
+                <div class="activity-status pending">
+                    Pending
+                </div>
+            </div>
+
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="activity-details">
+                    <span class="activity-title">Equipment Request Approved</span>
+                    <span class="activity-desc">Safety equipment request for Operations team</span>
+                    <span class="activity-time">3 hours ago</span>
+                </div>
+                <div class="activity-status approved">
+                    Approved
+                </div>
+            </div>
+
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="activity-details">
+                    <span class="activity-title">Inventory Updated</span>
+                    <span class="activity-desc">New stock received - 50 safety helmets</span>
+                    <span class="activity-time">5 hours ago</span>
+                </div>
+                <div class="activity-status completed">
+                    Completed
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        padding: 20px;
+        margin: 0;
+    }
+
+    .top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .dashboard-title {
+        font-size: 24px;
+        font-weight: 500;
+        color: #333;
+        margin: 0;
+    }
+
+    .user-profile {
+        display: flex;
+        align-items: center;
+    }
+
+    .user-dropdown {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .user-icon {
+        font-size: 24px;
+        color: #666;
+        padding: 8px;
+    }
+
+    .user-icon:hover {
+        color: #333;
+    }
+
+    .user-dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        background-color: white;
+        min-width: 160px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 0;
+        z-index: 1000;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 15px;
+        color: #333;
+        text-decoration: none;
+        font-size: 14px;
+        transition: background-color 0.2s;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .dropdown-item i {
+        width: 16px;
+        color: #666;
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    .btn-action {
+        background: #9497A8;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .btn-action:hover {
+        background: #7a7c8c;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        background: #9497A8;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stat-icon i {
+        font-size: 20px;
+        color: white;
+    }
+
+    .stat-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .stat-change {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .stat-change.positive {
+        color: #4CAF50;
+    }
+
+    .stat-change.negative {
+        color: #F44336;
+    }
+
+    .stat-change.urgent {
+        color: #FFC107;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .info-header {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .info-header h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-content {
+        padding: 20px;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .info-value {
+        color: #333;
+        font-weight: 500;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .btn-link {
+        background: none;
+        border: none;
+        color: #9497A8;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    }
+
+    .activity-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .activity-details {
+        flex: 1;
+    }
+
+    .activity-desc {
+        display: block;
+        font-size: 13px;
+        color: #666;
+        margin: 2px 0;
+    }
+
+    .activity-status {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .activity-status.pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .activity-status.approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .activity-status.completed {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .chart-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .chart-card h3 {
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .date-display {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #666;
+    }
+
+    .user-dropdown {
+        position: relative;
+        cursor: pointer;
+    }
+
+    .user-icon {
+        font-size: 24px;
+        color: #666;
+        transition: color 0.2s;
+    }
+
+    .user-icon:hover {
+        color: #333;
+    }
+
+    .user-dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        background-color: white;
+        min-width: 160px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 0;
+        z-index: 1000;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 15px;
+        color: #333;
+        text-decoration: none;
+        font-size: 14px;
+        transition: background-color 0.2s;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .dropdown-item i {
+        width: 16px;
+        color: #666;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Request Status Chart
+        const requestCtx = document.getElementById('requestChart').getContext('2d');
+        new Chart(requestCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'Approved', 'Completed', 'Rejected'],
+                datasets: [{
+                    data: [8, 12, 15, 4],
+                    backgroundColor: ['#FFC107', '#4CAF50', '#2196F3', '#F44336']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Inventory Movement Chart
+        const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+        new Chart(inventoryCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Items In',
+                    data: [65, 59, 80, 81, 56, 55],
+                    borderColor: '#4CAF50',
+                    tension: 0.4,
+                    fill: false
+                }, {
+                    label: 'Items Out',
+                    data: [28, 48, 40, 19, 86, 27],
+                    borderColor: '#F44336',
+                    tension: 0.4,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+} 

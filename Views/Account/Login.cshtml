@@ -1,0 +1,161 @@
+@model UniformAndEquipmentManagementSystem.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Uniform & Inventory Management System</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+
+        .login-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .login-left {
+            flex: 1;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-right {
+            flex: 1;
+            background-color: #9497A8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border-top-left-radius: 20px;
+            border-bottom-left-radius: 20px;
+        }
+
+        .fmi-logo {
+            max-width: 300px;
+            height: auto;
+        }
+
+        .login-form {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-form h1 {
+            color: black;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-form h2 {
+            color: black;
+            font-size: 16px;
+            margin-bottom: 2rem;
+        }
+
+        .login-title {
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            color: black;
+            margin-bottom: 0.5rem;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+
+        .btn-continue {
+            width: auto;
+            min-width: 120px;
+            padding: 0.5rem 2rem;
+            background-color: white;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .btn-continue:hover {
+            background-color: #f0f0f0;
+        }
+
+        .text-danger {
+            color: #ff3e3e;
+            font-size: 12px;
+            margin-top: 0.25rem;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-left">
+            <img src="~/images/fmi-logo.png.jpeg" alt="FMI Logo" class="fmi-logo" />
+        </div>
+        <div class="login-right">
+            <div class="login-form">
+                <div class="login-title">
+                    <h1>Uniform & Inventory Management System</h1>
+                    <h2>Welcome Back</h2>
+                </div>
+                
+                <div>
+                    <h2>Log In</h2>
+                </div>
+                
+                <form asp-controller="Account" asp-action="Login" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="form-group">
+                        <input asp-for="Email" class="form-control" placeholder="Email" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <input asp-for="Password" class="form-control" placeholder="Password" type="password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    
+                    <button type="submit" class="btn-continue">Continue</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html> 

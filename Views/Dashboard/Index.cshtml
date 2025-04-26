@@ -1,0 +1,300 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="dashboard-container">
+    <h1 class="page-title">Dashboard</h1>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-value">@ViewBag.TotalEmployees</span>
+                <span class="stat-label">Total Employees</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-value">@ViewBag.TotalRequests</span>
+                <span class="stat-label">Total Requests</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-value">@ViewBag.PendingRequests</span>
+                <span class="stat-label">Pending Requests</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-value">@ViewBag.LowStockItems</span>
+                <span class="stat-label">Low Stock Items</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>Request Status Distribution</h3>
+            <canvas id="requestChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Monthly Inventory Movement</h3>
+            <canvas id="inventoryChart"></canvas>
+        </div>
+    </div>
+
+    <div class="recent-activities">
+        <h3>Recent Activities</h3>
+        <div class="activity-list">
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="activity-details">
+                    <span class="activity-title">New Request Created</span>
+                    <span class="activity-time">2 hours ago</span>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="activity-details">
+                    <span class="activity-title">Request Approved</span>
+                    <span class="activity-time">3 hours ago</span>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="activity-details">
+                    <span class="activity-title">Inventory Updated</span>
+                    <span class="activity-time">5 hours ago</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        padding: 20px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 500;
+        margin-bottom: 30px;
+        color: #333;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        background: #9497A8;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stat-icon i {
+        font-size: 24px;
+        color: white;
+    }
+
+    .stat-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .chart-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .chart-card h3 {
+        font-size: 18px;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .recent-activities {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .recent-activities h3 {
+        font-size: 18px;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 10px;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    }
+
+    .activity-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        background: #f0f0f0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .activity-icon i {
+        font-size: 18px;
+        color: #9497A8;
+    }
+
+    .activity-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .activity-title {
+        font-size: 14px;
+        color: #333;
+    }
+
+    .activity-time {
+        font-size: 12px;
+        color: #666;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Request Status Chart
+        const requestCtx = document.getElementById('requestChart').getContext('2d');
+        new Chart(requestCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'Approved', 'Completed', 'Rejected'],
+                datasets: [{
+                    data: [8, 12, 15, 4],
+                    backgroundColor: ['#FFC107', '#4CAF50', '#2196F3', '#F44336']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Inventory Movement Chart
+        const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+        new Chart(inventoryCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Items In',
+                    data: [65, 59, 80, 81, 56, 55],
+                    borderColor: '#4CAF50',
+                    tension: 0.4
+                }, {
+                    label: 'Items Out',
+                    data: [28, 48, 40, 19, 86, 27],
+                    borderColor: '#F44336',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+} 
