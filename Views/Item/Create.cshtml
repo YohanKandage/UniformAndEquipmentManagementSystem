@@ -1,236 +1,325 @@
 @model UniformAndEquipmentManagementSystem.Models.Item
 
 @{
-    ViewData["Title"] = "New Item";
+    ViewData["Title"] = "Create Item";
 }
 
 <div class="page-container">
     <div class="page-header">
-        <h1 class="page-title">New Item</h1>
+        <h1 class="page-title">Create New Item</h1>
     </div>
+
     <div class="form-container">
-        <form asp-action="Create" method="post" enctype="multipart/form-data" class="item-form">
+        <form asp-action="Create" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
             <div class="form-grid">
+                <!-- Left Column - Basic Information -->
                 <div class="form-section">
+                    <h3 class="section-title">Basic Information</h3>
+                    
                     <div class="form-group">
-                        <label asp-for="ItemType"></label>
-                        <select asp-for="ItemType" class="form-control" id="itemTypeSelect">
+                        <label asp-for="ItemType" class="control-label"></label>
+                        <select asp-for="ItemType" class="form-control" id="itemType">
+                            <option value="">-- Select Type --</option>
                             <option value="Uniform">Uniform</option>
-                            <option value="Equipment">Equipment</option>
+                            <option value="Item">Item</option>
                         </select>
                         <span asp-validation-for="ItemType" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
-                        <label asp-for="ItemId"></label>
-                        <input asp-for="ItemId" class="form-control" />
+                        <label asp-for="ItemId" class="control-label"></label>
+                        <input asp-for="ItemId" class="form-control" readonly id="itemId" />
                         <span asp-validation-for="ItemId" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
-                        <label asp-for="ItemName"></label>
-                        <input asp-for="ItemName" class="form-control" />
+                        <label asp-for="ItemName" class="control-label"></label>
+                        <input asp-for="ItemName" class="form-control" placeholder="Enter item name" />
                         <span asp-validation-for="ItemName" class="text-danger"></span>
                     </div>
-                    <div class="form-group uniform-only">
-                        <label asp-for="Department"></label>
-                        <input asp-for="Department" class="form-control" />
-                        <span asp-validation-for="Department" class="text-danger"></span>
-                    </div>
-                    <div class="form-group uniform-only">
-                        <label asp-for="JobRole"></label>
-                        <input asp-for="JobRole" class="form-control" />
-                        <span asp-validation-for="JobRole" class="text-danger"></span>
-                    </div>
-                    <div class="form-group uniform-only">
-                        <label asp-for="Material"></label>
-                        <input asp-for="Material" class="form-control" />
+
+                    <div class="form-group">
+                        <label asp-for="Material" class="control-label"></label>
+                        <input asp-for="Material" class="form-control" placeholder="Enter material type" />
                         <span asp-validation-for="Material" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
-                        <label asp-for="Supplier"></label>
-                        <input asp-for="Supplier" class="form-control" />
-                        <span asp-validation-for="Supplier" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="Price"></label>
-                        <input asp-for="Price" class="form-control" />
-                        <span asp-validation-for="Price" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="form-section image-section">
-                    <label>Uniform Image</label>
-                    <div class="image-upload-container">
-                        <input type="file" name="ImageFile" class="form-control" accept="image/*" id="imageInput" />
-                        <div class="image-preview" id="imagePreview">
-                            <i class="fas fa-user"></i>
+                        <label asp-for="ImageFile" class="control-label"></label>
+                        <div class="custom-file">
+                            <input type="file" asp-for="ImageFile" class="custom-file-input" id="imageInput" accept="image/*" />
+                            <label class="custom-file-label" for="imageInput">Choose file</label>
+                        </div>
+                        <div id="imagePreview" class="mt-2 d-none">
+                            <img id="preview" src="#" alt="Preview" class="img-preview" />
                         </div>
                     </div>
                 </div>
+
+                <!-- Right Column - Additional Details -->
+                <div class="form-section">
+                    <h3 class="section-title">Additional Details</h3>
+
+                    <div class="form-group">
+                        <label asp-for="DepartmentId" class="control-label"></label>
+                        <select asp-for="DepartmentId" class="form-control" asp-items="ViewBag.DepartmentId">
+                            <option value="">-- Select Department --</option>
+                        </select>
+                        <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="SupplierId" class="control-label"></label>
+                        <select asp-for="SupplierId" class="form-control" asp-items="ViewBag.SupplierId">
+                            <option value="">-- Select Supplier --</option>
+                        </select>
+                        <span asp-validation-for="SupplierId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Price" class="control-label"></label>
+                        <input asp-for="Price" class="form-control" placeholder="Enter price" />
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Quantity" class="control-label"></label>
+                        <input asp-for="Quantity" class="form-control" placeholder="Enter quantity" type="number" min="0" />
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
+
             <div class="form-actions">
-                <button type="submit" class="btn-primary">Add Item</button>
+                <button type="submit" class="btn-submit">Create</button>
+                <a asp-action="Index" class="btn-cancel">Back to List</a>
             </div>
-            <div class="form-note">Item will be added to the inventory</div>
         </form>
     </div>
 </div>
 
 <style>
-.page-container {
-    padding: 20px;
-}
-.page-header {
-    margin-bottom: 20px;
-}
-.page-title {
-    font-size: 24px;
-    font-weight: 500;
-    color: #333;
-    margin: 0;
-}
-.form-container {
-    background-color: #7a2323;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin: 20px 0;
-    padding: 30px 20px;
-}
-.form-header {
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-    background-color: #f8f9fa;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-}
-.form-title {
-    font-size: 20px;
-    font-weight: 500;
-    color: #333;
-    margin: 0;
-}
-.item-form {
-    padding: 0;
-    background-color: transparent;
-}
-.form-grid {
-    display: flex;
-    gap: 40px;
-    align-items: flex-start;
-}
-.form-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-.image-section {
-    max-width: 250px;
-    align-items: center;
-}
-.form-group {
-    margin-bottom: 5px;
-}
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    color: #fff;
-    font-size: 14px;
-    font-weight: 500;
-}
-.form-control {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    transition: border-color 0.2s;
-}
-.form-control:focus {
-    border-color: #9497A8;
-    outline: none;
-}
-.image-upload-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-}
-.image-preview {
-    width: 180px;
-    height: 180px;
-    border-radius: 8px;
-    background-color: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: #9497A8;
-    border: 2px dashed #ddd;
-    margin-top: 10px;
-}
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-}
-.btn-primary {
-    background-color: #9497A8;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s;
-}
-.btn-primary:hover {
-    background-color: #7a7c8c;
-}
-.text-danger {
-    color: #dc3545;
-    font-size: 12px;
-    margin-top: 4px;
-    display: block;
-}
-.form-note {
-    color: #fff;
-    margin-top: 10px;
-    font-size: 13px;
-}
-.uniform-only { display: block; }
-.equipment-only { display: none; }
+    .page-container {
+        padding: 20px;
+    }
+
+    .page-header {
+        margin-bottom: 20px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 500;
+        color: #333;
+        margin: 0;
+    }
+
+    .form-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 32px;
+        margin-bottom: 24px;
+    }
+
+    .form-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 6px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #9497A8;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .control-label {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+        border-color: #9497A8;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(148, 151, 168, 0.2);
+    }
+
+    .text-danger {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .custom-file {
+        position: relative;
+    }
+
+    .custom-file-input {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .custom-file-label {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+
+    .img-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 4px;
+        margin-top: 8px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+    }
+
+    .btn-submit {
+        background-color: #9497A8;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .btn-submit:hover {
+        background-color: #7a7c8c;
+    }
+
+    .btn-cancel {
+        background-color: #f8f9fa;
+        color: #666;
+        padding: 10px 20px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background-color: #e2e6ea;
+        color: #333;
+    }
 </style>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
     <script>
-        // Image preview functionality
-        document.getElementById('imageInput').onchange = function(e) {
-            const preview = document.getElementById('imagePreview');
+        // Image preview handler
+        document.getElementById('imageInput').addEventListener('change', function (e) {
             const file = e.target.files[0];
+            const previewContainer = document.getElementById('imagePreview');
+            const label = document.querySelector('.custom-file-label');
+
             if (file) {
+                label.textContent = file.name;
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+                reader.onload = function (e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'img-preview';
+                    previewContainer.innerHTML = '';
+                    previewContainer.appendChild(img);
+                    previewContainer.classList.remove('d-none');
                 }
                 reader.readAsDataURL(file);
             } else {
-                preview.innerHTML = '<i class="fas fa-user"></i>';
+                label.textContent = 'Choose file';
+                previewContainer.classList.add('d-none');
             }
-        };
-        // Show/hide fields based on item type
-        function toggleFields() {
-            var type = document.getElementById('itemTypeSelect').value;
-            var uniformFields = document.querySelectorAll('.uniform-only');
-            if (type === 'Uniform') {
-                uniformFields.forEach(f => f.style.display = 'block');
-            } else {
-                uniformFields.forEach(f => f.style.display = 'none');
-            }
-        }
-        document.getElementById('itemTypeSelect').addEventListener('change', toggleFields);
-        window.onload = toggleFields;
+        });
+
+        // ItemId generator
+        document.getElementById('itemType').addEventListener('change', function() {
+            const type = this.value;
+            if (!type) return; // Don't generate ID if no type is selected
+            
+            const prefix = type === 'Uniform' ? 'UNF' : 'ITM';
+            const randomDigits = Math.floor(Math.random() * 900000) + 100000; // Generates a random 6-digit number
+            document.getElementById('itemId').value = prefix + randomDigits;
+        });
+
+        // Initialize form validation
+        $(document).ready(function () {
+            $('form').validate({
+                rules: {
+                    ItemType: {
+                        required: true
+                    },
+                    ItemId: {
+                        required: true
+                    },
+                    ItemName: {
+                        required: true
+                    },
+                    Material: {
+                        required: true
+                    },
+                    DepartmentId: {
+                        required: true
+                    },
+                    SupplierId: {
+                        required: true
+                    },
+                    Price: {
+                        required: true,
+                        number: true,
+                        min: 0
+                    },
+                    Quantity: {
+                        required: true,
+                        digits: true,
+                        min: 0
+                    }
+                }
+            });
+        });
     </script>
 } 

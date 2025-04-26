@@ -14,6 +14,19 @@ namespace UniformAndEquipmentManagementSystem.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // Configure Item relationships
+            builder.Entity<Item>()
+                .HasOne(i => i.Department)
+                .WithMany()
+                .HasForeignKey(i => i.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Item>()
+                .HasOne(i => i.Supplier)
+                .WithMany()
+                .HasForeignKey(i => i.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
         public DbSet<Department> Departments { get; set; }

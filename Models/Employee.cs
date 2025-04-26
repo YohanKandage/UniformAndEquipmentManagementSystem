@@ -9,52 +9,62 @@ namespace UniformAndEquipmentManagementSystem.Models
         public int Id { get; set; }
 
         [Required]
-        public string EmployeeId { get; set; }
+        [Display(Name = "Employee ID")]
+        public string EmployeeId { get; set; } = string.Empty;
 
         [Required]
-        public string FirstName { get; set; }
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; } = string.Empty;
 
         [Required]
-        public string LastName { get; set; }
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; } = string.Empty;
 
         [Required]
-        public string UserName { get; set; }
+        [Display(Name = "Username")]
+        public string UserName { get; set; } = string.Empty;
 
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        [Display(Name = "Email")]
+        public string Email { get; set; } = string.Empty;
 
         [Required]
-        public string Address { get; set; }
+        public string Address { get; set; } = string.Empty;
 
         [Required]
-        public string Phone { get; set; }
+        [Phone]
+        public string Phone { get; set; } = string.Empty;
 
         [Required]
-        public string Gender { get; set; }
+        public string Gender { get; set; } = string.Empty;
 
         [Required]
-        public string Role { get; set; }
+        public string Role { get; set; } = string.Empty;
 
         [Required]
-        public string NIC { get; set; }
+        [Display(Name = "NIC")]
+        public string NIC { get; set; } = string.Empty;
 
         [Required]
+        [DataType(DataType.Date)]
+        [Display(Name = "Date of Birth")]
         public DateTime DateOfBirth { get; set; }
 
         [Required]
-        public DateTime EmploymentDate { get; set; }
+        public string Position { get; set; } = string.Empty;
 
         [Required]
-        public string Position { get; set; }
+        [DataType(DataType.Date)]
+        [Display(Name = "Join Date")]
+        public DateTime JoinDate { get; set; }
+
+        [Required]
+        [Display(Name = "Department")]
+        public int DepartmentId { get; set; }
+        public Department Department { get; set; } = null!;
 
         public bool IsActive { get; set; } = true;
-
-        [Required]
-        public int DepartmentId { get; set; }
-
-        [ForeignKey("DepartmentId")]
-        public Department Department { get; set; }
 
         public string? ImagePath { get; set; }
 

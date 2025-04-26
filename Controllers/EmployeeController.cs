@@ -305,7 +305,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 var employmentInfoTable = new Table(2).UseAllAvailableWidth();
                 employmentInfoTable.AddCell("Department").AddCell(employee.Department?.Name ?? "Not Assigned");
                 employmentInfoTable.AddCell("Position").AddCell(employee.Position);
-                employmentInfoTable.AddCell("Employment Date").AddCell(employee.EmploymentDate.ToString("d"));
+                employmentInfoTable.AddCell("Join Date").AddCell(employee.JoinDate.ToString("d"));
                 employmentInfoTable.AddCell("Status").AddCell(employee.IsActive ? "Active" : "Inactive");
                 doc.Add(employmentInfoTable);
             });

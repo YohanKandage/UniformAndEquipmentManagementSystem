@@ -47,10 +47,10 @@
                 <span>Requests</span>
             </a>
         </div>
-        <div class="nav-item @(currentController == "Inventory" ? "active" : "")">
-            <a asp-controller="Inventory" asp-action="Index">
+        <div class="nav-item @(currentController == "Item" ? "active" : "")">
+            <a asp-controller="Item" asp-action="Index">
                 <i class="fas fa-box-open"></i>
-                <span>Inventory</span>
+                <span>Inventory Items</span>
             </a>
         </div>
         <div class="nav-item @(currentController == "Supplier" ? "active" : "")">
@@ -164,4 +164,40 @@
         color: #9497A8;
         font-weight: 500;
     }
-</style> 
+
+    .nav-toggle {
+        justify-content: space-between;
+    }
+
+    .nav-arrow {
+        transition: transform 0.3s ease;
+    }
+
+    .nav-item.active .nav-arrow {
+        transform: rotate(180deg);
+    }
+
+    .nav-subitems {
+        display: none;
+        padding-left: 20px;
+    }
+
+    .nav-item.active .nav-subitems {
+        display: block;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navToggles = document.querySelectorAll('.nav-toggle');
+            navToggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const navItem = this.closest('.nav-item');
+                    navItem.classList.toggle('active');
+                });
+            });
+        });
+    </script>
+} 

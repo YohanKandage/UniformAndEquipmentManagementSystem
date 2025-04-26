@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Hosting;
-using UniformAndEquipmentManagementSystem.Models;
-using UniformAndEquipmentManagementSystem.Data;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using UniformAndEquipmentManagementSystem.Data;
+using UniformAndEquipmentManagementSystem.Models;
 using Microsoft.AspNetCore.Authorization;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
-    [Authorize(Roles = "Admin,StockManager")]
+    [Authorize]
     public class ItemController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -21,12 +21,17 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var items = await _context.Items.ToListAsync();
+            var items = await _context.Items
+                .Include(i => i.Department)
+                .Include(i => i.Supplier)
+                .ToListAsync();
             return View(items);
         }
 
         public IActionResult Create()
         {
+            ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name");
+            ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "CompanyName");
             return View();
         }
 
@@ -36,13 +41,20 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Generate ItemId if not provided
+                if (string.IsNullOrEmpty(item.ItemId))
+                {
+                    var prefix = item.ItemType == "Uniform" ? "UNF" : "ITM";
+                    var random = new Random();
+                    var randomDigits = random.Next(100000, 999999).ToString();
+                    item.ItemId = prefix + randomDigits;
+                }
+
                 if (ImageFile != null && ImageFile.Length > 0)
                 {
                     var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "items");
                     if (!Directory.Exists(uploadsFolder))
-                    {
                         Directory.CreateDirectory(uploadsFolder);
-                    }
 
                     var uniqueFileName = Guid.NewGuid().ToString() + "_" + ImageFile.FileName;
                     var filePath = Path.Combine(uploadsFolder, uniqueFileName);
@@ -57,9 +69,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
                 _context.Add(item);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Item added successfully!";
+                TempData["Success"] = "Item created successfully!";
                 return RedirectToAction(nameof(Index));
             }
+
+            ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name", item.DepartmentId);
+            ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "CompanyName", item.SupplierId);
             return View(item);
         }
 
@@ -72,6 +87,8 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             if (item == null)
                 return NotFound();
 
+            ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name", item.DepartmentId);
+            ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "CompanyName", item.SupplierId);
             return View(item);
         }
 
@@ -100,6 +117,14 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                             await ImageFile.CopyToAsync(fileStream);
                         }
 
+                        // Delete old image if it exists
+                        if (!string.IsNullOrEmpty(item.ImagePath))
+                        {
+                            var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, item.ImagePath.TrimStart('/'));
+                            if (System.IO.File.Exists(oldImagePath))
+                                System.IO.File.Delete(oldImagePath);
+                        }
+
                         item.ImagePath = "/images/items/" + uniqueFileName;
                     }
 
@@ -109,13 +134,16 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!_context.Items.Any(e => e.Id == id))
+                    if (!ItemExists(item.Id))
                         return NotFound();
                     else
                         throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
+
+            ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name", item.DepartmentId);
+            ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "CompanyName", item.SupplierId);
             return View(item);
         }
 
@@ -124,7 +152,11 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             if (id == null)
                 return NotFound();
 
-            var item = await _context.Items.FirstOrDefaultAsync(m => m.Id == id);
+            var item = await _context.Items
+                .Include(i => i.Department)
+                .Include(i => i.Supplier)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
             if (item == null)
                 return NotFound();
 
@@ -142,9 +174,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 {
                     var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, item.ImagePath.TrimStart('/'));
                     if (System.IO.File.Exists(imagePath))
-                    {
                         System.IO.File.Delete(imagePath);
-                    }
                 }
 
                 _context.Items.Remove(item);
@@ -152,6 +182,11 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 TempData["Success"] = "Item deleted successfully!";
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool ItemExists(int id)
+        {
+            return _context.Items.Any(e => e.Id == id);
         }
     }
 } 

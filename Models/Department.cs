@@ -7,6 +7,7 @@ namespace UniformAndEquipmentManagementSystem.Models
         public Department()
         {
             Employees = new HashSet<Employee>();
+            Items = new HashSet<Item>();
         }
 
         [Key]
@@ -14,8 +15,9 @@ namespace UniformAndEquipmentManagementSystem.Models
 
         [Required]
         [Display(Name = "Department Name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-        public virtual ICollection<Employee> Employees { get; set; }
+        public virtual ICollection<Employee>? Employees { get; set; }
+        public virtual ICollection<Item>? Items { get; set; }
     }
 }

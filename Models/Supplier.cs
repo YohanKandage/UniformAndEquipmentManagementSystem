@@ -8,68 +8,73 @@ namespace UniformAndEquipmentManagementSystem.Models
 
         [Required]
         [Display(Name = "Company Name")]
-        public string CompanyName { get; set; }
+        public string CompanyName { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Company Code")]
-        public string CompanyCode { get; set; }
+        public string CompanyCode { get; set; } = string.Empty;
 
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [Required]
-        [Display(Name = "Contact No")]
-        public string ContactNo { get; set; }
+        [Phone]
+        [Display(Name = "Contact Number")]
+        public string ContactNo { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Contact Person")]
-        public string ContactPerson { get; set; }
+        public string ContactPerson { get; set; } = string.Empty;
 
         [Required]
         [EmailAddress]
         [Display(Name = "Contact Person Email")]
-        public string ContactPersonEmail { get; set; }
+        public string ContactPersonEmail { get; set; } = string.Empty;
 
         [Required]
-        public string Address { get; set; }
+        public string Address { get; set; } = string.Empty;
 
         [Required]
-        public string Province { get; set; }
+        public string Province { get; set; } = string.Empty;
 
         [Required]
-        public string District { get; set; }
+        public string District { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Postal Code")]
-        public string PostalCode { get; set; }
+        public string PostalCode { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Approval State")]
-        public string ApprovalState { get; set; }
+        public string ApprovalState { get; set; } = "Pending";
+
+        [Required]
+        [Display(Name = "Supplier Category")]
+        public string SupplierCategory { get; set; } = string.Empty;
+
+        [Required]
+        [DataType(DataType.Date)]
+        [Display(Name = "Contract Start Date")]
+        public DateTime ContractStartDate { get; set; }
+
+        [Required]
+        [DataType(DataType.Date)]
+        [Display(Name = "Contract End Date")]
+        public DateTime ContractEndDate { get; set; }
+
+        [Required]
+        [Display(Name = "Payment Terms")]
+        public string PaymentTerms { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "Delivery Terms")]
+        public string DeliveryTerms { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Is Active")]
         public bool IsActive { get; set; } = true;
 
-        [Required]
-        [Display(Name = "Supplier Category")]
-        public string SupplierCategory { get; set; }
-
-        [Required]
-        [Display(Name = "Contract Start Date")]
-        [DataType(DataType.Date)]
-        public DateTime ContractStartDate { get; set; }
-
-        [Required]
-        [Display(Name = "Contract End Date")]
-        [DataType(DataType.Date)]
-        public DateTime ContractEndDate { get; set; }
-
-        [Required]
-        public string PaymentTerms { get; set; }
-
-        [Required]
-        public string DeliveryTerms { get; set; }
+        public virtual ICollection<Item>? Items { get; set; }
     }
 } 
