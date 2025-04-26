@@ -46,5 +46,8 @@ namespace UniformAndEquipmentManagementSystem.Models
         public virtual Department Department { get; set; }
 
         public string? ImagePath { get; set; }
+
+        [NotMapped]
+        public string? Password { get; set; }
     }
 }

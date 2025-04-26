@@ -84,7 +84,11 @@
             cursor: pointer;
         }
 
-        .user-dropdown:hover .dropdown-content {
+        .user-dropdown .dropdown-content {
+            display: none;
+        }
+
+        .user-dropdown.open .dropdown-content {
             display: block;
         }
 
@@ -141,11 +145,11 @@
                     <div class="date-display">
                         @DateTime.Now.ToString("dd MMMM yyyy")
                     </div>
-                    <div class="user-dropdown">
-                        <div class="profile-image">
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="profile-image" id="profileImage">
                             <i class="fas fa-user"></i>
                         </div>
-                        <div class="dropdown-content">
+                        <div class="dropdown-content" id="dropdownContent">
                             <a asp-controller="Account" asp-action="Logout" class="dropdown-item">
                                 <i class="fas fa-sign-out-alt"></i>
                                 Logout
@@ -163,6 +167,19 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var userDropdown = document.getElementById('userDropdown');
+        var profileImage = document.getElementById('profileImage');
+        document.addEventListener('click', function(event) {
+            if (profileImage.contains(event.target)) {
+                userDropdown.classList.toggle('open');
+            } else if (!userDropdown.contains(event.target)) {
+                userDropdown.classList.remove('open');
+            }
+        });
+    });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -27,10 +27,17 @@
         </div>
         @if (isAdmin)
         {
-            <div class="nav-item @(currentController == "Department" ? "active" : "")">
+            <div class="nav-section-title">Master Configuration</div>
+            <div class="nav-subitem @(currentController == "Department" ? "active" : "")">
                 <a asp-controller="Department" asp-action="Index">
                     <i class="fas fa-building"></i>
                     <span>Departments</span>
+                </a>
+            </div>
+            <div class="nav-subitem @(currentController == "Role" ? "active" : "")">
+                <a asp-controller="Role" asp-action="Index">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Roles</span>
                 </a>
             </div>
         }
@@ -119,6 +126,41 @@
     }
 
     .nav-item:hover a, .nav-item.active a {
+        color: #9497A8;
+        font-weight: 500;
+    }
+
+    .nav-section-title {
+        color: #fff;
+        font-size: 13px;
+        font-weight: bold;
+        padding: 16px 24px 4px 24px;
+        letter-spacing: 1px;
+        opacity: 0.7;
+    }
+    .nav-subitem {
+        padding: 10px 40px;
+        margin: 2px 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .nav-subitem a {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .nav-subitem i {
+        width: 18px;
+        text-align: center;
+    }
+    .nav-subitem:hover, .nav-subitem.active {
+        background-color: #FFFFFF;
+        transform: translateX(5px);
+    }
+    .nav-subitem:hover a, .nav-subitem.active a {
         color: #9497A8;
         font-weight: 500;
     }
