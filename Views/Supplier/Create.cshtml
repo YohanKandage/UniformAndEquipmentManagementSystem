@@ -122,6 +122,18 @@
                         <input asp-for="ContractEndDate" class="form-control" type="date" />
                         <span asp-validation-for="ContractEndDate" class="text-danger"></span>
                     </div>
+
+                    <div class="form-group">
+                        <label asp-for="PaymentTerms"></label>
+                        <input asp-for="PaymentTerms" class="form-control" placeholder="Enter payment terms" />
+                        <span asp-validation-for="PaymentTerms" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="DeliveryTerms"></label>
+                        <input asp-for="DeliveryTerms" class="form-control" placeholder="Enter delivery terms" />
+                        <span asp-validation-for="DeliveryTerms" class="text-danger"></span>
+                    </div>
                 </div>
             </div>
 
@@ -282,11 +294,35 @@
         display: block;
     }
 
-    .validation-summary:empty {
-        display: none;
+    .validation-summary {
+        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 4px;
+        background-color: #fff;
+        border: 1px solid #dc3545;
     }
+
+    .validation-summary ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .validation-summary:empty { display: none; }
 </style>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Form submission handling
+        $(document).ready(function() {
+            $('form').on('submit', function() {
+                if ($(this).valid()) {
+                    // Disable submit button to prevent double submission
+                    $('button[type="submit"]').prop('disabled', true);
+                    return true;
+                }
+                return false;
+            });
+        });
+    </script>
 } 

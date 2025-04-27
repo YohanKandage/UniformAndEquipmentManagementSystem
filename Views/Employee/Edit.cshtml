@@ -10,9 +10,14 @@
     </div>
 
     <div class="form-container">
+        <div class="form-header">
+            <h2 class="form-title">Employee Data</h2>
+        </div>
+        
         <form asp-action="Edit" method="post" enctype="multipart/form-data" class="employee-form">
             <input type="hidden" asp-for="Id" />
             <div asp-validation-summary="ModelOnly" class="text-danger validation-summary"></div>
+            
             <div class="form-grid">
                 <div class="form-section">
                     <div class="form-group">
@@ -20,27 +25,62 @@
                         <input asp-for="FirstName" class="form-control" placeholder="Enter first name" />
                         <span asp-validation-for="FirstName" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
                         <label asp-for="LastName"></label>
                         <input asp-for="LastName" class="form-control" placeholder="Enter last name" />
                         <span asp-validation-for="LastName" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
                         <label asp-for="UserName"></label>
                         <input asp-for="UserName" class="form-control" placeholder="Enter username" />
                         <span asp-validation-for="UserName" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
                         <label asp-for="Email"></label>
                         <input asp-for="Email" class="form-control" placeholder="Enter email address" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
                         <label asp-for="Phone" class="control-label"></label>
                         <input asp-for="Phone" class="form-control" />
                         <span asp-validation-for="Phone" class="text-danger"></span>
                     </div>
+
+                    <div class="form-group">
+                        <label asp-for="EmployeeId"></label>
+                        <input asp-for="EmployeeId" class="form-control" placeholder="Enter employee ID" />
+                        <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="NIC"></label>
+                        <input asp-for="NIC" class="form-control" placeholder="Enter NIC number" />
+                        <span asp-validation-for="NIC" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Position"></label>
+                        <input asp-for="Position" class="form-control" placeholder="Enter position" />
+                        <span asp-validation-for="Position" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="DateOfBirth"></label>
+                        <input asp-for="DateOfBirth" class="form-control" type="date" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="JoinDate"></label>
+                        <input asp-for="JoinDate" class="form-control" type="date" />
+                        <span asp-validation-for="JoinDate" class="text-danger"></span>
+                    </div>
                 </div>
+
                 <div class="form-section">
                     <div class="form-group">
                         <label asp-for="Role"></label>
@@ -53,6 +93,7 @@
                         </select>
                         <span asp-validation-for="Role" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
                         <label asp-for="DepartmentId">Department</label>
                         <select asp-for="DepartmentId" class="form-control" asp-items="ViewBag.Departments">
@@ -60,6 +101,7 @@
                         </select>
                         <span asp-validation-for="DepartmentId" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
                         <label asp-for="Gender"></label>
                         <select asp-for="Gender" class="form-control">
@@ -70,11 +112,13 @@
                         </select>
                         <span asp-validation-for="Gender" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
                         <label asp-for="Address"></label>
                         <textarea asp-for="Address" class="form-control" rows="3" placeholder="Enter address"></textarea>
                         <span asp-validation-for="Address" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
                         <label>Profile Image</label>
                         <div class="image-upload-container">
@@ -82,7 +126,7 @@
                             <div class="image-preview" id="imagePreview">
                                 @if (!string.IsNullOrEmpty(Model.ImagePath))
                                 {
-                                    <img src="@Model.ImagePath" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;" />
+                                    <img src="@Model.ImagePath" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" />
                                 }
                                 else
                                 {
@@ -93,44 +137,197 @@
                     </div>
                 </div>
             </div>
+
             <div class="form-actions">
                 <a asp-action="Index" class="btn-secondary">Back to List</a>
-                <button type="submit" class="btn-primary">Save Changes</button>
+                <button type="submit" class="btn-primary">Update Employee</button>
             </div>
         </form>
     </div>
 </div>
 
 <style>
-    .page-container { padding: 20px; }
-    .page-header { margin-bottom: 20px; }
-    .page-title { font-size: 24px; font-weight: 500; color: #333; margin: 0; }
-    .form-container { background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px 0; }
-    .employee-form { padding: 20px; background-color: #f8f9fa; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
-    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
-    .form-section { display: flex; flex-direction: column; gap: 15px; }
-    .form-group { margin-bottom: 5px; }
-    .form-group label { display: block; margin-bottom: 5px; color: #666; font-size: 14px; font-weight: 500; }
-    .form-control { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; transition: border-color 0.2s; }
-    .form-control:focus { border-color: #9497A8; outline: none; }
-    select.form-control { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 16px; padding-right: 32px; }
-    .image-upload-container { display: flex; gap: 15px; align-items: center; }
-    .image-preview { width: 100px; height: 100px; border-radius: 8px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #9497A8; border: 2px dashed #ddd; }
-    .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
-    .btn-primary { background-color: #9497A8; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background-color 0.2s; }
-    .btn-primary:hover { background-color: #7a7c8c; }
-    .btn-secondary { background-color: #f8f9fa; color: #666; padding: 10px 20px; border: 1px solid #ddd; border-radius: 4px; text-decoration: none; font-size: 14px; transition: all 0.2s; }
-    .btn-secondary:hover { background-color: #e9ecef; color: #333; }
-    .text-danger { color: #dc3545; font-size: 12px; margin-top: 4px; display: block; }
+    .page-container {
+        padding: 20px;
+    }
+
+    .page-header {
+        margin-bottom: 20px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 500;
+        color: #333;
+        margin: 0;
+    }
+
+    .form-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin: 20px 0;
+    }
+
+    .form-header {
+        padding: 20px;
+        border-bottom: 1px solid #eee;
+        background-color: #f8f9fa;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+
+    .form-title {
+        font-size: 20px;
+        font-weight: 500;
+        color: #333;
+        margin: 0;
+    }
+
+    .employee-form {
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
+
+    .form-section {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .form-group {
+        margin-bottom: 5px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #666;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+        border-color: #9497A8;
+        outline: none;
+    }
+
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 16px;
+        padding-right: 32px;
+    }
+
+    .image-upload-container {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .image-preview {
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #9497A8;
+        border: 2px dashed #ddd;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+
+    .btn-primary {
+        background-color: #9497A8;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s;
+    }
+
+    .btn-primary:hover {
+        background-color: #7a7c8c;
+    }
+
+    .btn-secondary {
+        background-color: #f8f9fa;
+        color: #666;
+        padding: 10px 20px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+        background-color: #e9ecef;
+        color: #333;
+    }
+
+    .text-danger {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .validation-summary {
+        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 4px;
+        background-color: #fff;
+        border: 1px solid #dc3545;
+    }
+
+    .validation-summary ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
     .validation-summary:empty { display: none; }
 </style>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
+        // Image preview functionality
         document.getElementById('imageInput').onchange = function(e) {
             const preview = document.getElementById('imagePreview');
             const file = e.target.files[0];
+            
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -141,5 +338,17 @@
                 preview.innerHTML = '<i class="fas fa-user"></i>';
             }
         };
+
+        // Form submission handling
+        $(document).ready(function() {
+            $('form').on('submit', function() {
+                if ($(this).valid()) {
+                    // Disable submit button to prevent double submission
+                    $('button[type="submit"]').prop('disabled', true);
+                    return true;
+                }
+                return false;
+            });
+        });
     </script>
 } 

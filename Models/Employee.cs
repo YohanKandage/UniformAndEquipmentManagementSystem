@@ -62,6 +62,7 @@ namespace UniformAndEquipmentManagementSystem.Models
         [Required]
         [Display(Name = "Department")]
         public int DepartmentId { get; set; }
+        [ValidateNever]
         public Department Department { get; set; } = null!;
 
         public bool IsActive { get; set; } = true;
