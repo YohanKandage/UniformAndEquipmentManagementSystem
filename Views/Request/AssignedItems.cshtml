@@ -1,0 +1,105 @@
+@model IEnumerable<UniformAndEquipmentManagementSystem.Models.Item>
+
+@{
+    ViewData["Title"] = "My Assigned Items";
+}
+
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">My Assigned Items</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="row">
+                            @foreach (var item in Model)
+                            {
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100">
+                                        <img src="@(string.IsNullOrEmpty(item.ImagePath) ? "/images/default-item.png" : item.ImagePath)" 
+                                             class="card-img-top" style="height: 200px; object-fit: cover;" 
+                                             alt="@item.ItemName"
+                                             onerror="this.src='/images/default-item.png'">
+                                        <div class="card-body">
+                                            <h5 class="card-title">@item.ItemName</h5>
+                                            <p class="card-text text-muted">@item.ItemType</p>
+                                            <div class="item-details">
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Department:</span>
+                                                    <span class="detail-value">@item.Department?.Name</span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Status:</span>
+                                                    <span class="detail-value @(item.Status.ToLower() == "assigned" ? "text-success" : "text-warning")">
+                                                        @item.Status
+                                                    </span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Assigned Date:</span>
+                                                    <span class="detail-value">@item.AssignedDate?.ToString("MMM dd, yyyy")</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">You don't have any assigned items yet.</p>
+                            <a href="@Url.Action("Create", "Request")" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Request an Item
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .item-details {
+        margin-top: 1rem;
+    }
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    .detail-label {
+        color: #6c757d;
+        font-weight: 500;
+    }
+    .detail-value {
+        color: #212529;
+    }
+    .text-success {
+        color: #28a745 !important;
+    }
+    .text-warning {
+        color: #ffc107 !important;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+</style> 

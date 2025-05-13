@@ -391,5 +391,69 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             ViewBag.EmployeeEmail = employee.Email;
             return View();
         }
+
+        public async Task<IActionResult> Profile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var employee = await _context.Employees
+                .Include(e => e.Department)
+                .FirstOrDefaultAsync(e => e.Email == user.Email);
+
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            return View(employee);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(Employee model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("Profile", model);
+            }
+
+            var employee = await _context.Employees.FindAsync(model.Id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            // Only update allowed fields
+            employee.FirstName = model.FirstName;
+            employee.LastName = model.LastName;
+            employee.Phone = model.Phone;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Profile updated successfully.";
+                return RedirectToAction(nameof(Profile));
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!EmployeeExists(model.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        private bool EmployeeExists(int id)
+        {
+            return _context.Employees.Any(e => e.Id == id);
+        }
     }
 } 

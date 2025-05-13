@@ -29,9 +29,10 @@ namespace UniformAndEquipmentManagementSystem.Data
                 .OnDelete(DeleteBehavior.Restrict);
         }
 
-        public DbSet<Department> Departments { get; set; }
         public DbSet<Employee> Employees { get; set; }
+        public DbSet<Department> Departments { get; set; }
         public DbSet<Item> Items { get; set; }
+        public DbSet<Request> Requests { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
     }
 } 

@@ -28,78 +28,68 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login(string returnUrl = null)
+        public IActionResult Login(string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            ViewData["ReturnUrl"] = returnUrl;
-            
+            returnUrl ??= Url.Content("~/");
+            _logger.LogInformation("Login attempt for email: {Email}", model.Email);
+
             if (ModelState.IsValid)
             {
-                _logger.LogInformation($"Login attempt for email: {model.Email}");
-                
                 var user = await _userManager.FindByEmailAsync(model.Email);
                 if (user != null)
                 {
-                    _logger.LogInformation($"User found: {user.Email}, UserName: {user.UserName}, EmailConfirmed: {user.EmailConfirmed}, LockoutEnabled: {user.LockoutEnabled}, LockoutEnd: {user.LockoutEnd}");
-                    
-                    var result = await _signInManager.PasswordSignInAsync(
-                        model.Email,  // Use email for sign in
-                        model.Password, 
-                        isPersistent: false, 
-                        lockoutOnFailure: true);
+                    _logger.LogInformation("User found: {Email}, UserName: {UserName}, EmailConfirmed: {EmailConfirmed}, LockoutEnabled: {LockoutEnabled}, LockoutEnd: {LockoutEnd}",
+                        user.Email, user.UserName, user.EmailConfirmed, user.LockoutEnabled, user.LockoutEnd);
 
+                    var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, lockoutOnFailure: true);
                     if (result.Succeeded)
                     {
-                        _logger.LogInformation($"Login successful for user: {user.Email}");
+                        _logger.LogInformation("User logged in successfully: {Email}", model.Email);
                         
-                        var userRoles = await _userManager.GetRolesAsync(user);
-                        _logger.LogInformation($"User roles: {string.Join(", ", userRoles)}");
-
-                        if (userRoles.Contains("Admin"))
+                        // Get user roles
+                        var roles = await _userManager.GetRolesAsync(user);
+                        
+                        // Redirect based on role
+                        if (roles.Contains("Employee"))
                         {
-                            return RedirectToAction("Index", "Dashboard");
+                            return RedirectToAction("EmployeeDashboard", "Dashboard");
                         }
-                        else if (userRoles.Contains("Employee"))
+                        else if (roles.Contains("Admin"))
                         {
-                            return RedirectToAction("Index", "Employee");
+                            return RedirectToAction("AdminDashboard", "Dashboard");
                         }
-                        else if (userRoles.Contains("PropertyManager"))
+                        else if (roles.Contains("StockManager"))
                         {
-                            return RedirectToAction("Index", "Item");
+                            return RedirectToAction("Index", "StockManager");
                         }
-                        else if (userRoles.Contains("StockManager"))
+                        else if (roles.Contains("PropertyManager"))
                         {
-                            return RedirectToAction("Index", "Item");
+                            return RedirectToAction("Index", "PropertyManager");
                         }
-                        else
-                        {
-                            _logger.LogWarning($"User {user.Email} has no valid roles assigned");
-                            ModelState.AddModelError(string.Empty, "User has no valid roles assigned.");
-                            await _signInManager.SignOutAsync();
-                            return View(model);
-                        }
+                        
+                        return LocalRedirect(returnUrl);
                     }
                     else
                     {
-                        _logger.LogWarning($"Login failed for user: {user.Email}. Result: {result}, IsLockedOut: {result.IsLockedOut}, RequiresTwoFactor: {result.RequiresTwoFactor}, IsNotAllowed: {result.IsNotAllowed}");
+                        _logger.LogWarning("Login failed for user: {Email}. Result: {Result}, IsLockedOut: {IsLockedOut}, RequiresTwoFactor: {RequiresTwoFactor}, IsNotAllowed: {IsNotAllowed}",
+                            model.Email, result, result.IsLockedOut, result.RequiresTwoFactor, result.IsNotAllowed);
                         ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     }
                 }
                 else
                 {
-                    _logger.LogWarning($"User not found: {model.Email}");
+                    _logger.LogWarning("Login attempt failed - user not found: {Email}", model.Email);
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                 }
-            }
-            else
-            {
-                _logger.LogWarning($"Model state is invalid for login attempt. Errors: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
             }
 
             return View(model);
@@ -168,7 +158,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Logout(string returnUrl = null)
+        public async Task<IActionResult> Logout(string? returnUrl = null)
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login");

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UniformAndEquipmentManagementSystem.Data;
 
@@ -11,9 +12,11 @@ using UniformAndEquipmentManagementSystem.Data;
 namespace UniformAndEquipmentManagementSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250513164909_AddItemAssignmentFields")]
+    partial class AddItemAssignmentFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -333,9 +336,6 @@ namespace UniformAndEquipmentManagementSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("AssignedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<int?>("AssignedToId")
                         .HasColumnType("int");
 
@@ -396,50 +396,6 @@ namespace UniformAndEquipmentManagementSystem.Migrations
                     b.HasIndex("SupplierId1");
 
                     b.ToTable("Items");
-                });
-
-            modelBuilder.Entity("UniformAndEquipmentManagementSystem.Models.Request", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AdminComment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ItemId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ProcessedById")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("ProcessedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Reason")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("RequestDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("ItemId");
-
-                    b.HasIndex("ProcessedById");
-
-                    b.ToTable("Requests");
                 });
 
             modelBuilder.Entity("UniformAndEquipmentManagementSystem.Models.Supplier", b =>
@@ -622,31 +578,6 @@ namespace UniformAndEquipmentManagementSystem.Migrations
                     b.Navigation("Department");
 
                     b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("UniformAndEquipmentManagementSystem.Models.Request", b =>
-                {
-                    b.HasOne("UniformAndEquipmentManagementSystem.Models.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("UniformAndEquipmentManagementSystem.Models.Item", "Item")
-                        .WithMany()
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("UniformAndEquipmentManagementSystem.Models.ApplicationUser", "ProcessedBy")
-                        .WithMany()
-                        .HasForeignKey("ProcessedById");
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Item");
-
-                    b.Navigation("ProcessedBy");
                 });
 
             modelBuilder.Entity("UniformAndEquipmentManagementSystem.Models.Department", b =>

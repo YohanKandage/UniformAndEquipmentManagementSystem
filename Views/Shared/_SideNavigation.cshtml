@@ -5,6 +5,8 @@
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var isAdmin = User.IsInRole("Admin");
+    var isStockManager = User.IsInRole("StockManager");
+    var isEmployee = User.IsInRole("Employee");
 }
 
 <div class="side-nav">
@@ -13,20 +15,41 @@
     </div>
     
     <div class="nav-items">
-        <div class="nav-item @(currentController == "Dashboard" ? "active" : "")">
-            <a asp-controller="Dashboard" asp-action="Index">
-                <i class="fas fa-chart-line"></i>
-                <span>Dashboard</span>
-            </a>
-        </div>
-        <div class="nav-item @(currentController == "Employee" ? "active" : "")">
-            <a asp-controller="Employee" asp-action="Index">
-                <i class="fas fa-users"></i>
-                <span>Employees</span>
-            </a>
-        </div>
+        @if (isEmployee)
+        {
+            <div class="nav-item @(currentController == "Dashboard" ? "active" : "")">
+                <a asp-controller="Dashboard" asp-action="EmployeeDashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+        }
+        else if (isAdmin)
+        {
+            <div class="nav-item @(currentController == "Dashboard" ? "active" : "")">
+                <a asp-controller="Dashboard" asp-action="AdminDashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="nav-item @(currentController == "Dashboard" ? "active" : "")">
+                <a asp-controller="Dashboard" asp-action="Index">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+        }
         @if (isAdmin)
         {
+            <div class="nav-item @(currentController == "Employee" ? "active" : "")">
+                <a asp-controller="Employee" asp-action="Index">
+                    <i class="fas fa-users"></i>
+                    <span>Employees</span>
+                </a>
+            </div>
             <div class="nav-section-title">Master Configuration</div>
             <div class="nav-subitem @(currentController == "Department" ? "active" : "")">
                 <a asp-controller="Department" asp-action="Index">
@@ -47,18 +70,21 @@
                 <span>Requests</span>
             </a>
         </div>
-        <div class="nav-item @(currentController == "Item" ? "active" : "")">
-            <a asp-controller="Item" asp-action="Index">
-                <i class="fas fa-box-open"></i>
-                <span>Inventory Items</span>
-            </a>
-        </div>
-        <div class="nav-item @(currentController == "Supplier" ? "active" : "")">
-            <a asp-controller="Supplier" asp-action="Index">
-                <i class="fas fa-truck"></i>
-                <span>Suppliers</span>
-            </a>
-        </div>
+        @if (isAdmin || isStockManager)
+        {
+            <div class="nav-item @(currentController == "Item" ? "active" : "")">
+                <a asp-controller="Item" asp-action="Index">
+                    <i class="fas fa-box-open"></i>
+                    <span>Inventory Items</span>
+                </a>
+            </div>
+            <div class="nav-item @(currentController == "Supplier" ? "active" : "")">
+                <a asp-controller="Supplier" asp-action="Index">
+                    <i class="fas fa-truck"></i>
+                    <span>Suppliers</span>
+                </a>
+            </div>
+        }
     </div>
 </div>
 

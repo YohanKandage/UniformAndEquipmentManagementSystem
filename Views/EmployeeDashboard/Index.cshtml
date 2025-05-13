@@ -1,0 +1,292 @@
+@{
+    ViewData["Title"] = "Employee Dashboard";
+    var employee = ViewBag.Employee as Employee;
+    var assignedItems = ViewBag.AssignedItems as List<Item>;
+    var requestStats = ViewBag.RequestStats;
+}
+
+<div class="container-fluid py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <img src="@(string.IsNullOrEmpty(employee?.ImagePath) ? "/images/default-profile.png" : employee.ImagePath)" 
+                                 class="rounded-circle" style="width: 64px; height: 64px; object-fit: cover;" alt="Profile Picture">
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h2 class="card-title mb-1">Welcome, @employee?.FirstName!</h2>
+                            <p class="card-text text-muted mb-0">@employee?.Department?.Name Department</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <a href="@Url.Action("Edit", "Employee", new { id = employee?.Id })" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i>Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Assigned Items</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@assignedItems?.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-box fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Pending Requests</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@requestStats.Pending</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Approved Requests</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@requestStats.Approved</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Cancelled Requests</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@requestStats.Cancelled</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Profile and Recent Assignments -->
+    <div class="row">
+        <!-- Employee Profile -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Employee Profile</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                           data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                             aria-labelledby="dropdownMenuLink">
+                            <a class="dropdown-item" href="@Url.Action("Edit", "Employee", new { id = employee?.Id })">
+                                <i class="fas fa-edit fa-sm fa-fw mr-2 text-gray-400"></i>
+                                Edit Profile
+                            </a>
+                            <a class="dropdown-item" href="@Url.Action("ChangePassword", "Account")">
+                                <i class="fas fa-key fa-sm fa-fw mr-2 text-gray-400"></i>
+                                Change Password
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <img src="@(string.IsNullOrEmpty(employee?.ImagePath) ? "/images/default-profile.png" : employee.ImagePath)" 
+                                 class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="Profile Picture">
+                            <h5 class="mb-3">@employee?.FirstName @employee?.LastName</h5>
+                            <span class="badge bg-primary mb-3">@employee?.Position</span>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p class="mb-2"><i class="fas fa-envelope me-2"></i> @employee?.Email</p>
+                                    <p class="mb-2"><i class="fas fa-building me-2"></i> @employee?.Department?.Name Department</p>
+                                    <p class="mb-2"><i class="fas fa-id-card me-2"></i> Employee ID: @employee?.EmployeeId</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-2"><i class="fas fa-phone me-2"></i> @employee?.Phone</p>
+                                    <p class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> @employee?.Address</p>
+                                    <p class="mb-2"><i class="fas fa-calendar me-2"></i> Joined: @employee?.JoinDate.ToString("MMM dd, yyyy")</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Additional Information</h6>
+                                            <p class="mb-2"><i class="fas fa-venus-mars me-2"></i> Gender: @employee?.Gender</p>
+                                            <p class="mb-2"><i class="fas fa-birthday-cake me-2"></i> Date of Birth: @employee?.DateOfBirth.ToString("MMM dd, yyyy")</p>
+                                            <p class="mb-0"><i class="fas fa-id-card me-2"></i> NIC: @employee?.NIC</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Assignments -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Assignments</h6>
+                    <div>
+                        <a href="@Url.Action("AssignedItems")" class="btn btn-sm btn-primary">
+                            <i class="fas fa-list me-1"></i> View All
+                        </a>
+                        <a href="@Url.Action("CreateRequest")" class="btn btn-sm btn-success">
+                            <i class="fas fa-plus me-1"></i> New Request
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (assignedItems?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Item Name</th>
+                                        <th>Type</th>
+                                        <th>Assigned Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in assignedItems.Take(5))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(item.ImagePath))
+                                                    {
+                                                        <img src="@item.ImagePath" class="rounded me-2" style="width: 32px; height: 32px; object-fit: cover;" alt="@item.ItemName">
+                                                    }
+                                                    <span>@item.ItemName</span>
+                                                </div>
+                                            </td>
+                                            <td>@item.ItemType</td>
+                                            <td>@item.AssignmentDate?.ToString("MMM dd, yyyy")</td>
+                                            <td>
+                                                <span class="badge bg-success">Active</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-box-open fa-3x text-gray-300 mb-3"></i>
+                            <p class="text-muted">No items assigned yet.</p>
+                            <a href="@Url.Action("CreateRequest")" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i> Make a Request
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: 4px solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 4px solid #1cc88a !important;
+    }
+    .border-left-warning {
+        border-left: 4px solid #f6c23e !important;
+    }
+    .border-left-danger {
+        border-left: 4px solid #e74a3b !important;
+    }
+    .card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        word-wrap: break-word;
+        background-color: #fff;
+        background-clip: border-box;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.35rem;
+    }
+    .card-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+    }
+    .text-xs {
+        font-size: .7rem;
+    }
+    .text-gray-300 {
+        color: #dddfeb !important;
+    }
+    .text-gray-800 {
+        color: #5a5c69 !important;
+    }
+    .shadow {
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+    }
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .dropdown-menu {
+        min-width: 200px;
+    }
+    .dropdown-item {
+        padding: 0.5rem 1rem;
+    }
+    .dropdown-item i {
+        width: 20px;
+    }
+    .badge {
+        padding: 0.5em 0.75em;
+    }
+</style> 

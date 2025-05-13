@@ -1,0 +1,122 @@
+@model IEnumerable<UniformAndEquipmentManagementSystem.Models.Request>
+
+@{
+    ViewData["Title"] = "My Requests";
+}
+
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">My Requests</h5>
+                    <a href="@Url.Action("Create", "Request")" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Request
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Request Date</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th>Processed By</th>
+                                        <th>Processed Date</th>
+                                        <th>Comments</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var request in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="@(string.IsNullOrEmpty(request.Item?.ImagePath) ? "/images/default-item.png" : request.Item.ImagePath)" 
+                                                         class="rounded-circle mr-2" style="width: 40px; height: 40px; object-fit: cover;" alt="Item Image">
+                                                    <div>
+                                                        <div>@request.Item?.ItemName</div>
+                                                        <small class="text-muted">@request.Item?.ItemType</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>@request.RequestDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@request.Reason</td>
+                                            <td>
+                                                <span class="badge @(request.Status.ToLower() switch {
+                                                    "pending" => "badge-warning",
+                                                    "approved" => "badge-success",
+                                                    "cancelled" => "badge-danger",
+                                                    _ => "badge-secondary"
+                                                })">
+                                                    @request.Status
+                                                </span>
+                                            </td>
+                                            <td>@(request.ProcessedBy?.FirstName ?? "-")</td>
+                                            <td>@(request.ProcessedDate?.ToString("MMM dd, yyyy") ?? "-")</td>
+                                            <td>@(string.IsNullOrEmpty(request.AdminComment) ? "-" : request.AdminComment)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">You haven't made any requests yet.</p>
+                            <a href="@Url.Action("Create", "Request")" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Make Your First Request
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .table th {
+        border-top: none;
+        background-color: #f8f9fa;
+    }
+    .badge {
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+    }
+    .badge-warning {
+        background-color: #ffc107;
+        color: #000;
+    }
+    .badge-success {
+        background-color: #28a745;
+        color: #fff;
+    }
+    .badge-danger {
+        background-color: #dc3545;
+        color: #fff;
+    }
+    .badge-secondary {
+        background-color: #6c757d;
+        color: #fff;
+    }
+    .rounded-circle {
+        border-radius: 50%;
+    }
+    .mr-2 {
+        margin-right: 0.5rem;
+    }
+</style> 
