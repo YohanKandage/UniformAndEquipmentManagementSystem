@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IPdfService, PdfService>();
+builder.Services.AddScoped<RoleSeeder>();
 
 // Configure database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

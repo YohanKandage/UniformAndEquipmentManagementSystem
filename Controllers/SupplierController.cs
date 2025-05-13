@@ -8,10 +8,11 @@ using System.Linq;
 using iText.Layout.Element;
 using iText.Layout.Properties;
 using Microsoft.AspNetCore.Authorization;
+using System;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,StockManager")]
     public class SupplierController : Controller
     {
         private readonly ApplicationDbContext _context;

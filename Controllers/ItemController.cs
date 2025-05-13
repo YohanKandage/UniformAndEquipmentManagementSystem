@@ -4,10 +4,15 @@ using Microsoft.EntityFrameworkCore;
 using UniformAndEquipmentManagementSystem.Data;
 using UniformAndEquipmentManagementSystem.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
+using System.IO;
+using System.Linq;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,StockManager,PropertyManager")]
     public class ItemController : Controller
     {
         private readonly ApplicationDbContext _context;

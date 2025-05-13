@@ -14,10 +14,11 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using iText.Kernel.Pdf;
 using Microsoft.AspNetCore.Authorization;
+using System.Linq;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,PropertyManager")]
     public class EmployeeController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -94,7 +95,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 // Create the associated user account
                 var user = new ApplicationUser
                 {
-                    UserName = employee.UserName,
+                    UserName = employee.Email,
                     Email = employee.Email,
                     FirstName = employee.FirstName,
                     LastName = employee.LastName,
@@ -315,6 +316,80 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 "application/pdf",
                 $"Employee_{employee.EmployeeId}_{DateTime.Now:yyyyMMdd}.pdf"
             );
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ResetPassword(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var employee = await _context.Employees.FindAsync(id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.FindByEmailAsync(employee.Email);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.EmployeeName = $"{employee.FirstName} {employee.LastName}";
+            ViewBag.EmployeeEmail = employee.Email;
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(int id, string newPassword)
+        {
+            var employee = await _context.Employees.FindAsync(id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.FindByEmailAsync(employee.Email);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Remove the old password
+            var removePasswordResult = await _userManager.RemovePasswordAsync(user);
+            if (!removePasswordResult.Succeeded)
+            {
+                foreach (var error in removePasswordResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                ViewBag.EmployeeName = $"{employee.FirstName} {employee.LastName}";
+                ViewBag.EmployeeEmail = employee.Email;
+                return View();
+            }
+
+            // Add the new password
+            var addPasswordResult = await _userManager.AddPasswordAsync(user, newPassword);
+            if (addPasswordResult.Succeeded)
+            {
+                TempData["Success"] = "Password has been reset successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            foreach (var error in addPasswordResult.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            ViewBag.EmployeeName = $"{employee.FirstName} {employee.LastName}";
+            ViewBag.EmployeeEmail = employee.Email;
+            return View();
         }
     }
 } 
