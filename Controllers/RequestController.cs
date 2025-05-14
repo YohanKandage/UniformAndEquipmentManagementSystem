@@ -40,6 +40,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 .OrderByDescending(r => r.RequestDate)
                 .ToListAsync();
 
+            // Clear any existing TempData messages
+            if (TempData["Success"] != null)
+            {
+                TempData["Success"] = null;
+            }
+
             return View(requests);
         }
 
@@ -63,7 +69,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             var equipmentCount = await _context.Items
                 .CountAsync(i => i.DepartmentId == employee.DepartmentId && 
-                               i.ItemType == "Item" && 
+                               i.ItemType == "Equipment" && 
                                i.Status == "Available");
 
             ViewBag.UniformCount = uniformCount;
@@ -94,7 +100,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     id = i.Id,
                     itemName = i.ItemName,
                     imagePath = i.ImagePath ?? "/images/default-item.png",
-                    details = $"Department: {employee.Department.Name} | Material: {i.Material} | Price: ${i.Price}"
+                    details = $"Department: {employee.Department.Name} | Material: {i.Material} | Price: ${i.Price:F2} | Available: {i.Quantity}"
                 })
                 .ToListAsync();
 
@@ -105,35 +111,56 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ItemId,Reason")] Request request, string Size)
         {
-            var userEmail = User.Identity?.Name;
-            var employee = await _context.Employees
-                .Include(e => e.Department)
-                .FirstOrDefaultAsync(e => e.Email == userEmail);
-
-            if (employee == null)
+            try
             {
-                return NotFound();
-            }
+                var userEmail = User.Identity?.Name;
+                var employee = await _context.Employees
+                    .Include(e => e.Department)
+                    .FirstOrDefaultAsync(e => e.Email == userEmail);
 
-            // Validate that the requested item belongs to the employee's department
-            var selectedItem = await _context.Items
-                .FirstOrDefaultAsync(i => i.Id == request.ItemId && i.DepartmentId == employee.DepartmentId);
+                if (employee == null)
+                {
+                    return NotFound();
+                }
 
-            if (selectedItem == null)
-            {
-                ModelState.AddModelError("ItemId", "The selected item is not available for your department");
-                return View(request);
-            }
+                // Log the incoming request data
+                Console.WriteLine($"Debug - Request Data:");
+                Console.WriteLine($"ItemId: {request.ItemId}");
+                Console.WriteLine($"Reason: {request.Reason}");
+                Console.WriteLine($"Size: {Size}");
+                Console.WriteLine($"EmployeeId: {employee.Id}");
 
-            // Validate size for uniform requests
-            if (selectedItem.ItemType == "Uniform" && string.IsNullOrEmpty(Size))
-            {
-                ModelState.AddModelError("Size", "Size is required for uniform requests");
-                return View(request);
-            }
+                // Validate that the requested item belongs to the employee's department
+                var selectedItem = await _context.Items
+                    .FirstOrDefaultAsync(i => i.Id == request.ItemId && i.DepartmentId == employee.DepartmentId);
 
-            if (ModelState.IsValid)
-            {
+                if (selectedItem == null)
+                {
+                    ModelState.AddModelError("ItemId", "The selected item is not available for your department");
+                    return View(request);
+                }
+
+                // Log the selected item
+                Console.WriteLine($"Debug - Selected Item:");
+                Console.WriteLine($"ItemType: {selectedItem.ItemType}");
+                Console.WriteLine($"ItemName: {selectedItem.ItemName}");
+                Console.WriteLine($"DepartmentId: {selectedItem.DepartmentId}");
+
+                // Validate size for uniform requests
+                if (selectedItem.ItemType == "Uniform" && string.IsNullOrEmpty(Size))
+                {
+                    ModelState.AddModelError("Size", "Size is required for uniform requests");
+                    return View(request);
+                }
+
+                // Validate quantity
+                if (selectedItem.Quantity <= 0)
+                {
+                    ModelState.AddModelError("ItemId", "This item is currently out of stock");
+                    return View(request);
+                }
+
+                // Set required fields
                 request.EmployeeId = employee.Id;
                 request.RequestDate = DateTime.Now;
                 request.Status = "Pending";
@@ -141,20 +168,90 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 // Add size and department to the reason if it's a uniform request
                 if (selectedItem.ItemType == "Uniform")
                 {
-                    request.Reason = $"Department: {employee.Department.Name}\nSize: {Size}\n\nReason: {request.Reason}";
+                    request.EmployeeId = employee.Id;
+                    request.RequestDate = DateTime.Now;
+                    request.Status = "Pending";
+
+                    // Add size and department to the reason if it's a uniform request
+                    if (selectedItem.ItemType == "Uniform")
+                    {
+                        request.Reason = $"Department: {employee.Department.Name}\nSize: {Size}\n\nReason: {request.Reason}";
+                    }
+                    else
+                    {
+                        request.Reason = $"Department: {employee.Department.Name}\n\nReason: {request.Reason}";
+                    }
+
+                    try
+                    {
+                        // Log the final request object
+                        Console.WriteLine($"Debug - Final Request Object:");
+                        Console.WriteLine($"EmployeeId: {request.EmployeeId}");
+                        Console.WriteLine($"ItemId: {request.ItemId}");
+                        Console.WriteLine($"RequestDate: {request.RequestDate}");
+                        Console.WriteLine($"Status: {request.Status}");
+                        Console.WriteLine($"Reason: {request.Reason}");
+
+                        _context.Add(request);
+                        var result = await _context.SaveChangesAsync();
+                        Console.WriteLine($"Debug - SaveChanges Result: {result}");
+
+                        if (result > 0)
+                        {
+                            TempData["Success"] = "Request submitted successfully!";
+                            return RedirectToAction(nameof(Index));
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("", "Failed to save the request. Please try again.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error creating request: {ex.Message}");
+                        if (ex.InnerException != null)
+                        {
+                            Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                        }
+                        ModelState.AddModelError("", "An error occurred while submitting your request. Please try again.");
+                    }
                 }
                 else
                 {
-                    request.Reason = $"Department: {employee.Department.Name}\n\nReason: {request.Reason}";
+                    // Log validation errors
+                    foreach (var modelStateEntry in ModelState.Values)
+                    {
+                        foreach (var error in modelStateEntry.Errors)
+                        {
+                            Console.WriteLine($"Validation Error: {error.ErrorMessage}");
+                        }
+                    }
                 }
 
-                _context.Add(request);
-                await _context.SaveChangesAsync();
+                // If we got this far, something failed, redisplay form
+                ViewBag.UniformCount = await _context.Items
+                    .CountAsync(i => i.DepartmentId == employee.DepartmentId && 
+                                   i.ItemType == "Uniform" && 
+                                   i.Status == "Available");
 
-                return RedirectToAction(nameof(Index));
+                ViewBag.EquipmentCount = await _context.Items
+                    .CountAsync(i => i.DepartmentId == employee.DepartmentId && 
+                                   i.ItemType == "Equipment" && 
+                                   i.Status == "Available");
+
+                ViewBag.DepartmentName = employee.Department?.Name;
+                return View(request);
             }
-
-            return View(request);
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+                ModelState.AddModelError("", "An unexpected error occurred. Please try again.");
+                return View(request);
+            }
         }
 
         public async Task<IActionResult> AssignedItems()

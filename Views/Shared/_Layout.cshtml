@@ -47,29 +47,55 @@
         }
 
         .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            display: flex !important;
+            align-items: center !important;
+            gap: 15px !important;
+            height: 50px !important;
         }
 
         .date-display {
-            color: #666;
-            font-size: 12px;
-            background: #f8f9fa;
-            padding: 4px 12px;
-            border-radius: 12px;
+            color: #666 !important;
+            font-size: 13px !important;
+            background: #f8f9fa !important;
+            padding: 6px 12px !important;
+            border-radius: 20px !important;
+            font-weight: 500 !important;
+            white-space: nowrap !important;
         }
 
         .profile-image {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background-color: #9497A8;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            min-height: 32px !important;
+            max-width: 32px !important;
+            max-height: 32px !important;
+            border-radius: 50% !important;
+            background-color: #9497A8 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: white !important;
+            font-size: 14px !important;
+            transition: all 0.2s ease !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            line-height: 1 !important;
+            box-sizing: border-box !important;
+        }
+
+        .profile-image i {
+            font-size: 14px !important;
+            line-height: 1 !important;
+            width: 14px !important;
+            height: 14px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .profile-image:hover {
+            background-color: #7a7d8f !important;
         }
 
         .main-content {
