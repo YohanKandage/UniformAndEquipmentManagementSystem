@@ -1,0 +1,171 @@
+@model IEnumerable<UniformAndEquipmentManagementSystem.Models.Request>
+
+@{
+    ViewData["Title"] = "My Inventory";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Inventory</h2>
+    </div>
+
+    <div class="row">
+        <!-- Uniforms Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tshirt me-2"></i>Uniforms
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var uniforms = Model.Where(r => r.Item.ItemType == "Uniform");
+                    }
+                    @if (!uniforms.Any())
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-tshirt fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">No uniforms assigned yet</h6>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var item in uniforms)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@item.Item.ItemName</h6>
+                                            <small class="text-muted">
+                                                Assigned on @item.ProcessedDate?.ToString("MMM dd, yyyy")
+                                            </small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#itemModal@(item.Id)">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Item Details Modal -->
+                                <div class="modal fade" id="itemModal@(item.Id)" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Item Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <dl class="row">
+                                                    <dt class="col-sm-4">Item Name</dt>
+                                                    <dd class="col-sm-8">@item.Item.ItemName</dd>
+
+                                                    <dt class="col-sm-4">Type</dt>
+                                                    <dd class="col-sm-8">@item.Item.ItemType</dd>
+
+                                                    <dt class="col-sm-4">Material</dt>
+                                                    <dd class="col-sm-8">@item.Item.Material</dd>
+
+                                                    <dt class="col-sm-4">Assigned Date</dt>
+                                                    <dd class="col-sm-8">@item.ProcessedDate?.ToString("MMM dd, yyyy")</dd>
+
+                                                    @if (!string.IsNullOrEmpty(item.AdminComment))
+                                                    {
+                                                        <dt class="col-sm-4">Admin Note</dt>
+                                                        <dd class="col-sm-8">@item.AdminComment</dd>
+                                                    }
+                                                </dl>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipment Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tools me-2"></i>Equipment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var equipment = Model.Where(r => r.Item.ItemType == "Equipment");
+                    }
+                    @if (!equipment.Any())
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">No equipment assigned yet</h6>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var item in equipment)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@item.Item.ItemName</h6>
+                                            <small class="text-muted">
+                                                Assigned on @item.ProcessedDate?.ToString("MMM dd, yyyy")
+                                            </small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#itemModal@(item.Id)">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Item Details Modal -->
+                                <div class="modal fade" id="itemModal@(item.Id)" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Item Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <dl class="row">
+                                                    <dt class="col-sm-4">Item Name</dt>
+                                                    <dd class="col-sm-8">@item.Item.ItemName</dd>
+
+                                                    <dt class="col-sm-4">Type</dt>
+                                                    <dd class="col-sm-8">@item.Item.ItemType</dd>
+
+                                                    <dt class="col-sm-4">Material</dt>
+                                                    <dd class="col-sm-8">@item.Item.Material</dd>
+
+                                                    <dt class="col-sm-4">Assigned Date</dt>
+                                                    <dd class="col-sm-8">@item.ProcessedDate?.ToString("MMM dd, yyyy")</dd>
+
+                                                    @if (!string.IsNullOrEmpty(item.AdminComment))
+                                                    {
+                                                        <dt class="col-sm-4">Admin Note</dt>
+                                                        <dd class="col-sm-8">@item.AdminComment</dd>
+                                                    }
+                                                </dl>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

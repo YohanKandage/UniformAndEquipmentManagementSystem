@@ -273,5 +273,27 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             return View(assignedItems);
         }
+
+        public async Task<IActionResult> MyInventory()
+        {
+            var userEmail = User.Identity?.Name;
+            var employee = await _context.Employees
+                .Include(e => e.Department)
+                .FirstOrDefaultAsync(e => e.Email == userEmail);
+
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            // Get approved requests for this employee
+            var assignedItems = await _context.Requests
+                .Include(r => r.Item)
+                .Where(r => r.EmployeeId == employee.Id && r.Status == "Approved")
+                .OrderByDescending(r => r.ProcessedDate)
+                .ToListAsync();
+
+            return View(assignedItems);
+        }
     }
 } 
