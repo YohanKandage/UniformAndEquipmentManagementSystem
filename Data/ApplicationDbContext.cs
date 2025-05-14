@@ -18,15 +18,20 @@ namespace UniformAndEquipmentManagementSystem.Data
             // Configure Item relationships
             builder.Entity<Item>()
                 .HasOne(i => i.Department)
-                .WithMany()
+                .WithMany(d => d.Items)
                 .HasForeignKey(i => i.DepartmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Item>()
                 .HasOne(i => i.Supplier)
-                .WithMany()
+                .WithMany(s => s.Items)
                 .HasForeignKey(i => i.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Set default value for Status
+            builder.Entity<Item>()
+                .Property(i => i.Status)
+                .HasDefaultValue("Available");
         }
 
         public DbSet<Employee> Employees { get; set; }

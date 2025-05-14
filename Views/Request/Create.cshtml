@@ -7,34 +7,84 @@
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Create New Request</h5>
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Create New Request</h5>
+                        <span class="badge bg-light text-primary">@ViewBag.DepartmentName</span>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form asp-action="Create" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post" id="requestForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                        <div class="form-group">
-                            <label asp-for="ItemId" class="control-label">Select Item</label>
-                            <select asp-for="ItemId" class="form-control" asp-items="@(new SelectList(ViewBag.AvailableItems, "Id", "ItemName"))">
+                        <!-- Step 1: Item Type Selection -->
+                        <div class="form-group mb-4">
+                            <label class="control-label fw-bold">Select Item Type</label>
+                            <select class="form-select form-select-lg" id="itemType" required>
+                                <option value="">-- Select Type --</option>
+                                <option value="Uniform">Uniform (@ViewBag.UniformCount available)</option>
+                                <option value="Item">Equipment (@ViewBag.EquipmentCount available)</option>
+                            </select>
+                        </div>
+
+                        <!-- Step 2: Item Selection -->
+                        <div class="form-group mb-4" id="itemSelection" style="display: none;">
+                            <label asp-for="ItemId" class="control-label fw-bold">Select Item</label>
+                            <select asp-for="ItemId" class="form-select" required>
                                 <option value="">-- Select an item --</option>
                             </select>
                             <span asp-validation-for="ItemId" class="text-danger"></span>
                         </div>
 
-                        <div class="form-group">
-                            <label asp-for="Reason" class="control-label">Reason for Request</label>
-                            <textarea asp-for="Reason" class="form-control" rows="4" placeholder="Please provide a detailed reason for your request..."></textarea>
+                        <!-- Size Selection (for uniforms only) -->
+                        <div class="form-group mb-4" id="sizeSelection" style="display: none;">
+                            <label class="control-label fw-bold">Select Size</label>
+                            <select class="form-select" id="uniformSize" name="Size" required>
+                                <option value="">-- Select Size --</option>
+                                <option value="XS">Extra Small (XS)</option>
+                                <option value="S">Small (S)</option>
+                                <option value="M">Medium (M)</option>
+                                <option value="L">Large (L)</option>
+                                <option value="XL">Extra Large (XL)</option>
+                                <option value="XXL">2XL</option>
+                                <option value="XXXL">3XL</option>
+                            </select>
+                            <span class="text-danger" id="sizeError"></span>
+                        </div>
+
+                        <!-- Item Preview -->
+                        <div class="form-group mb-4" id="itemPreview" style="display: none;">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body text-center p-4">
+                                    <div class="position-relative mb-3">
+                                        <img id="itemImage" src="" alt="Item Preview" class="img-fluid rounded" style="max-height: 200px; object-fit: contain;">
+                                        <div class="position-absolute top-0 end-0 p-2">
+                                            <span class="badge bg-primary" id="itemTypeBadge"></span>
+                                        </div>
+                                    </div>
+                                    <h5 id="itemName" class="card-title mb-2"></h5>
+                                    <p id="itemDetails" class="card-text text-muted mb-2"></p>
+                                    <p id="selectedSize" class="card-text text-primary fw-bold" style="display: none;"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reason Input -->
+                        <div class="form-group mb-4">
+                            <label asp-for="Reason" class="control-label fw-bold">Reason for Request</label>
+                            <textarea asp-for="Reason" class="form-control" rows="4" required
+                                    placeholder="Please provide a detailed reason for your request..."
+                                    style="resize: none;"></textarea>
                             <span asp-validation-for="Reason" class="text-danger"></span>
                         </div>
 
-                        <div class="form-group text-right">
-                            <a href="@Url.Action("Index", "Request")" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back to List
+                        <div class="form-group d-flex justify-content-between align-items-center">
+                            <a href="@Url.Action("Index", "Request")" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i> Back to List
                             </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i> Submit Request
+                            <button type="submit" class="btn btn-primary px-4" id="submitBtn" disabled>
+                                <i class="fas fa-paper-plane me-2"></i> Submit Request
                             </button>
                         </div>
                     </form>
@@ -46,41 +96,174 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function () {
+            const itemTypeSelect = $('#itemType');
+            const itemSelection = $('#itemSelection');
+            const sizeSelection = $('#sizeSelection');
+            const itemPreview = $('#itemPreview');
+            const itemSelect = $('#ItemId');
+            const uniformSize = $('#uniformSize');
+            const submitBtn = $('#submitBtn');
+            const itemImage = $('#itemImage');
+            const itemName = $('#itemName');
+            const itemDetails = $('#itemDetails');
+            const selectedSize = $('#selectedSize');
+            const itemTypeBadge = $('#itemTypeBadge');
+
+            // Load items when type is selected
+            itemTypeSelect.change(function () {
+                const selectedType = $(this).val();
+                if (selectedType) {
+                    // Show item selection
+                    itemSelection.show();
+                    
+                    // Show/hide size selection based on type
+                    if (selectedType === 'Uniform') {
+                        sizeSelection.show();
+                        itemTypeBadge.text('Uniform').removeClass('bg-info').addClass('bg-primary');
+                    } else {
+                        sizeSelection.hide();
+                        uniformSize.prop('required', false);
+                        itemTypeBadge.text('Equipment').removeClass('bg-primary').addClass('bg-info');
+                    }
+                    
+                    // Clear previous selection
+                    itemSelect.empty().append('<option value="">-- Select an item --</option>');
+                    itemPreview.hide();
+                    submitBtn.prop('disabled', true);
+
+                    // Load items of selected type
+                    $.get('/Request/GetItemsByType', { type: selectedType }, function (items) {
+                        if (items.length === 0) {
+                            itemSelect.append($('<option></option>')
+                                .val('')
+                                .text('No items available for your department'));
+                            itemSelect.prop('disabled', true);
+                        } else {
+                            itemSelect.prop('disabled', false);
+                            items.forEach(function (item) {
+                                itemSelect.append($('<option></option>')
+                                    .val(item.id)
+                                    .text(item.itemName)
+                                    .data('image', item.imagePath)
+                                    .data('details', item.details));
+                            });
+                        }
+                    });
+                } else {
+                    itemSelection.hide();
+                    sizeSelection.hide();
+                    itemPreview.hide();
+                    submitBtn.prop('disabled', true);
+                }
+            });
+
+            // Show item preview when item is selected
+            itemSelect.change(function () {
+                const selectedOption = $(this).find('option:selected');
+                if (selectedOption.val()) {
+                    const imagePath = selectedOption.data('image') || '/images/default-item.png';
+                    const details = selectedOption.data('details');
+
+                    itemImage.attr('src', imagePath);
+                    itemName.text(selectedOption.text());
+                    itemDetails.text(details);
+                    itemPreview.show();
+                    updateSubmitButton();
+                } else {
+                    itemPreview.hide();
+                    submitBtn.prop('disabled', true);
+                }
+            });
+
+            // Update size display when size is selected
+            uniformSize.change(function() {
+                const size = $(this).val();
+                if (size) {
+                    selectedSize.text(`Selected Size: ${size}`).show();
+                } else {
+                    selectedSize.hide();
+                }
+                updateSubmitButton();
+            });
+
+            // Function to update submit button state
+            function updateSubmitButton() {
+                const isItemSelected = itemSelect.val() !== '';
+                const isSizeRequired = itemTypeSelect.val() === 'Uniform';
+                const isSizeSelected = !isSizeRequired || uniformSize.val() !== '';
+                const isReasonFilled = $('#Reason').val().trim() !== '';
+
+                submitBtn.prop('disabled', !(isItemSelected && isSizeSelected && isReasonFilled));
+            }
+
+            // Update submit button when reason changes
+            $('#Reason').on('input', updateSubmitButton);
+        });
+    </script>
 }
 
 <style>
     .card {
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
     }
-    .card-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #e9ecef;
+    .card:hover {
+        transform: translateY(-2px);
     }
-    .form-group {
-        margin-bottom: 1.5rem;
+    .form-select, .form-control {
+        border-radius: 0.5rem;
+        border: 1px solid #dee2e6;
+        padding: 0.75rem 1rem;
     }
-    .form-control {
-        border-radius: 0.25rem;
-    }
-    .form-control:focus {
+    .form-select:focus, .form-control:focus {
         border-color: #80bdff;
         box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
     }
     .btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+        transform: translateY(-1px);
+    }
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        color: white;
+        transform: translateY(-1px);
+    }
+    .text-danger {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    #itemPreview .card {
+        background-color: #f8f9fa;
+        border-radius: 1rem;
+    }
+    #itemPreview .card-body {
+        padding: 2rem;
+    }
+    #selectedSize {
+        font-weight: 500;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background-color: rgba(13, 110, 253, 0.1);
+        border-radius: 0.5rem;
+        display: inline-block;
+    }
+    .badge {
         padding: 0.5rem 1rem;
         font-weight: 500;
     }
-    .btn-primary {
-        background-color: #007bff;
-        border-color: #007bff;
-    }
-    .btn-secondary {
-        background-color: #6c757d;
-        border-color: #6c757d;
-    }
-    .text-danger {
-        color: #dc3545;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
+    .alert {
+        border-radius: 0.5rem;
     }
 </style> 

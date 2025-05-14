@@ -10,7 +10,7 @@ namespace UniformAndEquipmentManagementSystem.Models
 
         [Required]
         [Display(Name = "Item Type")]
-        [RegularExpression("^(Uniform|Item)$", ErrorMessage = "Item Type must be either 'Uniform' or 'Item'")]
+        [RegularExpression("^(Uniform|Equipment)$", ErrorMessage = "Item Type must be either 'Uniform' or 'Equipment'")]
         public string ItemType { get; set; } = string.Empty;
 
         [Required]
@@ -25,7 +25,7 @@ namespace UniformAndEquipmentManagementSystem.Models
         [ForeignKey("Department")]
         [Display(Name = "Department")]
         public int DepartmentId { get; set; }
-        public virtual Department Department { get; set; } = null!;
+        public virtual Department? Department { get; set; }
 
         [Required]
         public string Material { get; set; } = string.Empty;
@@ -34,7 +34,7 @@ namespace UniformAndEquipmentManagementSystem.Models
         [ForeignKey("Supplier")]
         [Display(Name = "Supplier")]
         public int SupplierId { get; set; }
-        public virtual Supplier Supplier { get; set; } = null!;
+        public virtual Supplier? Supplier { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]

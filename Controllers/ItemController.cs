@@ -44,43 +44,102 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Item item, IFormFile? ImageFile)
         {
-            if (ModelState.IsValid)
+            try
             {
-                // Generate ItemId if not provided
-                if (string.IsNullOrEmpty(item.ItemId))
+                // Verify that the Department and Supplier exist
+                var departmentExists = await _context.Departments.AnyAsync(d => d.Id == item.DepartmentId);
+                var supplierExists = await _context.Suppliers.AnyAsync(s => s.Id == item.SupplierId);
+
+                if (!departmentExists)
                 {
-                    var prefix = item.ItemType == "Uniform" ? "UNF" : "ITM";
-                    var random = new Random();
-                    var randomDigits = random.Next(100000, 999999).ToString();
-                    item.ItemId = prefix + randomDigits;
+                    ModelState.AddModelError("DepartmentId", "Selected department does not exist.");
+                }
+                if (!supplierExists)
+                {
+                    ModelState.AddModelError("SupplierId", "Selected supplier does not exist.");
                 }
 
-                if (ImageFile != null && ImageFile.Length > 0)
+                // Log the incoming model state
+                if (!ModelState.IsValid)
                 {
-                    var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "items");
-                    if (!Directory.Exists(uploadsFolder))
-                        Directory.CreateDirectory(uploadsFolder);
-
-                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + ImageFile.FileName;
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    foreach (var entry in ModelState)
                     {
-                        await ImageFile.CopyToAsync(fileStream);
+                        if (entry.Value.Errors.Any())
+                        {
+                            foreach (var error in entry.Value.Errors)
+                            {
+                                Console.WriteLine($"Validation Error - Field: {entry.Key}, Error: {error.ErrorMessage}");
+                            }
+                        }
+                    }
+                }
+
+                // Log the item properties
+                Console.WriteLine($"Debug - ItemType: {item.ItemType}");
+                Console.WriteLine($"Debug - ItemId: {item.ItemId}");
+                Console.WriteLine($"Debug - ItemName: {item.ItemName}");
+                Console.WriteLine($"Debug - DepartmentId: {item.DepartmentId}");
+                Console.WriteLine($"Debug - SupplierId: {item.SupplierId}");
+                Console.WriteLine($"Debug - Material: {item.Material}");
+                Console.WriteLine($"Debug - Price: {item.Price}");
+                Console.WriteLine($"Debug - Quantity: {item.Quantity}");
+
+                if (ModelState.IsValid)
+                {
+                    // Set default status
+                    item.Status = "Available";
+
+                    // Handle image upload
+                    if (ImageFile != null && ImageFile.Length > 0)
+                    {
+                        var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "items");
+                        if (!Directory.Exists(uploadsFolder))
+                            Directory.CreateDirectory(uploadsFolder);
+
+                        var uniqueFileName = Guid.NewGuid().ToString() + "_" + ImageFile.FileName;
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImageFile.CopyToAsync(fileStream);
+                        }
+
+                        item.ImagePath = "/images/items/" + uniqueFileName;
                     }
 
-                    item.ImagePath = "/images/items/" + uniqueFileName;
+                    try
+                    {
+                        // Add the item to the context
+                        _context.Add(item);
+                        await _context.SaveChangesAsync();
+                        
+                        TempData["Success"] = "Item created successfully!";
+                        return RedirectToAction(nameof(Index));
+                    }
+                    catch (DbUpdateException dbEx)
+                    {
+                        ModelState.AddModelError("", $"Database Error: {dbEx.InnerException?.Message ?? dbEx.Message}");
+                    }
                 }
 
-                _context.Add(item);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Item created successfully!";
-                return RedirectToAction(nameof(Index));
+                // If we got this far, something failed, redisplay form
+                ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name", item.DepartmentId);
+                ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "CompanyName", item.SupplierId);
+                return View(item);
             }
-
-            ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name", item.DepartmentId);
-            ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "CompanyName", item.SupplierId);
-            return View(item);
+            catch (Exception ex)
+            {
+                // Log the error
+                Console.WriteLine($"Error creating item: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+                ModelState.AddModelError("", "An error occurred while creating the item. Please try again.");
+                ViewData["DepartmentId"] = new SelectList(_context.Departments, "Id", "Name", item.DepartmentId);
+                ViewData["SupplierId"] = new SelectList(_context.Suppliers, "Id", "CompanyName", item.SupplierId);
+                return View(item);
+            }
         }
 
         public async Task<IActionResult> Edit(int? id)

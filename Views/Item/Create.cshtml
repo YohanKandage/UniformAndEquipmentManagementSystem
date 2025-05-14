@@ -10,8 +10,8 @@
     </div>
 
     <div class="form-container">
-        <form asp-action="Create" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form asp-controller="Item" asp-action="Create" method="post" enctype="multipart/form-data" id="createItemForm">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
             <div class="form-grid">
                 <!-- Left Column - Basic Information -->
@@ -20,10 +20,10 @@
                     
                     <div class="form-group">
                         <label asp-for="ItemType" class="control-label"></label>
-                        <select asp-for="ItemType" class="form-control" id="itemType">
+                        <select asp-for="ItemType" class="form-control" id="itemType" required>
                             <option value="">-- Select Type --</option>
                             <option value="Uniform">Uniform</option>
-                            <option value="Item">Item</option>
+                            <option value="Equipment">Equipment</option>
                         </select>
                         <span asp-validation-for="ItemType" class="text-danger"></span>
                     </div>
@@ -36,21 +36,20 @@
 
                     <div class="form-group">
                         <label asp-for="ItemName" class="control-label"></label>
-                        <input asp-for="ItemName" class="form-control" placeholder="Enter item name" />
+                        <input asp-for="ItemName" class="form-control" placeholder="Enter item name" required />
                         <span asp-validation-for="ItemName" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
                         <label asp-for="Material" class="control-label"></label>
-                        <input asp-for="Material" class="form-control" placeholder="Enter material type" />
+                        <input asp-for="Material" class="form-control" placeholder="Enter material type" required />
                         <span asp-validation-for="Material" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
                         <label asp-for="ImageFile" class="control-label"></label>
                         <div class="custom-file">
-                            <input type="file" asp-for="ImageFile" class="custom-file-input" id="imageInput" accept="image/*" />
-                            <label class="custom-file-label" for="imageInput">Choose file</label>
+                            <input type="file" asp-for="ImageFile" class="form-control" id="imageInput" accept="image/*" />
                         </div>
                         <div id="imagePreview" class="mt-2 d-none">
                             <img id="preview" src="#" alt="Preview" class="img-preview" />
@@ -64,7 +63,7 @@
 
                     <div class="form-group">
                         <label asp-for="DepartmentId" class="control-label"></label>
-                        <select asp-for="DepartmentId" class="form-control" asp-items="ViewBag.DepartmentId">
+                        <select asp-for="DepartmentId" class="form-control" asp-items="ViewBag.DepartmentId" required>
                             <option value="">-- Select Department --</option>
                         </select>
                         <span asp-validation-for="DepartmentId" class="text-danger"></span>
@@ -72,7 +71,7 @@
 
                     <div class="form-group">
                         <label asp-for="SupplierId" class="control-label"></label>
-                        <select asp-for="SupplierId" class="form-control" asp-items="ViewBag.SupplierId">
+                        <select asp-for="SupplierId" class="form-control" asp-items="ViewBag.SupplierId" required>
                             <option value="">-- Select Supplier --</option>
                         </select>
                         <span asp-validation-for="SupplierId" class="text-danger"></span>
@@ -80,13 +79,13 @@
 
                     <div class="form-group">
                         <label asp-for="Price" class="control-label"></label>
-                        <input asp-for="Price" class="form-control" placeholder="Enter price" />
+                        <input asp-for="Price" class="form-control" placeholder="Enter price" type="number" step="0.01" min="0" required />
                         <span asp-validation-for="Price" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
                         <label asp-for="Quantity" class="control-label"></label>
-                        <input asp-for="Quantity" class="form-control" placeholder="Enter quantity" type="number" min="0" />
+                        <input asp-for="Quantity" class="form-control" placeholder="Enter quantity" type="number" min="0" required />
                         <span asp-validation-for="Quantity" class="text-danger"></span>
                     </div>
                 </div>
@@ -99,6 +98,93 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // ItemId generator
+        document.getElementById('itemType').addEventListener('change', function() {
+            const type = this.value;
+            if (!type) return; // Don't generate ID if no type is selected
+            
+            const prefix = type === 'Uniform' ? 'UNF' : 'EQP';
+            const randomDigits = Math.floor(Math.random() * 900000) + 100000; // Generates a random 6-digit number
+            document.getElementById('itemId').value = prefix + randomDigits;
+        });
+
+        // Image preview
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const preview = document.getElementById('preview');
+            const previewContainer = document.getElementById('imagePreview');
+            const file = e.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = '#';
+                previewContainer.classList.add('d-none');
+            }
+        });
+
+        // Form validation
+        $(document).ready(function () {
+            $('#createItemForm').validate({
+                rules: {
+                    ItemType: {
+                        required: true
+                    },
+                    ItemId: {
+                        required: true
+                    },
+                    ItemName: {
+                        required: true
+                    },
+                    Material: {
+                        required: true
+                    },
+                    DepartmentId: {
+                        required: true
+                    },
+                    SupplierId: {
+                        required: true
+                    },
+                    Price: {
+                        required: true,
+                        number: true,
+                        min: 0
+                    },
+                    Quantity: {
+                        required: true,
+                        digits: true,
+                        min: 0
+                    }
+                },
+                messages: {
+                    ItemType: "Please select an item type",
+                    ItemName: "Please enter an item name",
+                    Material: "Please enter the material type",
+                    DepartmentId: "Please select a department",
+                    SupplierId: "Please select a supplier",
+                    Price: "Please enter a valid price",
+                    Quantity: "Please enter a valid quantity"
+                },
+                errorElement: 'span',
+                errorClass: 'text-danger',
+                highlight: function(element) {
+                    $(element).addClass('is-invalid').removeClass('is-valid');
+                },
+                unhighlight: function(element) {
+                    $(element).addClass('is-valid').removeClass('is-invalid');
+                }
+            });
+        });
+    </script>
+}
 
 <style>
     .page-container {
@@ -180,28 +266,6 @@
         display: block;
     }
 
-    .custom-file {
-        position: relative;
-    }
-
-    .custom-file-input {
-        position: absolute;
-        left: 0;
-        top: 0;
-        opacity: 0;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-    }
-
-    .custom-file-label {
-        background-color: #fff;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 8px 12px;
-        cursor: pointer;
-    }
-
     .img-preview {
         max-width: 200px;
         max-height: 200px;
@@ -217,7 +281,7 @@
     }
 
     .btn-submit {
-        background-color: #9497A8;
+        background-color: #0d6efd;
         color: white;
         padding: 10px 20px;
         border: none;
@@ -228,7 +292,7 @@
     }
 
     .btn-submit:hover {
-        background-color: #7a7c8c;
+        background-color: #0b5ed7;
     }
 
     .btn-cancel {
@@ -246,80 +310,17 @@
         background-color: #e2e6ea;
         color: #333;
     }
-</style>
 
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
 
-    <script>
-        // Image preview handler
-        document.getElementById('imageInput').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            const previewContainer = document.getElementById('imagePreview');
-            const label = document.querySelector('.custom-file-label');
+    .is-valid {
+        border-color: #198754 !important;
+    }
 
-            if (file) {
-                label.textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'img-preview';
-                    previewContainer.innerHTML = '';
-                    previewContainer.appendChild(img);
-                    previewContainer.classList.remove('d-none');
-                }
-                reader.readAsDataURL(file);
-            } else {
-                label.textContent = 'Choose file';
-                previewContainer.classList.add('d-none');
-            }
-        });
-
-        // ItemId generator
-        document.getElementById('itemType').addEventListener('change', function() {
-            const type = this.value;
-            if (!type) return; // Don't generate ID if no type is selected
-            
-            const prefix = type === 'Uniform' ? 'UNF' : 'ITM';
-            const randomDigits = Math.floor(Math.random() * 900000) + 100000; // Generates a random 6-digit number
-            document.getElementById('itemId').value = prefix + randomDigits;
-        });
-
-        // Initialize form validation
-        $(document).ready(function () {
-            $('form').validate({
-                rules: {
-                    ItemType: {
-                        required: true
-                    },
-                    ItemId: {
-                        required: true
-                    },
-                    ItemName: {
-                        required: true
-                    },
-                    Material: {
-                        required: true
-                    },
-                    DepartmentId: {
-                        required: true
-                    },
-                    SupplierId: {
-                        required: true
-                    },
-                    Price: {
-                        required: true,
-                        number: true,
-                        min: 0
-                    },
-                    Quantity: {
-                        required: true,
-                        digits: true,
-                        min: 0
-                    }
-                }
-            });
-        });
-    </script>
-} 
+    .alert {
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+</style> 

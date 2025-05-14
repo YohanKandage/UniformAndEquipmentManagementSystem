@@ -25,6 +25,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         {
             var userEmail = User.Identity?.Name;
             var employee = await _context.Employees
+                .Include(e => e.Department)
                 .FirstOrDefaultAsync(e => e.Email == userEmail);
 
             if (employee == null)
@@ -46,6 +47,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         {
             var userEmail = User.Identity?.Name;
             var employee = await _context.Employees
+                .Include(e => e.Department)
                 .FirstOrDefaultAsync(e => e.Email == userEmail);
 
             if (employee == null)
@@ -53,26 +55,81 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 return NotFound();
             }
 
-            // Get available items for the employee's department
-            var availableItems = await _context.Items
-                .Where(i => i.DepartmentId == employee.DepartmentId && i.Status == "Available")
-                .ToListAsync();
+            // Get department-specific items count for initial display
+            var uniformCount = await _context.Items
+                .CountAsync(i => i.DepartmentId == employee.DepartmentId && 
+                               i.ItemType == "Uniform" && 
+                               i.Status == "Available");
 
-            ViewBag.AvailableItems = availableItems;
+            var equipmentCount = await _context.Items
+                .CountAsync(i => i.DepartmentId == employee.DepartmentId && 
+                               i.ItemType == "Item" && 
+                               i.Status == "Available");
+
+            ViewBag.UniformCount = uniformCount;
+            ViewBag.EquipmentCount = equipmentCount;
+            ViewBag.DepartmentName = employee.Department?.Name;
+
             return View();
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ItemId,Reason")] Request request)
+        [HttpGet]
+        public async Task<IActionResult> GetItemsByType(string type)
         {
             var userEmail = User.Identity?.Name;
             var employee = await _context.Employees
+                .Include(e => e.Department)
                 .FirstOrDefaultAsync(e => e.Email == userEmail);
 
             if (employee == null)
             {
                 return NotFound();
+            }
+
+            var items = await _context.Items
+                .Where(i => i.DepartmentId == employee.DepartmentId && 
+                           i.ItemType == type && 
+                           i.Status == "Available")
+                .Select(i => new {
+                    id = i.Id,
+                    itemName = i.ItemName,
+                    imagePath = i.ImagePath ?? "/images/default-item.png",
+                    details = $"Department: {employee.Department.Name} | Material: {i.Material} | Price: ${i.Price}"
+                })
+                .ToListAsync();
+
+            return Json(items);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("ItemId,Reason")] Request request, string Size)
+        {
+            var userEmail = User.Identity?.Name;
+            var employee = await _context.Employees
+                .Include(e => e.Department)
+                .FirstOrDefaultAsync(e => e.Email == userEmail);
+
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            // Validate that the requested item belongs to the employee's department
+            var selectedItem = await _context.Items
+                .FirstOrDefaultAsync(i => i.Id == request.ItemId && i.DepartmentId == employee.DepartmentId);
+
+            if (selectedItem == null)
+            {
+                ModelState.AddModelError("ItemId", "The selected item is not available for your department");
+                return View(request);
+            }
+
+            // Validate size for uniform requests
+            if (selectedItem.ItemType == "Uniform" && string.IsNullOrEmpty(Size))
+            {
+                ModelState.AddModelError("Size", "Size is required for uniform requests");
+                return View(request);
             }
 
             if (ModelState.IsValid)
@@ -81,18 +138,22 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 request.RequestDate = DateTime.Now;
                 request.Status = "Pending";
 
+                // Add size and department to the reason if it's a uniform request
+                if (selectedItem.ItemType == "Uniform")
+                {
+                    request.Reason = $"Department: {employee.Department.Name}\nSize: {Size}\n\nReason: {request.Reason}";
+                }
+                else
+                {
+                    request.Reason = $"Department: {employee.Department.Name}\n\nReason: {request.Reason}";
+                }
+
                 _context.Add(request);
                 await _context.SaveChangesAsync();
 
                 return RedirectToAction(nameof(Index));
             }
 
-            // If we got this far, something failed, redisplay form
-            var availableItems = await _context.Items
-                .Where(i => i.DepartmentId == employee.DepartmentId && i.Status == "Available")
-                .ToListAsync();
-
-            ViewBag.AvailableItems = availableItems;
             return View(request);
         }
 
@@ -100,6 +161,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         {
             var userEmail = User.Identity?.Name;
             var employee = await _context.Employees
+                .Include(e => e.Department)
                 .FirstOrDefaultAsync(e => e.Email == userEmail);
 
             if (employee == null)
