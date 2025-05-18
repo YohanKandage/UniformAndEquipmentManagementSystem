@@ -78,9 +78,11 @@
                         <h3>@(Model.FirstName ?? "User") @(Model.LastName ?? "")</h3>
                         <span class="profile-position">@(Model.Position ?? "Employee")</span>
                     </div>
-                    <a href="@Url.Action("Profile", "Dashboard")" class="btn-edit-profile">
-                        <i class="fas fa-edit"></i> Edit Profile
-                    </a>
+                    <div class="profile-actions">
+                        <a href="@Url.Action("EditProfile", "Employee", new { id = Model.Id })" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </a>
+                    </div>
                 </div>
                 <div class="profile-content">
                     <div class="profile-section">
@@ -301,10 +303,12 @@
         color: #666;
         font-size: 1rem;
     }
-    .btn-edit-profile {
+    .profile-actions {
         position: absolute;
         top: 0;
         right: 0;
+    }
+    .profile-actions .btn-primary {
         padding: 8px 16px;
         background: #007bff;
         color: white;
@@ -315,9 +319,10 @@
         gap: 8px;
         transition: background-color 0.2s;
     }
-    .btn-edit-profile:hover {
+    .profile-actions .btn-primary:hover {
         background: #0056b3;
         color: white;
+        text-decoration: none;
     }
     .profile-content {
         display: grid;

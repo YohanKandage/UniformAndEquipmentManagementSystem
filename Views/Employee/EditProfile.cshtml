@@ -1,0 +1,239 @@
+@model Employee
+
+@{
+    ViewData["Title"] = "Edit Profile";
+}
+
+<div class="profile-container">
+    <div class="profile-header">
+        <h1>Edit Profile</h1>
+        <a href="@Url.Action("Profile", "Employee")" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Profile
+        </a>
+    </div>
+
+    <div class="profile-content">
+        <div class="profile-card">
+            <form asp-action="UpdateProfile" method="post" class="profile-form">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="Email" />
+                <input type="hidden" asp-for="EmployeeId" />
+                <input type="hidden" asp-for="DepartmentId" />
+                <input type="hidden" asp-for="JoinDate" />
+                <input type="hidden" asp-for="Position" />
+                <input type="hidden" asp-for="IsActive" />
+                <input type="hidden" asp-for="ImagePath" />
+
+                <div class="form-section">
+                    <h3>Personal Information</h3>
+                    <div class="form-group">
+                        <label asp-for="FirstName">First Name</label>
+                        <input asp-for="FirstName" class="form-control" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="LastName">Last Name</label>
+                        <input asp-for="LastName" class="form-control" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Phone">Phone Number</label>
+                        <input asp-for="Phone" class="form-control" />
+                        <span asp-validation-for="Phone" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NIC">NIC</label>
+                        <input asp-for="NIC" class="form-control" />
+                        <span asp-validation-for="NIC" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DateOfBirth">Date of Birth</label>
+                        <input asp-for="DateOfBirth" class="form-control" type="date" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Gender">Gender</label>
+                        <select asp-for="Gender" class="form-control">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <span asp-validation-for="Gender" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Address">Address</label>
+                        <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Work Information</h3>
+                    <div class="info-group">
+                        <label>Employee ID</label>
+                        <span>@Model.EmployeeId</span>
+                    </div>
+                    <div class="info-group">
+                        <label>Email</label>
+                        <span>@Model.Email</span>
+                    </div>
+                    <div class="info-group">
+                        <label>Department</label>
+                        <span>@Model.Department?.Name</span>
+                    </div>
+                    <div class="info-group">
+                        <label>Join Date</label>
+                        <span>@Model.JoinDate.ToString("MMM dd, yyyy")</span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .profile-header h1 {
+        font-size: 24px;
+        color: #333;
+        margin: 0;
+    }
+
+    .btn-back {
+        padding: 8px 16px;
+        background: #f8f9fa;
+        color: #333;
+        border-radius: 5px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.2s;
+    }
+
+    .btn-back:hover {
+        background: #e9ecef;
+        color: #333;
+    }
+
+    .profile-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 30px;
+    }
+
+    .profile-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+    }
+
+    .form-section {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .form-section h3 {
+        color: #007bff;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .form-control:focus {
+        border-color: #007bff;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+
+    .text-danger {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 4px;
+    }
+
+    .info-group {
+        margin-bottom: 15px;
+    }
+
+    .info-group label {
+        display: block;
+        color: #555;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+
+    .info-group span {
+        color: #333;
+        font-size: 1rem;
+    }
+
+    .form-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
+    .btn-primary {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.2s;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+</style>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

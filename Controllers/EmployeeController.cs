@@ -15,27 +15,30 @@ using iText.Layout.Properties;
 using iText.Kernel.Pdf;
 using Microsoft.AspNetCore.Authorization;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
-    [Authorize(Roles = "Admin,PropertyManager")]
     public class EmployeeController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IPdfService _pdfService;
+        private readonly ILogger<EmployeeController> _logger;
 
         public EmployeeController(
             ApplicationDbContext context, 
             IWebHostEnvironment webHostEnvironment,
             UserManager<ApplicationUser> userManager,
-            IPdfService pdfService)
+            IPdfService pdfService,
+            ILogger<EmployeeController> logger)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
             _userManager = userManager;
             _pdfService = pdfService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -392,62 +395,141 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Admin,Manager,Employee")]
         public async Task<IActionResult> Profile()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            try
             {
-                return NotFound();
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    _logger.LogWarning("User not found for profile view");
+                    return RedirectToAction("Login", "Account");
+                }
+
+                var employee = await _context.Employees
+                    .Include(e => e.Department)
+                    .FirstOrDefaultAsync(e => e.Email == user.Email);
+
+                if (employee == null)
+                {
+                    _logger.LogWarning("Employee not found for user: {Email}", user.Email);
+                    return RedirectToAction("Index", "Dashboard");
+                }
+
+                return View(employee);
             }
-
-            var employee = await _context.Employees
-                .Include(e => e.Department)
-                .FirstOrDefaultAsync(e => e.Email == user.Email);
-
-            if (employee == null)
+            catch (Exception ex)
             {
-                return NotFound();
+                _logger.LogError(ex, "Error retrieving employee profile");
+                return RedirectToAction("Index", "Dashboard");
             }
+        }
 
-            return View(employee);
+        [HttpGet]
+        [Authorize(Roles = "Admin,Manager,Employee")]
+        public async Task<IActionResult> EditProfile()
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    _logger.LogWarning("User not found for profile edit");
+                    return RedirectToAction("Login", "Account");
+                }
+
+                var employee = await _context.Employees
+                    .Include(e => e.Department)
+                    .FirstOrDefaultAsync(e => e.Email == user.Email);
+
+                if (employee == null)
+                {
+                    _logger.LogWarning("Employee not found for user: {Email}", user.Email);
+                    return RedirectToAction("Index", "Dashboard");
+                }
+
+                return View(employee);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving employee profile for edit");
+                return RedirectToAction("Index", "Dashboard");
+            }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Manager,Employee")]
         public async Task<IActionResult> UpdateProfile(Employee model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View("Profile", model);
-            }
-
-            var employee = await _context.Employees.FindAsync(model.Id);
-            if (employee == null)
-            {
-                return NotFound();
-            }
-
-            // Only update allowed fields
-            employee.FirstName = model.FirstName;
-            employee.LastName = model.LastName;
-            employee.Phone = model.Phone;
-
             try
             {
+                _logger.LogInformation("Starting profile update for employee ID: {EmployeeId}", model.Id);
+
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for profile update");
+                    foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        _logger.LogWarning("Model error: {ErrorMessage}", error.ErrorMessage);
+                    }
+                    return View("EditProfile", model);
+                }
+
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    _logger.LogWarning("User not found for profile update");
+                    return RedirectToAction("Login", "Account");
+                }
+
+                var employee = await _context.Employees
+                    .Include(e => e.Department)
+                    .FirstOrDefaultAsync(e => e.Id == model.Id);
+
+                if (employee == null)
+                {
+                    _logger.LogWarning("Employee not found for ID: {Id}", model.Id);
+                    return RedirectToAction("Index", "Dashboard");
+                }
+
+                // Security: Ensure the employee belongs to the current user
+                if (employee.Email != user.Email)
+                {
+                    _logger.LogWarning("Security violation: User {UserId} attempted to update profile {ProfileId}", user.Id, model.Id);
+                    return RedirectToAction("Index", "Dashboard");
+                }
+
+                // Update employee properties
+                employee.FirstName = model.FirstName;
+                employee.LastName = model.LastName;
+                employee.Phone = model.Phone;
+                employee.NIC = model.NIC;
+                employee.DateOfBirth = model.DateOfBirth;
+                employee.Gender = model.Gender;
+                employee.Address = model.Address;
+
+                // Update ApplicationUser properties
+                user.FirstName = model.FirstName;
+                user.LastName = model.LastName;
+
+                _logger.LogInformation("Updating employee profile: {@Employee}", employee);
+
+                _context.Entry(employee).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
+                await _userManager.UpdateAsync(user);
+
+                _logger.LogInformation("Profile updated successfully for employee ID: {EmployeeId}", employee.Id);
+
                 TempData["SuccessMessage"] = "Profile updated successfully.";
                 return RedirectToAction(nameof(Profile));
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (!EmployeeExists(model.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                _logger.LogError(ex, "Error updating employee profile");
+                ModelState.AddModelError("", "An error occurred while updating your profile. Please try again.");
+                return View("EditProfile", model);
             }
         }
 
