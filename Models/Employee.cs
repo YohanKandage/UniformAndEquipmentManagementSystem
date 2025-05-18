@@ -33,7 +33,9 @@ namespace UniformAndEquipmentManagementSystem.Models
         public string Address { get; set; } = string.Empty;
 
         [Required]
-        [Phone]
+        [StringLength(10, MinimumLength = 10, ErrorMessage = "Phone number must be exactly 10 digits.")]
+        [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Phone number must be exactly 10 digits and contain only numbers.")]
+        [Display(Name = "Phone Number")]
         public string Phone { get; set; } = string.Empty;
 
         [Required]
