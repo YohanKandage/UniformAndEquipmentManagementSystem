@@ -5,13 +5,6 @@
     var hasError = !string.IsNullOrEmpty(ViewData["ErrorMessage"]?.ToString());
 }
 
-@if (hasError)
-{
-    <div class="alert alert-danger" role="alert">
-        @ViewData["ErrorMessage"]
-    </div>
-}
-
 <div class="dashboard-container">
     <h1 class="page-title">Employee Dashboard</h1>
     
