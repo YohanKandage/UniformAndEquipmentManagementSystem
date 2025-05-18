@@ -16,7 +16,7 @@
                 </div>
 
                 <div class="card-body p-4">
-                    <form asp-controller="Request" asp-action="Create" method="post" id="requestForm">
+                    <form asp-controller="Request" asp-action="Create" method="post" enctype="multipart/form-data" id="requestForm">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
                         @if (TempData["Success"] != null)
@@ -71,6 +71,12 @@
                                                 <option value="XXL">XXL</option>
                                             </select>
                                             <span class="text-danger" id="sizeError"></span>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="form-label fw-medium">Proof Images (up to 3)</label>
+                                            <input type="file" name="ProofImages" accept="image/*" multiple class="form-control" onchange="if(this.files.length>3){alert('You can only upload up to 3 images.');this.value='';}">
+                                            <small class="form-text text-muted">You can upload up to 3 images as proof. Only image files are allowed.</small>
                                         </div>
                                     </div>
                                 </div>

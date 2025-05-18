@@ -32,5 +32,9 @@ namespace UniformAndEquipmentManagementSystem.Models
         [ForeignKey("ProcessedBy")]
         public string? ProcessedById { get; set; }
         public virtual ApplicationUser? ProcessedBy { get; set; }
+
+        public string? ProofImage1 { get; set; }
+        public string? ProofImage2 { get; set; }
+        public string? ProofImage3 { get; set; }
     }
 } 

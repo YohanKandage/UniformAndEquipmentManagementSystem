@@ -117,6 +117,26 @@
                                                         <dd class="col-sm-8">@item.ProcessedDate.Value.ToString("MMM dd, yyyy HH:mm")</dd>
                                                     }
                                                 </dl>
+                                                @if (!string.IsNullOrEmpty(item.ProofImage1) || !string.IsNullOrEmpty(item.ProofImage2) || !string.IsNullOrEmpty(item.ProofImage3))
+                                                {
+                                                    <div class="mb-3">
+                                                        <label class="fw-bold">Proof Images:</label>
+                                                        <div class="d-flex gap-2 flex-wrap">
+                                                            @if (!string.IsNullOrEmpty(item.ProofImage1))
+                                                            {
+                                                                <img src="@item.ProofImage1" alt="Proof 1" style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 1px solid #eee;" />
+                                                            }
+                                                            @if (!string.IsNullOrEmpty(item.ProofImage2))
+                                                            {
+                                                                <img src="@item.ProofImage2" alt="Proof 2" style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 1px solid #eee;" />
+                                                            }
+                                                            @if (!string.IsNullOrEmpty(item.ProofImage3))
+                                                            {
+                                                                <img src="@item.ProofImage3" alt="Proof 3" style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 1px solid #eee;" />
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
                                             </div>
                                         </div>
                                     </div>

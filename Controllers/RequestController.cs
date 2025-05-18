@@ -6,6 +6,9 @@ using UniformAndEquipmentManagementSystem.Data;
 using UniformAndEquipmentManagementSystem.Models;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.AspNetCore.Http;
+using System.IO;
+using System;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
@@ -109,7 +112,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ItemId,Reason")] Request request, string Size)
+        public async Task<IActionResult> Create([Bind("ItemId,Reason")] Request request, string Size, List<IFormFile> ProofImages)
         {
             try
             {
@@ -168,90 +171,71 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 // Add size and department to the reason if it's a uniform request
                 if (selectedItem.ItemType == "Uniform")
                 {
-                    request.EmployeeId = employee.Id;
-                    request.RequestDate = DateTime.Now;
-                    request.Status = "Pending";
-
-                    // Add size and department to the reason if it's a uniform request
-                    if (selectedItem.ItemType == "Uniform")
-                    {
-                        request.Reason = $"Department: {employee.Department.Name}\nSize: {Size}\n\nReason: {request.Reason}";
-                    }
-                    else
-                    {
-                        request.Reason = $"Department: {employee.Department.Name}\n\nReason: {request.Reason}";
-                    }
-
-                    try
-                    {
-                        // Log the final request object
-                        Console.WriteLine($"Debug - Final Request Object:");
-                        Console.WriteLine($"EmployeeId: {request.EmployeeId}");
-                        Console.WriteLine($"ItemId: {request.ItemId}");
-                        Console.WriteLine($"RequestDate: {request.RequestDate}");
-                        Console.WriteLine($"Status: {request.Status}");
-                        Console.WriteLine($"Reason: {request.Reason}");
-
-                        _context.Add(request);
-                        var result = await _context.SaveChangesAsync();
-                        Console.WriteLine($"Debug - SaveChanges Result: {result}");
-
-                        if (result > 0)
-                        {
-                            TempData["Success"] = "Request submitted successfully!";
-                            return RedirectToAction(nameof(Index));
-                        }
-                        else
-                        {
-                            ModelState.AddModelError("", "Failed to save the request. Please try again.");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error creating request: {ex.Message}");
-                        if (ex.InnerException != null)
-                        {
-                            Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                        }
-                        ModelState.AddModelError("", "An error occurred while submitting your request. Please try again.");
-                    }
+                    request.Reason = $"Department: {employee.Department.Name}\nSize: {Size}\n\nReason: {request.Reason}";
                 }
                 else
                 {
-                    // Log validation errors
-                    foreach (var modelStateEntry in ModelState.Values)
+                    request.Reason = $"Department: {employee.Department.Name}\n\nReason: {request.Reason}";
+                }
+
+                // Handle proof images
+                if (ProofImages != null && ProofImages.Count > 0)
+                {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "proofs");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    for (int i = 0; i < Math.Min(ProofImages.Count, 3); i++)
                     {
-                        foreach (var error in modelStateEntry.Errors)
+                        var file = ProofImages[i];
+                        if (file.Length > 0)
                         {
-                            Console.WriteLine($"Validation Error: {error.ErrorMessage}");
+                            var uniqueFileName = Guid.NewGuid() + "_" + Path.GetFileName(file.FileName);
+                            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                            using (var fileStream = new FileStream(filePath, FileMode.Create))
+                            {
+                                await file.CopyToAsync(fileStream);
+                            }
+                            var relativePath = "/images/proofs/" + uniqueFileName;
+                            if (i == 0) request.ProofImage1 = relativePath;
+                            if (i == 1) request.ProofImage2 = relativePath;
+                            if (i == 2) request.ProofImage3 = relativePath;
                         }
                     }
                 }
 
-                // If we got this far, something failed, redisplay form
-                ViewBag.UniformCount = await _context.Items
-                    .CountAsync(i => i.DepartmentId == employee.DepartmentId && 
-                                   i.ItemType == "Uniform" && 
-                                   i.Status == "Available");
+                // Log the final request object
+                Console.WriteLine($"Debug - Final Request Object:");
+                Console.WriteLine($"EmployeeId: {request.EmployeeId}");
+                Console.WriteLine($"ItemId: {request.ItemId}");
+                Console.WriteLine($"RequestDate: {request.RequestDate}");
+                Console.WriteLine($"Status: {request.Status}");
+                Console.WriteLine($"Reason: {request.Reason}");
 
-                ViewBag.EquipmentCount = await _context.Items
-                    .CountAsync(i => i.DepartmentId == employee.DepartmentId && 
-                                   i.ItemType == "Equipment" && 
-                                   i.Status == "Available");
+                _context.Add(request);
+                var result = await _context.SaveChangesAsync();
+                Console.WriteLine($"Debug - SaveChanges Result: {result}");
 
-                ViewBag.DepartmentName = employee.Department?.Name;
-                return View(request);
+                if (result > 0)
+                {
+                    TempData["Success"] = "Request submitted successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Failed to save the request. Please try again.");
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Unexpected error: {ex.Message}");
+                Console.WriteLine($"Error creating request: {ex.Message}");
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
                 }
-                ModelState.AddModelError("", "An unexpected error occurred. Please try again.");
-                return View(request);
+                ModelState.AddModelError("", "An error occurred while submitting your request. Please try again.");
             }
+            return View(request);
         }
 
         public async Task<IActionResult> AssignedItems()
