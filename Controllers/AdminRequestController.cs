@@ -71,5 +71,23 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             TempData["Success"] = $"Request has been {status.ToLower()} successfully.";
             return RedirectToAction(nameof(Index));
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var request = await _context.Requests
+                .Include(r => r.Item)
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(r => r.ProcessedBy)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            return View(request);
+        }
     }
 } 

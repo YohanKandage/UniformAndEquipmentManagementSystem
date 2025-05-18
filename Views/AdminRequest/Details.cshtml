@@ -1,0 +1,152 @@
+@model UniformAndEquipmentManagementSystem.Models.Request
+
+@{
+    ViewData["Title"] = "Request Details";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Request Details</h4>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                    </a>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Request Date</dt>
+                        <dd class="col-sm-8">@Model.RequestDate.ToString("MMM dd, yyyy HH:mm")</dd>
+
+                        <dt class="col-sm-4">Employee</dt>
+                        <dd class="col-sm-8">@Model.Employee.FirstName @Model.Employee.LastName</dd>
+
+                        <dt class="col-sm-4">Department</dt>
+                        <dd class="col-sm-8">@Model.Employee.Department?.Name</dd>
+
+                        <dt class="col-sm-4">Item</dt>
+                        <dd class="col-sm-8">@Model.Item.ItemName</dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-@(Model.Status switch {
+                                "Pending" => "warning",
+                                "Approved" => "success",
+                                "Cancelled" => "danger",
+                                _ => "secondary"
+                            })">
+                                @Model.Status
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">Reason</dt>
+                        <dd class="col-sm-8">@Model.Reason</dd>
+
+                        @if (!string.IsNullOrEmpty(Model.AdminComment))
+                        {
+                            <dt class="col-sm-4">Admin Comment</dt>
+                            <dd class="col-sm-8">@Model.AdminComment</dd>
+                        }
+
+                        @if (Model.ProcessedDate.HasValue)
+                        {
+                            <dt class="col-sm-4">Processed Date</dt>
+                            <dd class="col-sm-8">@Model.ProcessedDate.Value.ToString("MMM dd, yyyy HH:mm")</dd>
+                        }
+                    </dl>
+
+                    @if (!string.IsNullOrEmpty(Model.ProofImage1) || !string.IsNullOrEmpty(Model.ProofImage2) || !string.IsNullOrEmpty(Model.ProofImage3))
+                    {
+                        <div class="mb-3">
+                            <label class="fw-bold">Proof Images:</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                @if (!string.IsNullOrEmpty(Model.ProofImage1))
+                                {
+                                    <img src="@Model.ProofImage1" alt="Proof 1" style="max-width: 160px; max-height: 160px; border-radius: 8px; border: 1px solid #eee;" />
+                                }
+                                @if (!string.IsNullOrEmpty(Model.ProofImage2))
+                                {
+                                    <img src="@Model.ProofImage2" alt="Proof 2" style="max-width: 160px; max-height: 160px; border-radius: 8px; border: 1px solid #eee;" />
+                                }
+                                @if (!string.IsNullOrEmpty(Model.ProofImage3))
+                                {
+                                    <img src="@Model.ProofImage3" alt="Proof 3" style="max-width: 160px; max-height: 160px; border-radius: 8px; border: 1px solid #eee;" />
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Status == "Pending")
+                    {
+                        <form asp-action="ProcessRequest" method="post" class="mt-4">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-3">
+                                <label for="adminComment" class="form-label">Admin Comment</label>
+                                <textarea name="adminComment" id="adminComment" class="form-control" rows="3">@Model.AdminComment</textarea>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" name="status" value="Approved" class="btn btn-success">
+                                    <i class="fas fa-check me-1"></i>Approve
+                                </button>
+                                <button type="submit" name="status" value="Cancelled" class="btn btn-danger">
+                                    <i class="fas fa-times me-1"></i>Reject
+                                </button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    .form-control {
+        border-radius: 0.5rem;
+        border: 1px solid #dee2e6;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+    .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.15);
+    }
+    .btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+        transform: translateY(-1px);
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        transform: translateY(-1px);
+    }
+    .fw-bold {
+        font-weight: 600;
+    }
+    .badge {
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+    }
+</style> 
