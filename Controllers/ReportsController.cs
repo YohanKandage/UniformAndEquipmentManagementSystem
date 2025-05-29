@@ -25,15 +25,25 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             return View();
         }
 
-        public async Task<IActionResult> DepartmentWiseEmployeeReport(int? departmentId)
+        public async Task<IActionResult> DepartmentWiseEmployeeReport(string departmentName, string email, string role)
         {
             var query = _context.Employees
                 .Include(e => e.Department)
                 .AsQueryable();
 
-            if (departmentId.HasValue)
+            if (!string.IsNullOrEmpty(departmentName))
             {
-                query = query.Where(e => e.DepartmentId == departmentId);
+                query = query.Where(e => e.Department.Name.Contains(departmentName));
+            }
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                query = query.Where(e => e.Email.Contains(email));
+            }
+
+            if (!string.IsNullOrEmpty(role))
+            {
+                query = query.Where(e => e.Role == role);
             }
 
             var employees = await query
@@ -48,12 +58,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 })
                 .ToListAsync();
 
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-            {
-                return Json(employees);
-            }
+            ViewBag.Departments = await _context.Departments.Select(d => d.Name).ToListAsync();
+            ViewBag.Roles = new List<string> { "Admin", "StockManager", "PropertyManager", "Employee" };
+            ViewBag.DepartmentName = departmentName;
+            ViewBag.Email = email;
+            ViewBag.Role = role;
 
-            ViewBag.Departments = await _context.Departments.ToListAsync();
             return View(employees);
         }
 

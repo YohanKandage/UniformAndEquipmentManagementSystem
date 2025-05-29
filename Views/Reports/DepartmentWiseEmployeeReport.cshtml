@@ -3,7 +3,7 @@
     ViewData["Title"] = "Department Wise Employee Report";
 }
 
-<div class="container-fluid">
+<div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Department Wise Employee Report</h2>
         <div>
@@ -15,20 +15,34 @@
 
     <div class="card mb-4">
         <div class="card-body">
-            <form id="filterForm" class="row g-3">
-                @Html.AntiForgeryToken()
-                <div class="col-md-4">
-                    <label for="departmentId" class="form-label">Department</label>
-                    <select id="departmentId" name="departmentId" class="form-select">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="departmentName" class="form-label">Department</label>
+                    <select id="departmentName" name="departmentName" class="form-select">
                         <option value="">All Departments</option>
                         @foreach (var dept in ViewBag.Departments)
                         {
-                            <option value="@dept.Id">@dept.Name</option>
+                            <option value="@dept" selected="@(ViewBag.DepartmentName == dept)">@dept</option>
                         }
                     </select>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-md-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="text" id="email" name="email" class="form-control" placeholder="Enter email" value="@ViewBag.Email">
+                </div>
+                <div class="col-md-3">
+                    <label for="role" class="form-label">Role</label>
+                    <select id="role" name="role" class="form-select">
+                        <option value="">All Roles</option>
+                        @foreach (var role in ViewBag.Roles)
+                        {
+                            <option value="@role" selected="@(ViewBag.Role == role)">@role</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-primary">Apply Filter</button>
+                    <a asp-action="DepartmentWiseEmployeeReport" class="btn btn-secondary">Clear Filters</a>
                 </div>
             </form>
         </div>
@@ -70,37 +84,17 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Initialize DataTable
-            var table = $('#employeeTable').DataTable({
+            $('#employeeTable').DataTable({
                 "pageLength": 10,
                 "ordering": true,
                 "searching": true
             });
 
-            // Handle filter form submission
-            $('#filterForm').on('submit', function (e) {
-                e.preventDefault();
-                var departmentId = $('#departmentId').val();
-                
-                $.get('@Url.Action("DepartmentWiseEmployeeReport")', { departmentId: departmentId }, function (data) {
-                    table.clear();
-                    data.forEach(function (employee) {
-                        table.row.add([
-                            employee.departmentName,
-                            employee.userName,
-                            employee.email,
-                            employee.role,
-                            employee.gender,
-                            employee.phone
-                        ]);
-                    });
-                    table.draw();
-                });
-            });
-
             // Handle export button click
             $('#exportBtn').on('click', function () {
-                var departmentId = $('#departmentId').val();
+                var departmentId = $('#departmentName').val();
+                var email = $('#email').val();
+                var role = $('#role').val();
                 var form = $('<form>', {
                     'method': 'POST',
                     'action': '@Url.Action("ExportDepartmentWiseEmployeeReport")'
@@ -117,8 +111,22 @@
                 if (departmentId) {
                     form.append($('<input>', {
                         'type': 'hidden',
-                        'name': 'departmentId',
+                        'name': 'departmentName',
                         'value': departmentId
+                    }));
+                }
+                if (email) {
+                    form.append($('<input>', {
+                        'type': 'hidden',
+                        'name': 'email',
+                        'value': email
+                    }));
+                }
+                if (role) {
+                    form.append($('<input>', {
+                        'type': 'hidden',
+                        'name': 'role',
+                        'value': role
                     }));
                 }
                 $('body').append(form);
