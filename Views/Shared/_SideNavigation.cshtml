@@ -118,7 +118,7 @@
 
 <style>
     .side-nav {
-        background-color: #9497A8;
+        background-color: #3b3e6b;
         width: 250px;
         height: 100vh;
         position: fixed;
@@ -126,17 +126,17 @@
         top: 0;
         display: flex;
         flex-direction: column;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
         overflow-y: auto;
     }
 
     .nav-logo {
-        padding: 6px;
-        background-color: white;
+        padding: 8px;
+        background-color: #2c2e52;
         display: flex;
         justify-content: center;
         align-items: center;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         height: 50px;
     }
 
@@ -155,13 +155,14 @@
 
     .nav-item {
         padding: 12px 24px;
-        margin: 5px 0;
+        margin: 4px 0;
         cursor: pointer;
         transition: all 0.3s ease;
+        border-left: 3px solid transparent;
     }
 
     .nav-item a {
-        color: white;
+        color: rgba(255, 255, 255, 0.9);
         text-decoration: none;
         font-size: 15px;
         display: flex;
@@ -172,95 +173,104 @@
     .nav-item i {
         width: 20px;
         text-align: center;
+        color: rgba(255, 255, 255, 0.8);
     }
 
     .nav-item:hover, .nav-item.active {
-        background-color: #FFFFFF;
-        transform: translateX(5px);
+        background-color: rgba(255, 255, 255, 0.08);
+        border-left: 3px solid #4a4d7d;
     }
 
     .nav-item:hover a, .nav-item.active a {
-        color: #9497A8;
+        color: white;
         font-weight: 500;
     }
 
+    .nav-item:hover i, .nav-item.active i {
+        color: white;
+    }
+
     .nav-section-title {
-        color: #fff;
+        color: rgba(255, 255, 255, 0.6);
         font-size: 13px;
         font-weight: bold;
         padding: 16px 24px 4px 24px;
         letter-spacing: 1px;
-        opacity: 0.7;
+        text-transform: uppercase;
     }
+
     .nav-subitem {
         padding: 10px 40px;
         margin: 2px 0;
         cursor: pointer;
         transition: all 0.3s ease;
+        border-left: 3px solid transparent;
     }
+
     .nav-subitem a {
-        color: white;
+        color: rgba(255, 255, 255, 0.85);
         text-decoration: none;
         font-size: 14px;
         display: flex;
         align-items: center;
         gap: 10px;
     }
+
     .nav-subitem i {
         width: 18px;
         text-align: center;
+        color: rgba(255, 255, 255, 0.7);
     }
+
     .nav-subitem:hover, .nav-subitem.active {
-        background-color: #FFFFFF;
-        transform: translateX(5px);
+        background-color: rgba(255, 255, 255, 0.08);
+        border-left: 3px solid #4a4d7d;
     }
+
     .nav-subitem:hover a, .nav-subitem.active a {
-        color: #9497A8;
+        color: white;
         font-weight: 500;
     }
 
-    .nav-toggle {
-        justify-content: space-between;
-    }
-
-    .nav-arrow {
-        transition: transform 0.3s ease;
-    }
-
-    .nav-item.active .nav-arrow {
-        transform: rotate(180deg);
-    }
-
-    .nav-subitems {
-        display: none;
-        padding-left: 20px;
-    }
-
-    .nav-item.active .nav-subitems {
-        display: block;
+    .nav-subitem:hover i, .nav-subitem.active i {
+        color: white;
     }
 
     .nav-submenu {
         display: block;
         padding-left: 20px;
-        background-color: #f8f9fa;
-        border-left: 3px solid #007bff;
-    }
-
-    .nav-item.active .nav-submenu {
-        display: block;
+        background-color: rgba(0, 0, 0, 0.1);
+        border-left: 3px solid #4a4d7d;
     }
 
     .nav-submenu a {
-        display: block;
-        padding: 8px 0;
-        color: #333;
+        color: rgba(255, 255, 255, 0.85);
         text-decoration: none;
         font-size: 14px;
+        padding: 8px 0;
+        display: block;
     }
 
     .nav-submenu a:hover {
-        color: #007bff;
+        color: white;
+    }
+
+    /* Custom scrollbar for side nav */
+    .side-nav::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .side-nav::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .side-nav::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+    }
+
+    .side-nav::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
     }
 </style>
 
