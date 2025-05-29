@@ -32,6 +32,13 @@ namespace UniformAndEquipmentManagementSystem.Data
             builder.Entity<Item>()
                 .Property(i => i.Status)
                 .HasDefaultValue("Available");
+
+            // Configure ApplicationUser relationship with Department
+            builder.Entity<ApplicationUser>()
+                .HasOne(u => u.Department)
+                .WithMany()
+                .HasForeignKey(u => u.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
         public DbSet<Employee> Employees { get; set; }

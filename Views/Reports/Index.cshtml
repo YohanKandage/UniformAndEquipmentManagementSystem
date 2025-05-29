@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">Reports</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Department Wise Employee Report</h5>
+                    <p class="card-text">View and export employee data organized by departments.</p>
+                    <a asp-action="DepartmentWiseEmployeeReport" class="btn btn-primary">View Report</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Employee Request Report</h5>
+                    <p class="card-text">View and export employee request data with filtering options.</p>
+                    <a asp-action="EmployeeRequestReport" class="btn btn-primary">View Report</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

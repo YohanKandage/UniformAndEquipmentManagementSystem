@@ -1,0 +1,130 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Department Wise Employee Report";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Department Wise Employee Report</h2>
+        <div>
+            <button id="exportBtn" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Export to Excel
+            </button>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="filterForm" class="row g-3">
+                @Html.AntiForgeryToken()
+                <div class="col-md-4">
+                    <label for="departmentId" class="form-label">Department</label>
+                    <select id="departmentId" name="departmentId" class="form-select">
+                        <option value="">All Departments</option>
+                        @foreach (var dept in ViewBag.Departments)
+                        {
+                            <option value="@dept.Id">@dept.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="employeeTable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Department Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Gender</th>
+                            <th>Phone</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var employee in Model)
+                        {
+                            <tr>
+                                <td>@employee.DepartmentName</td>
+                                <td>@employee.UserName</td>
+                                <td>@employee.Email</td>
+                                <td>@employee.Role</td>
+                                <td>@employee.Gender</td>
+                                <td>@employee.Phone</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable
+            var table = $('#employeeTable').DataTable({
+                "pageLength": 10,
+                "ordering": true,
+                "searching": true
+            });
+
+            // Handle filter form submission
+            $('#filterForm').on('submit', function (e) {
+                e.preventDefault();
+                var departmentId = $('#departmentId').val();
+                
+                $.get('@Url.Action("DepartmentWiseEmployeeReport")', { departmentId: departmentId }, function (data) {
+                    table.clear();
+                    data.forEach(function (employee) {
+                        table.row.add([
+                            employee.departmentName,
+                            employee.userName,
+                            employee.email,
+                            employee.role,
+                            employee.gender,
+                            employee.phone
+                        ]);
+                    });
+                    table.draw();
+                });
+            });
+
+            // Handle export button click
+            $('#exportBtn').on('click', function () {
+                var departmentId = $('#departmentId').val();
+                var form = $('<form>', {
+                    'method': 'POST',
+                    'action': '@Url.Action("ExportDepartmentWiseEmployeeReport")'
+                });
+                // Add anti-forgery token
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                if (token) {
+                    form.append($('<input>', {
+                        'type': 'hidden',
+                        'name': '__RequestVerificationToken',
+                        'value': token
+                    }));
+                }
+                if (departmentId) {
+                    form.append($('<input>', {
+                        'type': 'hidden',
+                        'name': 'departmentId',
+                        'value': departmentId
+                    }));
+                }
+                $('body').append(form);
+                form.submit();
+                form.remove();
+            });
+        });
+    </script>
+} 

@@ -56,6 +56,19 @@
                     <span>Request Management</span>
                 </a>
             </div>
+            <div class="nav-section-title">Reports</div>
+            <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "DepartmentWiseEmployeeReport" ? "active" : "")">
+                <a asp-controller="Reports" asp-action="DepartmentWiseEmployeeReport">
+                    <i class="fas fa-building"></i>
+                    <span>Department Wise Employee Report</span>
+                </a>
+            </div>
+            <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "EmployeeRequestReport" ? "active" : "")">
+                <a asp-controller="Reports" asp-action="EmployeeRequestReport">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Employee Request Report</span>
+                </a>
+            </div>
             <div class="nav-section-title">Master Configuration</div>
             <div class="nav-subitem @(currentController == "Department" ? "active" : "")">
                 <a asp-controller="Department" asp-action="Index">
@@ -225,6 +238,29 @@
 
     .nav-item.active .nav-subitems {
         display: block;
+    }
+
+    .nav-submenu {
+        display: block;
+        padding-left: 20px;
+        background-color: #f8f9fa;
+        border-left: 3px solid #007bff;
+    }
+
+    .nav-item.active .nav-submenu {
+        display: block;
+    }
+
+    .nav-submenu a {
+        display: block;
+        padding: 8px 0;
+        color: #333;
+        text-decoration: none;
+        font-size: 14px;
+    }
+
+    .nav-submenu a:hover {
+        color: #007bff;
     }
 </style>
 

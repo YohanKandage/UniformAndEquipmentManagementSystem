@@ -60,7 +60,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                         FirstName = user.FirstName ?? "User",
                         LastName = user.LastName ?? "",
                         Email = user.Email,
-                        Department = new Department { Name = user.Department ?? "Not Assigned" },
+                        Department = new Department { Name = user.Department?.Name ?? "Not Assigned" },
                         IsActive = true,
                         Position = "Employee",
                         EmployeeId = user.EmployeeId.ToString()

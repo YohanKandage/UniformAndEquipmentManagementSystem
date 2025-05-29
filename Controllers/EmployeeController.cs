@@ -102,7 +102,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     Email = employee.Email,
                     FirstName = employee.FirstName,
                     LastName = employee.LastName,
-                    Department = employee.Department?.Name,
+                    DepartmentId = employee.DepartmentId,
                     EmployeeId = employee.Id,
                     EmailConfirmed = true // Auto-confirm email for simplicity
                 };
