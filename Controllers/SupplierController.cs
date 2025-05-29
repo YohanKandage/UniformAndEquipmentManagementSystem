@@ -25,9 +25,38 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         }
 
         // GET: Supplier
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string companyName, string email, string contactNo, string category)
         {
-            var suppliers = await _context.Suppliers.ToListAsync();
+            var query = _context.Suppliers.AsQueryable();
+
+            if (!string.IsNullOrEmpty(companyName))
+            {
+                query = query.Where(s => s.CompanyName.Contains(companyName));
+            }
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                query = query.Where(s => s.Email.Contains(email));
+            }
+
+            if (!string.IsNullOrEmpty(contactNo))
+            {
+                query = query.Where(s => s.ContactNo.Contains(contactNo));
+            }
+
+            if (!string.IsNullOrEmpty(category))
+            {
+                query = query.Where(s => s.SupplierCategory == category);
+            }
+
+            var suppliers = await query.ToListAsync();
+
+            // Pass filter values to view
+            ViewBag.CompanyName = companyName;
+            ViewBag.Email = email;
+            ViewBag.ContactNo = contactNo;
+            ViewBag.Category = category;
+
             return View(suppliers);
         }
 

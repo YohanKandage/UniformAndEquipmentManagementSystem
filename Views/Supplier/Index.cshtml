@@ -15,6 +15,45 @@
         </div>
     </div>
 
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="get" class="filter-form">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="companyName">Company Name</label>
+                    <input type="text" id="companyName" name="companyName" class="form-control" placeholder="Enter company name" value="@ViewBag.CompanyName">
+                </div>
+                <div class="filter-group">
+                    <label for="email">Email</label>
+                    <input type="text" id="email" name="email" class="form-control" placeholder="Enter email" value="@ViewBag.Email">
+                </div>
+                <div class="filter-group">
+                    <label for="contactNo">Contact No</label>
+                    <input type="text" id="contactNo" name="contactNo" class="form-control" placeholder="Enter contact number" value="@ViewBag.ContactNo">
+                </div>
+                <div class="filter-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" class="form-control">
+                        <option value="">All Categories</option>
+                        <option value="Uniform" selected="@(ViewBag.Category == "Uniform")">Uniform</option>
+                        <option value="Equipment" selected="@(ViewBag.Category == "Equipment")">Equipment</option>
+                        <option value="Both" selected="@(ViewBag.Category == "Both")">Both</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-search"></i>
+                    Apply Filters
+                </button>
+                <a href="@Url.Action("Index", "Supplier")" class="btn-clear">
+                    <i class="fas fa-times"></i>
+                    Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+
     <div class="table-container">
         <table class="data-table">
             <thead>
@@ -99,6 +138,83 @@
         color: white;
     }
 
+    .filter-section {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        padding: 20px;
+    }
+
+    .filter-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .filter-group label {
+        font-size: 14px;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 5px;
+    }
+
+    .btn-filter {
+        background-color: #2c2e52;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        transition: background-color 0.2s;
+    }
+
+    .btn-filter:hover {
+        background-color: #3a3d6a;
+    }
+
+    .btn-clear {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+
+    .btn-clear:hover {
+        background-color: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
     .table-container {
         background-color: white;
         border-radius: 8px;
@@ -176,4 +292,16 @@
         background-color: #ffebee;
         color: #c62828;
     }
-</style> 
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.data-table').DataTable({
+                "pageLength": 10,
+                "ordering": true,
+                "searching": true
+            });
+        });
+    </script>
+} 
