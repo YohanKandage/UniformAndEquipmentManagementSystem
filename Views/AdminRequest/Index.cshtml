@@ -17,46 +17,67 @@
         </div>
     }
 
-    <div class="card shadow-sm">
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="filterForm" class="row g-3" method="get">
+                <div class="col-md-3">
+                    <label for="employeeName" class="form-label">Employee Name</label>
+                    <input type="text" id="employeeName" name="employeeName" class="form-control" placeholder="Enter employee name" value="@ViewBag.EmployeeName">
+                </div>
+                <div class="col-md-3">
+                    <label for="departmentId" class="form-label">Department</label>
+                    <select id="departmentId" name="departmentId" class="form-select">
+                        <option value="">All Departments</option>
+                        @foreach (var dept in ViewBag.Departments)
+                        {
+                            <option value="@dept.Id" selected="@(ViewBag.DepartmentId == dept.Id)">@dept.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="Pending" selected="@(ViewBag.Status == "Pending")">Pending</option>
+                        <option value="Approved" selected="@(ViewBag.Status == "Approved")">Approved</option>
+                        <option value="Cancelled" selected="@(ViewBag.Status == "Cancelled")">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                    <a asp-action="Index" class="btn btn-secondary">Clear Filters</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table id="requestTable" class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Request Date</th>
-                            <th>Employee</th>
+                            <th>Request ID</th>
+                            <th>Employee Name</th>
                             <th>Department</th>
                             <th>Item</th>
+                            <th>Request Date</th>
                             <th>Status</th>
-                            <th>Processed Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model)
+                        @foreach (var request in Model)
                         {
                             <tr>
-                                <td>@item.RequestDate.ToString("MMM dd, yyyy HH:mm")</td>
-                                <td>@item.Employee.FirstName @item.Employee.LastName</td>
-                                <td>@item.Employee.Department?.Name</td>
-                                <td>@item.Item.ItemName</td>
+                                <td>@request.Id</td>
+                                <td>@request.Employee.FirstName @request.Employee.LastName</td>
+                                <td>@request.Employee.Department.Name</td>
+                                <td>@request.Item.ItemName</td>
+                                <td>@request.RequestDate</td>
+                                <td>@request.Status</td>
                                 <td>
-                                    <span class="badge bg-@(item.Status switch {
-                                        "Pending" => "warning",
-                                        "Approved" => "success",
-                                        "Cancelled" => "danger",
-                                        _ => "secondary"
-                                    })">
-                                        @item.Status
-                                    </span>
-                                </td>
-                                <td>
-                                    @(item.ProcessedDate?.ToString("MMM dd, yyyy HH:mm") ?? "-")
-                                </td>
-                                <td>
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                    <a asp-action="Details" asp-route-id="@request.Id" class="btn btn-info btn-sm">Details</a>
                                 </td>
                             </tr>
                         }
@@ -74,6 +95,15 @@
             setTimeout(function() {
                 $('.alert-success').alert('close');
             }, 5000);
+        });
+
+        $(document).ready(function () {
+            // Initialize DataTable
+            var table = $('#requestTable').DataTable({
+                "pageLength": 10,
+                "ordering": true,
+                "searching": true
+            });
         });
     </script>
 } 

@@ -18,16 +18,38 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string employeeName, int? departmentId, string status)
         {
-            var requests = await _context.Requests
+            var query = _context.Requests
                 .Include(r => r.Item)
                 .Include(r => r.Employee)
                     .ThenInclude(e => e.Department)
                 .Include(r => r.ProcessedBy)
-                .OrderByDescending(r => r.RequestDate)
-                .ToListAsync();
+                .AsQueryable();
 
+            if (!string.IsNullOrEmpty(employeeName))
+            {
+                query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
+            }
+
+            if (departmentId.HasValue)
+            {
+                query = query.Where(r => r.Employee.DepartmentId == departmentId);
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(r => r.Status == status);
+            }
+
+            var requests = await query.OrderByDescending(r => r.RequestDate).ToListAsync();
+            ViewBag.Departments = await _context.Departments.ToListAsync();
+            
+            // Pass filter values to view
+            ViewBag.EmployeeName = employeeName;
+            ViewBag.DepartmentId = departmentId;
+            ViewBag.Status = status;
+            
             return View(requests);
         }
 
