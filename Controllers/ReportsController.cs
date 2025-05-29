@@ -67,12 +67,23 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             return View(employees);
         }
 
-        public async Task<IActionResult> EmployeeRequestReport(DateTime? startDate, DateTime? endDate)
+        public async Task<IActionResult> EmployeeRequestReport(string employeeName, string status, DateTime? startDate, DateTime? endDate)
         {
             var query = _context.Requests
-                .Include(r => r.Employee)
                 .Include(r => r.Item)
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.Department)
                 .AsQueryable();
+
+            if (!string.IsNullOrEmpty(employeeName))
+            {
+                query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(r => r.Status == status);
+            }
 
             if (startDate.HasValue)
             {
@@ -81,14 +92,14 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             if (endDate.HasValue)
             {
-                query = query.Where(r => r.RequestDate <= endDate.Value);
+                query = query.Where(r => r.RequestDate <= endDate.Value.AddDays(1).AddSeconds(-1));
             }
 
             var requests = await query
                 .Select(r => new
                 {
                     RequestId = r.Id,
-                    EmployeeName = $"{r.Employee.FirstName} {r.Employee.LastName}",
+                    EmployeeName = r.Employee.FirstName + " " + r.Employee.LastName,
                     ItemName = r.Item.ItemName,
                     Reason = r.Reason,
                     RequestDate = r.RequestDate,
@@ -96,10 +107,11 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 })
                 .ToListAsync();
 
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-            {
-                return Json(requests);
-            }
+            ViewBag.Statuses = new List<string> { "Pending", "Approved", "Cancelled" };
+            ViewBag.EmployeeName = employeeName;
+            ViewBag.Status = status;
+            ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+            ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
 
             return View(requests);
         }

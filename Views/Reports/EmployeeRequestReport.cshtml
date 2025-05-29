@@ -3,7 +3,7 @@
     ViewData["Title"] = "Employee Request Report";
 }
 
-<div class="container-fluid">
+<div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Employee Request Report</h2>
         <div>
@@ -15,17 +15,32 @@
 
     <div class="card mb-4">
         <div class="card-body">
-            <form id="filterForm" class="row g-3">
-                <div class="col-md-4">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="employeeName" class="form-label">Employee Name</label>
+                    <input type="text" id="employeeName" name="employeeName" class="form-control" placeholder="Enter employee name" value="@ViewBag.EmployeeName">
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        @foreach (var status in ViewBag.Statuses)
+                        {
+                            <option value="@status" selected="@(ViewBag.Status == status)">@status</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label for="startDate" class="form-label">Start Date</label>
-                    <input type="date" class="form-control" id="startDate" name="startDate">
+                    <input type="date" id="startDate" name="startDate" class="form-control" value="@ViewBag.StartDate">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label for="endDate" class="form-label">End Date</label>
-                    <input type="date" class="form-control" id="endDate" name="endDate">
+                    <input type="date" id="endDate" name="endDate" class="form-control" value="@ViewBag.EndDate">
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-12 d-flex gap-2">
                     <button type="submit" class="btn btn-primary">Apply Filter</button>
+                    <a asp-action="EmployeeRequestReport" class="btn btn-secondary">Clear Filters</a>
                 </div>
             </form>
         </div>
@@ -53,7 +68,7 @@
                                 <td>@request.EmployeeName</td>
                                 <td>@request.ItemName</td>
                                 <td>@request.Reason</td>
-                                <td>@request.RequestDate.ToString("dd/MM/yyyy")</td>
+                                <td>@request.RequestDate.ToString("MMM dd, yyyy HH:mm")</td>
                                 <td>@request.Status</td>
                             </tr>
                         }
@@ -67,47 +82,50 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Initialize DataTable
-            var table = $('#requestTable').DataTable({
+            $('#requestTable').DataTable({
                 "pageLength": 10,
                 "ordering": true,
                 "searching": true
             });
 
-            // Handle filter form submission
-            $('#filterForm').on('submit', function (e) {
-                e.preventDefault();
+            // Handle export button click
+            $('#exportBtn').on('click', function () {
+                var employeeName = $('#employeeName').val();
+                var status = $('#status').val();
                 var startDate = $('#startDate').val();
                 var endDate = $('#endDate').val();
                 
-                $.get('@Url.Action("EmployeeRequestReport")', { 
-                    startDate: startDate,
-                    endDate: endDate
-                }, function (data) {
-                    table.clear();
-                    data.forEach(function (request) {
-                        table.row.add([
-                            request.requestId,
-                            request.employeeName,
-                            request.itemName,
-                            request.reason,
-                            new Date(request.requestDate).toLocaleDateString(),
-                            request.status
-                        ]);
-                    });
-                    table.draw();
-                });
-            });
-
-            // Handle export button click
-            $('#exportBtn').on('click', function () {
-                var startDate = $('#startDate').val();
-                var endDate = $('#endDate').val();
                 var form = $('<form>', {
                     'method': 'POST',
                     'action': '@Url.Action("ExportEmployeeRequestReport")'
                 });
-                
+
+                // Add anti-forgery token
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                if (token) {
+                    form.append($('<input>', {
+                        'type': 'hidden',
+                        'name': '__RequestVerificationToken',
+                        'value': token
+                    }));
+                }
+
+                if (employeeName) {
+                    form.append($('<input>', {
+                        'type': 'hidden',
+                        'name': 'employeeName',
+                        'value': employeeName
+                    }));
+                }
+
+                if (status) {
+                    form.append($('<input>', {
+                        'type': 'hidden',
+                        'name': 'status',
+                        'value': status
+                    }));
+                }
+
                 if (startDate) {
                     form.append($('<input>', {
                         'type': 'hidden',
@@ -115,7 +133,7 @@
                         'value': startDate
                     }));
                 }
-                
+
                 if (endDate) {
                     form.append($('<input>', {
                         'type': 'hidden',
@@ -123,7 +141,7 @@
                         'value': endDate
                     }));
                 }
-                
+
                 $('body').append(form);
                 form.submit();
                 form.remove();
