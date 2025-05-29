@@ -24,12 +24,29 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        public async Task<IActionResult> Index(string itemType, int? departmentId, int? supplierId)
+        public async Task<IActionResult> Index(string searchString, string searchField, string itemType, int? departmentId, int? supplierId)
         {
             var query = _context.Items
                 .Include(i => i.Department)
                 .Include(i => i.Supplier)
                 .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                switch (searchField?.ToLower())
+                {
+                    case "name":
+                        query = query.Where(i => i.ItemName.Contains(searchString));
+                        break;
+                    case "code":
+                        query = query.Where(i => i.ItemId.Contains(searchString));
+                        break;
+                    default:
+                        query = query.Where(i => i.ItemName.Contains(searchString) || 
+                                               i.ItemId.Contains(searchString));
+                        break;
+                }
+            }
 
             if (!string.IsNullOrEmpty(itemType))
             {
@@ -45,11 +62,16 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             }
 
             var items = await query.ToListAsync();
+
+            // Pass filter values and lists to view
+            ViewBag.SearchString = searchString;
+            ViewBag.SearchField = searchField;
             ViewBag.ItemType = itemType;
             ViewBag.DepartmentId = departmentId;
             ViewBag.SupplierId = supplierId;
             ViewBag.Departments = await _context.Departments.ToListAsync();
             ViewBag.Suppliers = await _context.Suppliers.ToListAsync();
+
             return View(items);
         }
 
