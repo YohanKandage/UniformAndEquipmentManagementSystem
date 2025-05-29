@@ -24,12 +24,32 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string itemType, int? departmentId, int? supplierId)
         {
-            var items = await _context.Items
+            var query = _context.Items
                 .Include(i => i.Department)
                 .Include(i => i.Supplier)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(itemType))
+            {
+                query = query.Where(i => i.ItemType == itemType);
+            }
+            if (departmentId.HasValue)
+            {
+                query = query.Where(i => i.DepartmentId == departmentId);
+            }
+            if (supplierId.HasValue)
+            {
+                query = query.Where(i => i.SupplierId == supplierId);
+            }
+
+            var items = await query.ToListAsync();
+            ViewBag.ItemType = itemType;
+            ViewBag.DepartmentId = departmentId;
+            ViewBag.SupplierId = supplierId;
+            ViewBag.Departments = await _context.Departments.ToListAsync();
+            ViewBag.Suppliers = await _context.Suppliers.ToListAsync();
             return View(items);
         }
 
