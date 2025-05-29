@@ -1,5 +1,10 @@
 @{
-    ViewData["Title"] = "";
+    ViewData["Title"] = "Admin Dashboard";
+    var departmentStats = (ViewBag.DepartmentStats as IEnumerable<dynamic>) ?? new List<dynamic>();
+    var uniformStats = (ViewBag.UniformStats as IEnumerable<dynamic>) ?? new List<dynamic>();
+    var equipmentStats = (ViewBag.EquipmentStats as IEnumerable<dynamic>) ?? new List<dynamic>();
+    var recentActivities = (ViewBag.RecentActivities as IEnumerable<dynamic>) ?? new List<dynamic>();
+    var requestStatusDistribution = (ViewBag.RequestStatusDistribution as IEnumerable<dynamic>) ?? new List<dynamic>();
 }
 
 <div class="dashboard-container">
@@ -10,9 +15,8 @@
                 <i class="fas fa-users"></i>
             </div>
             <div class="stat-details">
-                <span class="stat-value">156</span>
+                <span class="stat-value">@(ViewBag.TotalEmployees ?? 0)</span>
                 <span class="stat-label">Total Employees</span>
-                <span class="stat-change positive">+12% from last month</span>
             </div>
         </div>
 
@@ -21,9 +25,8 @@
                 <i class="fas fa-clipboard-list"></i>
             </div>
             <div class="stat-details">
-                <span class="stat-value">24</span>
+                <span class="stat-value">@(ViewBag.TotalRequests ?? 0)</span>
                 <span class="stat-label">Total Requests</span>
-                <span class="stat-change">This month</span>
             </div>
         </div>
 
@@ -32,9 +35,12 @@
                 <i class="fas fa-clock"></i>
             </div>
             <div class="stat-details">
-                <span class="stat-value">8</span>
+                <span class="stat-value">@(ViewBag.PendingRequests ?? 0)</span>
                 <span class="stat-label">Pending Requests</span>
-                <span class="stat-change urgent">Requires attention</span>
+                @if ((ViewBag.PendingRequests ?? 0) > 0)
+                {
+                    <span class="stat-change urgent">Requires attention</span>
+                }
             </div>
         </div>
 
@@ -43,9 +49,12 @@
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
             <div class="stat-details">
-                <span class="stat-value">12</span>
+                <span class="stat-value">@(ViewBag.LowStockItems ?? 0)</span>
                 <span class="stat-label">Low Stock Items</span>
-                <span class="stat-change negative">Critical items</span>
+                @if ((ViewBag.LowStockItems ?? 0) > 0)
+                {
+                    <span class="stat-change negative">Critical items</span>
+                }
             </div>
         </div>
     </div>
@@ -56,18 +65,13 @@
                 <h3><i class="fas fa-building"></i> Department Overview</h3>
             </div>
             <div class="info-content">
-                <div class="info-item">
-                    <span class="info-label">IT Department</span>
-                    <span class="info-value">45 employees</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">HR Department</span>
-                    <span class="info-value">28 employees</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Operations</span>
-                    <span class="info-value">83 employees</span>
-                </div>
+                @foreach (var dept in departmentStats)
+                {
+                    <div class="info-item">
+                        <span class="info-label">@dept.DepartmentName</span>
+                        <span class="info-value">@dept.EmployeeCount employees</span>
+                    </div>
+                }
             </div>
         </div>
 
@@ -76,17 +80,22 @@
                 <h3><i class="fas fa-tshirt"></i> Uniform Status</h3>
             </div>
             <div class="info-content">
+                @{
+                    var totalUniforms = uniformStats.Cast<dynamic>().Sum(u => (int)u.Count);
+                    var assignedUniforms = uniformStats.Cast<dynamic>().FirstOrDefault(u => (string)u.Status == "Assigned")?.Count ?? 0;
+                    var availableUniforms = uniformStats.Cast<dynamic>().FirstOrDefault(u => (string)u.Status == "Available")?.Count ?? 0;
+                }
                 <div class="info-item">
                     <span class="info-label">Total Uniforms</span>
-                    <span class="info-value">312 sets</span>
+                    <span class="info-value">@totalUniforms sets</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Assigned</span>
-                    <span class="info-value">285 sets</span>
+                    <span class="info-value">@assignedUniforms sets</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Available</span>
-                    <span class="info-value">27 sets</span>
+                    <span class="info-value">@availableUniforms sets</span>
                 </div>
             </div>
         </div>
@@ -96,17 +105,22 @@
                 <h3><i class="fas fa-tools"></i> Equipment Status</h3>
             </div>
             <div class="info-content">
+                @{
+                    var totalEquipment = equipmentStats.Cast<dynamic>().Sum(e => (int)e.Count);
+                    var inUseEquipment = equipmentStats.Cast<dynamic>().FirstOrDefault(e => (string)e.Status == "In Use")?.Count ?? 0;
+                    var maintenanceEquipment = equipmentStats.Cast<dynamic>().FirstOrDefault(e => (string)e.Status == "Under Maintenance")?.Count ?? 0;
+                }
                 <div class="info-item">
                     <span class="info-label">Total Equipment</span>
-                    <span class="info-value">450 items</span>
+                    <span class="info-value">@totalEquipment items</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">In Use</span>
-                    <span class="info-value">398 items</span>
+                    <span class="info-value">@inUseEquipment items</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Under Maintenance</span>
-                    <span class="info-value">12 items</span>
+                    <span class="info-value">@maintenanceEquipment items</span>
                 </div>
             </div>
         </div>
@@ -126,50 +140,25 @@
     <div class="recent-activities">
         <div class="section-header">
             <h3>Recent Activities</h3>
-            <button class="btn-link">View All</button>
+            <a href="@Url.Action("Index", "AdminRequest")" class="btn-link">View All</a>
         </div>
         <div class="activity-list">
-            <div class="activity-item">
-                <div class="activity-icon">
-                    <i class="fas fa-plus-circle"></i>
+            @foreach (var activity in recentActivities)
+            {
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div class="activity-details">
+                        <span class="activity-title">@activity.Title</span>
+                        <span class="activity-desc">@activity.Description</span>
+                        <span class="activity-time">@activity.Time.ToString("MMM dd, yyyy HH:mm")</span>
+                    </div>
+                    <div class="activity-status @(activity.Status?.ToLower() ?? "unknown")">
+                        @activity.Status
+                    </div>
                 </div>
-                <div class="activity-details">
-                    <span class="activity-title">New Uniform Request - IT Department</span>
-                    <span class="activity-desc">John Doe requested 2 sets of uniforms</span>
-                    <span class="activity-time">2 hours ago</span>
-                </div>
-                <div class="activity-status pending">
-                    Pending
-                </div>
-            </div>
-
-            <div class="activity-item">
-                <div class="activity-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="activity-details">
-                    <span class="activity-title">Equipment Request Approved</span>
-                    <span class="activity-desc">Safety equipment request for Operations team</span>
-                    <span class="activity-time">3 hours ago</span>
-                </div>
-                <div class="activity-status approved">
-                    Approved
-                </div>
-            </div>
-
-            <div class="activity-item">
-                <div class="activity-icon">
-                    <i class="fas fa-box"></i>
-                </div>
-                <div class="activity-details">
-                    <span class="activity-title">Inventory Updated</span>
-                    <span class="activity-desc">New stock received - 50 safety helmets</span>
-                    <span class="activity-time">5 hours ago</span>
-                </div>
-                <div class="activity-status completed">
-                    Completed
-                </div>
-            </div>
+            }
         </div>
     </div>
 </div>
@@ -562,12 +551,14 @@
     <script>
         // Request Status Chart
         const requestCtx = document.getElementById('requestChart').getContext('2d');
+        const requestData = @Html.Raw(Json.Serialize(requestStatusDistribution));
+        
         new Chart(requestCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Pending', 'Approved', 'Completed', 'Rejected'],
+                labels: requestData.map(r => r.status),
                 datasets: [{
-                    data: [8, 12, 15, 4],
+                    data: requestData.map(r => r.count),
                     backgroundColor: ['#FFC107', '#4CAF50', '#2196F3', '#F44336']
                 }]
             },
@@ -581,24 +572,22 @@
             }
         });
 
-        // Inventory Movement Chart
+        // Inventory Movement Chart (placeholder data for now)
         const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
         new Chart(inventoryCtx, {
             type: 'line',
             data: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
                 datasets: [{
-                    label: 'Items In',
+                    label: 'Uniforms',
                     data: [65, 59, 80, 81, 56, 55],
                     borderColor: '#4CAF50',
-                    tension: 0.4,
-                    fill: false
+                    tension: 0.1
                 }, {
-                    label: 'Items Out',
+                    label: 'Equipment',
                     data: [28, 48, 40, 19, 86, 27],
-                    borderColor: '#F44336',
-                    tension: 0.4,
-                    fill: false
+                    borderColor: '#2196F3',
+                    tension: 0.1
                 }]
             },
             options: {

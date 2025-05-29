@@ -6,6 +6,7 @@ using UniformAndEquipmentManagementSystem.Data;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
@@ -14,11 +15,13 @@ namespace UniformAndEquipmentManagementSystem.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<DashboardController> _logger;
 
-        public DashboardController(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
+        public DashboardController(UserManager<ApplicationUser> userManager, ApplicationDbContext context, ILogger<DashboardController> logger)
         {
             _userManager = userManager;
             _context = context;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -46,9 +49,99 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        public IActionResult AdminDashboard()
+        public async Task<IActionResult> AdminDashboard()
         {
-            return View();
+            try
+            {
+                // Get total employees count
+                var totalEmployees = await _context.Employees.CountAsync();
+
+                // Get total requests count
+                var totalRequests = await _context.Requests.CountAsync();
+
+                // Get pending requests count
+                var pendingRequests = await _context.Requests.CountAsync(r => r.Status == "Pending");
+
+                // Get low stock items (items with quantity less than 10)
+                var lowStockItems = await _context.Items.CountAsync(i => i.Quantity < 10);
+
+                // Get department-wise employee count
+                var departmentStats = await _context.Departments
+                    .Select(d => new
+                    {
+                        DepartmentName = d.Name,
+                        EmployeeCount = _context.Employees.Count(e => e.DepartmentId == d.Id)
+                    })
+                    .ToListAsync();
+
+                // Get uniform statistics
+                var uniformStats = await _context.Items
+                    .Where(i => i.ItemType == "Uniform")
+                    .GroupBy(i => i.Status ?? "Unknown")
+                    .Select(g => new
+                    {
+                        Status = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToListAsync();
+
+                // Get equipment statistics
+                var equipmentStats = await _context.Items
+                    .Where(i => i.ItemType == "Equipment")
+                    .GroupBy(i => i.Status ?? "Unknown")
+                    .Select(g => new
+                    {
+                        Status = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToListAsync();
+
+                // Get recent activities (last 5 requests)
+                var recentActivities = await _context.Requests
+                    .Include(r => r.Employee)
+                        .ThenInclude(e => e.Department)
+                    .Include(r => r.Item)
+                    .OrderByDescending(r => r.RequestDate)
+                    .Take(5)
+                    .Select(r => new
+                    {
+                        Title = $"New {r.Item.ItemType} Request - {r.Employee.Department.Name}",
+                        Description = $"{r.Employee.FirstName} {r.Employee.LastName} requested {r.Item.ItemName}",
+                        Time = r.RequestDate,
+                        Status = r.Status ?? "Unknown"
+                    })
+                    .ToListAsync();
+
+                // Get request status distribution for chart
+                var requestStatusDistribution = await _context.Requests
+                    .GroupBy(r => r.Status ?? "Unknown")
+                    .Select(g => new
+                    {
+                        Status = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToListAsync();
+
+                ViewBag.TotalEmployees = totalEmployees;
+                ViewBag.TotalRequests = totalRequests;
+                ViewBag.PendingRequests = pendingRequests;
+                ViewBag.LowStockItems = lowStockItems;
+                ViewBag.DepartmentStats = departmentStats;
+                ViewBag.UniformStats = uniformStats;
+                ViewBag.EquipmentStats = equipmentStats;
+                ViewBag.RecentActivities = recentActivities;
+                ViewBag.RequestStatusDistribution = requestStatusDistribution;
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                _logger.LogError(ex, "Error occurred while loading admin dashboard");
+                
+                // Return error view or handle gracefully
+                return View("Error");
+            }
         }
 
         [Authorize(Roles = "Manager")]
