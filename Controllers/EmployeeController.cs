@@ -16,6 +16,7 @@ using iText.Kernel.Pdf;
 using Microsoft.AspNetCore.Authorization;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
@@ -41,9 +42,52 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString, string searchField, int? departmentId, string role)
         {
-            var employees = await _context.Employees.Include(e => e.Department).ToListAsync();
+            var query = _context.Employees
+                .Include(e => e.Department)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                switch (searchField?.ToLower())
+                {
+                    case "name":
+                        query = query.Where(e => e.FirstName.Contains(searchString) || e.LastName.Contains(searchString));
+                        break;
+                    case "email":
+                        query = query.Where(e => e.Email.Contains(searchString));
+                        break;
+                    case "phone":
+                        query = query.Where(e => e.Phone.Contains(searchString));
+                        break;
+                    default:
+                        query = query.Where(e => e.FirstName.Contains(searchString) || e.LastName.Contains(searchString) || 
+                                               e.Email.Contains(searchString) || e.Phone.Contains(searchString));
+                        break;
+                }
+            }
+
+            if (departmentId.HasValue)
+            {
+                query = query.Where(e => e.DepartmentId == departmentId);
+            }
+
+            if (!string.IsNullOrEmpty(role))
+            {
+                query = query.Where(e => e.Role == role);
+            }
+
+            var employees = await query.ToListAsync();
+
+            // Pass filter values and lists to view
+            ViewBag.SearchString = searchString;
+            ViewBag.SearchField = searchField;
+            ViewBag.DepartmentId = departmentId;
+            ViewBag.Role = role;
+            ViewBag.Departments = await _context.Departments.ToListAsync();
+            ViewBag.Roles = new List<string> { "Admin", "StockManager", "PropertyManager", "Employee" };
+
             return View(employees);
         }
 
