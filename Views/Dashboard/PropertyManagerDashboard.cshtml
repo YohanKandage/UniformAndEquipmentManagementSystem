@@ -34,88 +34,32 @@
                 <div class="stat-details">
                     <span class="stat-value">@ViewBag.PendingRequests</span>
                     <span class="stat-label">Pending Requests</span>
-                    <span class="stat-change">This month</span>
+                    <span class="stat-change">Requires attention</span>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-box"></i>
+                    <i class="fas fa-exclamation-triangle"></i>
                 </div>
                 <div class="stat-details">
-                    <span class="stat-value">@ViewBag.TotalInventory</span>
-                    <span class="stat-label">Total Inventory</span>
-                    <span class="stat-change">All items</span>
+                    <span class="stat-value">@ViewBag.LowStockItems</span>
+                    <span class="stat-label">Low Stock Items</span>
+                    <span class="stat-change">Quantity &lt; 10</span>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-truck"></i>
+                    <i class="fas fa-calendar-day"></i>
                 </div>
                 <div class="stat-details">
-                    <span class="stat-value">@ViewBag.TotalSuppliers</span>
-                    <span class="stat-label">Active Suppliers</span>
-                    <span class="stat-change">Current suppliers</span>
+                    <span class="stat-value">@ViewBag.TodayRequests</span>
+                    <span class="stat-label">Today's Requests</span>
+                    <span class="stat-change">@DateTime.Today.ToString("MMM dd")</span>
                 </div>
             </div>
         </div>
 
         <div class="info-grid">
-            <div class="info-card profile-card">
-                <div class="profile-header">
-                    <div class="employee-profile-image">
-                        <img src="@(string.IsNullOrEmpty(Model.ImagePath) ? "/images/default-profile.png" : Model.ImagePath)" 
-                             alt="Profile Picture"
-                             onerror="this.src='/images/default-profile.png'">
-                    </div>
-                    <div class="profile-title">
-                        <h3>@(Model.FirstName ?? "User") @(Model.LastName ?? "")</h3>
-                        <span class="profile-position">Property Manager</span>
-                    </div>
-                    <div class="profile-actions">
-                        <a href="@Url.Action("EditProfile", "Employee", new { id = Model.Id })" class="btn btn-primary">
-                            <i class="fas fa-edit"></i> Edit Profile
-                        </a>
-                    </div>
-                </div>
-                <div class="profile-content">
-                    <div class="profile-section">
-                        <h4>Personal Information</h4>
-                        <div class="info-item">
-                            <span class="info-label">Employee ID</span>
-                            <span class="info-value">@(Model.EmployeeId ?? "N/A")</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Email</span>
-                            <span class="info-value">@(Model.Email ?? "N/A")</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Phone</span>
-                            <span class="info-value">@(Model.Phone ?? "N/A")</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">NIC</span>
-                            <span class="info-value">@(Model.NIC ?? "N/A")</span>
-                        </div>
-                    </div>
-                    <div class="profile-section">
-                        <h4>Work Information</h4>
-                        <div class="info-item">
-                            <span class="info-label">Department</span>
-                            <span class="info-value">@(Model.Department?.Name ?? "N/A")</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Join Date</span>
-                            <span class="info-value">@(Model.JoinDate.ToString("MMM dd, yyyy") ?? "N/A")</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Status</span>
-                            <span class="info-value @(Model.IsActive ? "status-active" : "status-inactive")">
-                                @(Model.IsActive ? "Active" : "Inactive")
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
             <div class="info-card">
                 <div class="info-header">
                     <h3><i class="fas fa-tshirt"></i> Uniform Management</h3>
@@ -156,11 +100,31 @@
                     </div>
                 </div>
             </div>
+            <div class="info-card">
+                <div class="info-header">
+                    <h3><i class="fas fa-chart-pie"></i> Request Statistics</h3>
+                    <a href="@Url.Action("Index", "Request")" class="btn-link">View All</a>
+                </div>
+                <div class="info-content">
+                    <div class="info-item">
+                        <span class="info-label">This Month</span>
+                        <span class="info-value">@ViewBag.ThisMonthRequests</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Today</span>
+                        <span class="info-value">@ViewBag.TodayRequests</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Pending</span>
+                        <span class="info-value">@ViewBag.PendingRequests</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="recent-activities">
             <div class="section-header">
-                <h3>Recent Activities</h3>
+                <h3>Recent Requests</h3>
                 <a href="@Url.Action("Index", "Request")" class="btn-link">View All</a>
             </div>
             <div class="activity-list">
@@ -266,66 +230,6 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         overflow: hidden;
     }
-    .profile-card {
-        grid-column: 1 / -1;
-    }
-    .profile-header {
-        padding: 20px;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        border-bottom: 1px solid #eee;
-    }
-    .employee-profile-image {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        overflow: hidden;
-    }
-    .employee-profile-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .profile-title {
-        flex: 1;
-    }
-    .profile-title h3 {
-        margin: 0;
-        font-size: 1.2rem;
-        color: #333;
-    }
-    .profile-position {
-        color: #666;
-        font-size: 0.9rem;
-    }
-    .profile-actions {
-        display: flex;
-        gap: 10px;
-    }
-    .profile-content {
-        padding: 20px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-    }
-    .profile-section h4 {
-        margin: 0 0 15px 0;
-        color: #333;
-        font-size: 1rem;
-    }
-    .info-item {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-    }
-    .info-label {
-        color: #666;
-    }
-    .info-value {
-        color: #333;
-        font-weight: 500;
-    }
     .info-header {
         padding: 15px 20px;
         border-bottom: 1px solid #eee;
@@ -343,6 +247,18 @@
     }
     .info-content {
         padding: 20px;
+    }
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    .info-label {
+        color: #666;
+    }
+    .info-value {
+        color: #333;
+        font-weight: 500;
     }
     .btn-link {
         color: #007bff;
@@ -427,12 +343,6 @@
     .activity-status.rejected {
         background: #f8d7da;
         color: #721c24;
-    }
-    .status-active {
-        color: #28a745;
-    }
-    .status-inactive {
-        color: #dc3545;
     }
     .no-data {
         text-align: center;

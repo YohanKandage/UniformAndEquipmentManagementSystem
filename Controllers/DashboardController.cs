@@ -189,6 +189,27 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 var availableEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.Quantity > 0);
                 var assignedEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.AssignedToId != null);
 
+                // Get low stock items (quantity less than 10)
+                var lowStockItems = await _context.Items.CountAsync(i => i.Quantity < 10);
+
+                // Get today's requests
+                var todayRequests = await _context.Requests
+                    .CountAsync(r => r.RequestDate.Date == DateTime.Today);
+
+                // Get this month's requests
+                var thisMonthRequests = await _context.Requests
+                    .CountAsync(r => r.RequestDate.Month == DateTime.Today.Month && r.RequestDate.Year == DateTime.Today.Year);
+
+                // Get request status distribution
+                var requestStatusDistribution = await _context.Requests
+                    .GroupBy(r => r.Status ?? "Pending")
+                    .Select(g => new
+                    {
+                        Status = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToListAsync();
+
                 // Get recent requests (last 5)
                 var recentRequests = await _context.Requests
                     .Include(r => r.Employee)
@@ -215,6 +236,10 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 ViewBag.TotalEquipment = totalEquipment;
                 ViewBag.AvailableEquipment = availableEquipment;
                 ViewBag.AssignedEquipment = assignedEquipment;
+                ViewBag.LowStockItems = lowStockItems;
+                ViewBag.TodayRequests = todayRequests;
+                ViewBag.ThisMonthRequests = thisMonthRequests;
+                ViewBag.RequestStatusDistribution = requestStatusDistribution;
                 ViewBag.RecentRequests = recentRequests;
 
                 return View(employee);
