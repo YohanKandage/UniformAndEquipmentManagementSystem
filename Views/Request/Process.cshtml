@@ -1,0 +1,141 @@
+@model UniformAndEquipmentManagementSystem.Models.Request
+
+@{
+    ViewData["Title"] = "Process Request";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Process Request</h1>
+        <a href="@Url.Action("Index")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Request Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5>Employee Information</h5>
+                            <p><strong>Name:</strong> @Model.Employee?.FirstName @Model.Employee?.LastName</p>
+                            <p><strong>Department:</strong> @Model.Employee?.Department?.Name</p>
+                            <p><strong>Employee ID:</strong> @Model.Employee?.EmployeeId</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Request Information</h5>
+                            <p><strong>Request ID:</strong> @Model.Id</p>
+                            <p><strong>Request Date:</strong> @Model.RequestDate.ToString("MMM dd, yyyy HH:mm")</p>
+                            <p><strong>Status:</strong> <span class="badge badge-warning">@Model.Status</span></p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h5>Item Information</h5>
+                            <p><strong>Item Name:</strong> @Model.Item?.ItemName</p>
+                            <p><strong>Item Type:</strong> @Model.Item?.ItemType</p>
+                            <p><strong>Available Quantity:</strong> @Model.Item?.Quantity</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h5>Request Details</h5>
+                            <div class="card">
+                                <div class="card-body">
+                                    <pre class="mb-0">@Model.Reason</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.ProofImage1) || !string.IsNullOrEmpty(Model.ProofImage2) || !string.IsNullOrEmpty(Model.ProofImage3))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h5>Proof Images</h5>
+                                <div class="row">
+                                    @if (!string.IsNullOrEmpty(Model.ProofImage1))
+                                    {
+                                        <div class="col-md-4">
+                                            <img src="@Model.ProofImage1" class="img-fluid rounded" alt="Proof 1">
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.ProofImage2))
+                                    {
+                                        <div class="col-md-4">
+                                            <img src="@Model.ProofImage2" class="img-fluid rounded" alt="Proof 2">
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.ProofImage3))
+                                    {
+                                        <div class="col-md-4">
+                                            <img src="@Model.ProofImage3" class="img-fluid rounded" alt="Proof 3">
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Process Request</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Process" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select name="status" class="form-control" required>
+                                <option value="">Select Status</option>
+                                <option value="Approved">Approve</option>
+                                <option value="Rejected">Reject</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Remarks</label>
+                            <textarea name="remarks" class="form-control" rows="4" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-check"></i> Process Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('select[name="status"]').change(function() {
+                var status = $(this).val();
+                var remarksField = $('textarea[name="remarks"]');
+                
+                if (status === "Approved") {
+                    remarksField.attr('placeholder', 'Enter approval remarks...');
+                } else if (status === "Rejected") {
+                    remarksField.attr('placeholder', 'Enter rejection reason...');
+                } else {
+                    remarksField.attr('placeholder', 'Enter remarks...');
+                }
+            });
+        });
+    </script>
+} 

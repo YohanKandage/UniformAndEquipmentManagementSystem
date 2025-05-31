@@ -38,13 +38,21 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             {
                 return RedirectToAction("AdminDashboard");
             }
-            else if (roles.Contains("Manager"))
+            else if (roles.Contains("PropertyManager"))
             {
-                return RedirectToAction("ManagerDashboard");
+                return RedirectToAction("Index", "PropertyManager");
+            }
+            else if (roles.Contains("StockManager"))
+            {
+                return RedirectToAction("Index", "StockManager");
+            }
+            else if (roles.Contains("Employee"))
+            {
+                return RedirectToAction("EmployeeDashboard");
             }
             else
             {
-                return RedirectToAction("EmployeeDashboard");
+                return RedirectToAction("Login", "Account");
             }
         }
 
@@ -140,6 +148,80 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 _logger.LogError(ex, "Error occurred while loading admin dashboard");
                 
                 // Return error view or handle gracefully
+                return View("Error");
+            }
+        }
+
+        [Authorize(Roles = "PropertyManager")]
+        public async Task<IActionResult> PropertyManagerDashboard()
+        {
+            try
+            {
+                var userEmail = User.Identity?.Name;
+                var employee = await _context.Employees
+                    .Include(e => e.Department)
+                    .FirstOrDefaultAsync(e => e.Email == userEmail);
+
+                if (employee == null)
+                {
+                    return NotFound();
+                }
+
+                // Get total employees count
+                var totalEmployees = await _context.Employees.CountAsync(e => e.IsActive);
+
+                // Get pending requests count
+                var pendingRequests = await _context.Requests.CountAsync(r => r.Status == "Pending");
+
+                // Get total inventory count
+                var totalInventory = await _context.Items.CountAsync();
+
+                // Get total suppliers count
+                var totalSuppliers = await _context.Suppliers.CountAsync();
+
+                // Get uniform statistics
+                var totalUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform");
+                var availableUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform" && i.Quantity > 0);
+                var assignedUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform" && i.AssignedToId != null);
+
+                // Get equipment statistics
+                var totalEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment");
+                var availableEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.Quantity > 0);
+                var assignedEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.AssignedToId != null);
+
+                // Get recent requests (last 5)
+                var recentRequests = await _context.Requests
+                    .Include(r => r.Employee)
+                    .Include(r => r.Item)
+                    .OrderByDescending(r => r.RequestDate)
+                    .Take(5)
+                    .Select(r => new
+                    {
+                        RequestType = r.Item.ItemType,
+                        EmployeeName = $"{r.Employee.FirstName} {r.Employee.LastName}",
+                        ItemName = r.Item.ItemName,
+                        RequestDate = r.RequestDate,
+                        Status = r.Status ?? "Pending"
+                    })
+                    .ToListAsync();
+
+                ViewBag.TotalEmployees = totalEmployees;
+                ViewBag.PendingRequests = pendingRequests;
+                ViewBag.TotalInventory = totalInventory;
+                ViewBag.TotalSuppliers = totalSuppliers;
+                ViewBag.TotalUniforms = totalUniforms;
+                ViewBag.AvailableUniforms = availableUniforms;
+                ViewBag.AssignedUniforms = assignedUniforms;
+                ViewBag.TotalEquipment = totalEquipment;
+                ViewBag.AvailableEquipment = availableEquipment;
+                ViewBag.AssignedEquipment = assignedEquipment;
+                ViewBag.RecentRequests = recentRequests;
+
+                return View(employee);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while loading property manager dashboard");
                 return View("Error");
             }
         }

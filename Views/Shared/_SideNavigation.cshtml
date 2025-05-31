@@ -7,6 +7,7 @@
     var isAdmin = User.IsInRole("Admin");
     var isStockManager = User.IsInRole("StockManager");
     var isEmployee = User.IsInRole("Employee");
+    var isPropertyManager = User.IsInRole("PropertyManager");
 }
 
 <div class="side-nav">
@@ -28,6 +29,15 @@
         {
             <div class="nav-item @(currentController == "Dashboard" ? "active" : "")">
                 <a asp-controller="Dashboard" asp-action="AdminDashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+        }
+        else if (isPropertyManager)
+        {
+            <div class="nav-item @(currentController == "Dashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "PropertyManagerDashboard" ? "active" : "")">
+                <a asp-controller="Dashboard" asp-action="PropertyManagerDashboard">
                     <i class="fas fa-chart-line"></i>
                     <span>Dashboard</span>
                 </a>
@@ -98,7 +108,7 @@
                 </a>
             </div>
         }
-        @if (isAdmin || isStockManager)
+        @if (isAdmin || isStockManager || isPropertyManager)
         {
             <div class="nav-item @(currentController == "Item" ? "active" : "")">
                 <a asp-controller="Item" asp-action="Index">
@@ -110,6 +120,15 @@
                 <a asp-controller="Supplier" asp-action="Index">
                     <i class="fas fa-truck"></i>
                     <span>Suppliers</span>
+                </a>
+            </div>
+        }
+        @if (isPropertyManager)
+        {
+            <div class="nav-item @(currentController == "Request" ? "active" : "")">
+                <a asp-controller="Request" asp-action="Index">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Employee Requests</span>
                 </a>
             </div>
         }
@@ -176,83 +195,55 @@
         color: rgba(255, 255, 255, 0.8);
     }
 
-    .nav-item:hover, .nav-item.active {
-        background-color: rgba(255, 255, 255, 0.08);
-        border-left: 3px solid #4a4d7d;
+    .nav-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-left-color: #4CAF50;
     }
 
-    .nav-item:hover a, .nav-item.active a {
-        color: white;
-        font-weight: 500;
-    }
-
-    .nav-item:hover i, .nav-item.active i {
-        color: white;
+    .nav-item.active {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-left-color: #4CAF50;
     }
 
     .nav-section-title {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 13px;
-        font-weight: bold;
-        padding: 16px 24px 4px 24px;
-        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
         text-transform: uppercase;
+        padding: 20px 24px 8px;
+        letter-spacing: 1px;
     }
 
     .nav-subitem {
-        padding: 10px 40px;
-        margin: 2px 0;
+        padding: 8px 24px 8px 48px;
+        margin: 4px 0;
         cursor: pointer;
         transition: all 0.3s ease;
         border-left: 3px solid transparent;
     }
 
     .nav-subitem a {
-        color: rgba(255, 255, 255, 0.85);
+        color: rgba(255, 255, 255, 0.9);
         text-decoration: none;
         font-size: 14px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
     }
 
     .nav-subitem i {
-        width: 18px;
+        width: 20px;
         text-align: center;
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(255, 255, 255, 0.8);
     }
 
-    .nav-subitem:hover, .nav-subitem.active {
-        background-color: rgba(255, 255, 255, 0.08);
-        border-left: 3px solid #4a4d7d;
+    .nav-subitem:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-left-color: #4CAF50;
     }
 
-    .nav-subitem:hover a, .nav-subitem.active a {
-        color: white;
-        font-weight: 500;
-    }
-
-    .nav-subitem:hover i, .nav-subitem.active i {
-        color: white;
-    }
-
-    .nav-submenu {
-        display: block;
-        padding-left: 20px;
-        background-color: rgba(0, 0, 0, 0.1);
-        border-left: 3px solid #4a4d7d;
-    }
-
-    .nav-submenu a {
-        color: rgba(255, 255, 255, 0.85);
-        text-decoration: none;
-        font-size: 14px;
-        padding: 8px 0;
-        display: block;
-    }
-
-    .nav-submenu a:hover {
-        color: white;
+    .nav-subitem.active {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-left-color: #4CAF50;
     }
 
     /* Custom scrollbar for side nav */

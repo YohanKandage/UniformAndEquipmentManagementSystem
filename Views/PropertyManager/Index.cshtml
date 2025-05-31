@@ -1,0 +1,440 @@
+@{
+    ViewData["Title"] = "Property Manager Dashboard";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Property Manager Dashboard</h1>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Employees</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalEmployees</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Pending Requests</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.PendingRequests</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Inventory</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalInventory</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Active Suppliers</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalSuppliers</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-truck fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Profile Information -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Profile Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img class="img-profile rounded-circle" src="@Model.ProfileImage" alt="Profile Image" style="width: 150px; height: 150px; object-fit: cover;">
+                    </div>
+                    <div class="mb-3">
+                        <h5 class="font-weight-bold">@Model.FirstName @Model.LastName</h5>
+                        <p class="text-muted">@Model.Email</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="font-weight-bold">Contact Information</h6>
+                        <p class="mb-1"><i class="fas fa-phone mr-2"></i> @Model.PhoneNumber</p>
+                        <p class="mb-1"><i class="fas fa-envelope mr-2"></i> @Model.Email</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Management Cards -->
+        <div class="col-lg-8">
+            <div class="row">
+                <!-- Uniform Management -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Uniform Management</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6 class="font-weight-bold">Statistics</h6>
+                                <p class="mb-1">Total Uniforms: @ViewBag.TotalUniforms</p>
+                                <p class="mb-1">Low Stock Items: @ViewBag.LowStockUniforms</p>
+                            </div>
+                            <a href="@Url.Action("Index", "Item", new { type = "Uniform" })" class="btn btn-primary btn-block">
+                                <i class="fas fa-tshirt mr-2"></i> Manage Uniforms
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equipment Management -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Equipment Management</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6 class="font-weight-bold">Statistics</h6>
+                                <p class="mb-1">Total Equipment: @ViewBag.TotalEquipment</p>
+                                <p class="mb-1">Low Stock Items: @ViewBag.LowStockEquipment</p>
+                            </div>
+                            <a href="@Url.Action("Index", "Item", new { type = "Equipment" })" class="btn btn-primary btn-block">
+                                <i class="fas fa-tools mr-2"></i> Manage Equipment
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Requests -->
+                <div class="col-12">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Recent Requests</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Employee</th>
+                                            <th>Item</th>
+                                            <th>Request Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var request in ViewBag.RecentRequests)
+                                        {
+                                            <tr>
+                                                <td>@request.Employee.FirstName @request.Employee.LastName</td>
+                                                <td>@request.Item.ItemName</td>
+                                                <td>@request.RequestDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                                <td>
+                                                    @switch (request.Status)
+                                                    {
+                                                        case "Pending":
+                                                            <span class="badge badge-warning">@request.Status</span>
+                                                            break;
+                                                        case "Approved":
+                                                            <span class="badge badge-success">@request.Status</span>
+                                                            break;
+                                                        case "Rejected":
+                                                            <span class="badge badge-danger">@request.Status</span>
+                                                            break;
+                                                        default:
+                                                            <span class="badge badge-secondary">@request.Status</span>
+                                                            break;
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <a href="@Url.Action("Details", "Request", new { id = request.Id })" class="btn btn-info btn-sm">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    @if (request.Status == "Pending")
+                                                    {
+                                                        <a href="@Url.Action("Process", "Request", new { id = request.Id })" class="btn btn-primary btn-sm">
+                                                            <i class="fas fa-check"></i>
+                                                        </a>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Request Status Chart
+        const requestStatusCtx = document.getElementById('requestStatusChart').getContext('2d');
+        new Chart(requestStatusCtx, {
+            type: 'pie',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.RequestStatusDistribution.Keys)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(ViewBag.RequestStatusDistribution.Values)),
+                    backgroundColor: [
+                        '#4CAF50',  // Approved
+                        '#FFC107',  // Pending
+                        '#F44336',  // Rejected
+                        '#2196F3'   // Other
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Inventory Status Chart
+        const inventoryStatusCtx = document.getElementById('inventoryStatusChart').getContext('2d');
+        new Chart(inventoryStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.InventoryStatus.Keys)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(ViewBag.InventoryStatus.Values)),
+                    backgroundColor: [
+                        '#4CAF50',  // In Stock
+                        '#FFC107',  // Low Stock
+                        '#F44336'   // Out of Stock
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    .dashboard-container {
+        padding: 2rem 1rem;
+        margin-left: 250px;
+        max-width: 1200px;
+        margin-right: auto;
+        margin-top: 2rem;
+    }
+
+    .dashboard-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .dashboard-header h1 {
+        font-size: 2.2rem;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    .dashboard-header p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    .stats-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        justify-content: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem 2rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        min-width: 210px;
+        flex: 1 1 210px;
+        max-width: 260px;
+        justify-content: flex-start;
+    }
+
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        background: #f5f5f5;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.7rem;
+        color: #3b3e6b;
+    }
+
+    .stat-content h3 {
+        font-size: 1rem;
+        color: #666;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .stat-number {
+        font-size: 1.6rem;
+        font-weight: bold;
+        color: #333;
+        margin: 0.25rem 0 0;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 2rem;
+        justify-content: center;
+    }
+
+    .dashboard-card {
+        background: white;
+        padding: 2rem 1.5rem 1.5rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        min-width: 320px;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    .dashboard-card h3 {
+        color: #333;
+        margin: 0 0 1rem;
+        font-size: 1.15rem;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+    }
+
+    .data-table th {
+        background-color: #f5f5f5;
+        color: #333;
+        font-weight: 600;
+        text-align: left;
+        padding: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .data-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #eee;
+        font-size: 0.95rem;
+        color: #666;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .status-badge.pending {
+        background-color: #FFF3CD;
+        color: #856404;
+    }
+
+    .status-badge.approved {
+        background-color: #D4EDDA;
+        color: #155724;
+    }
+
+    .status-badge.rejected {
+        background-color: #F8D7DA;
+        color: #721C24;
+    }
+
+    .no-data {
+        color: #666;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .view-all-link {
+        display: inline-block;
+        color: #3b3e6b;
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+
+    .view-all-link:hover {
+        text-decoration: underline;
+    }
+
+    .chart-container {
+        height: 300px;
+        position: relative;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+</style> 

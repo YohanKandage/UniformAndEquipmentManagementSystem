@@ -73,7 +73,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                         }
                         else if (roles.Contains("PropertyManager"))
                         {
-                            return RedirectToAction("Index", "PropertyManager");
+                            return RedirectToAction("PropertyManagerDashboard", "Dashboard");
                         }
                         
                         return LocalRedirect(returnUrl);

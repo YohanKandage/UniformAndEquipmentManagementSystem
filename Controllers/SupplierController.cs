@@ -12,7 +12,7 @@ using System;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
-    [Authorize(Roles = "Admin,StockManager")]
+    [Authorize(Roles = "Admin,StockManager,PropertyManager")]
     public class SupplierController : Controller
     {
         private readonly ApplicationDbContext _context;

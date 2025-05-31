@@ -25,6 +25,8 @@ namespace UniformAndEquipmentManagementSystem.Models
 
         public string? Reason { get; set; }
 
+        public string? Remarks { get; set; }
+
         public string? AdminComment { get; set; }
 
         public DateTime? ProcessedDate { get; set; }

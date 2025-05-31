@@ -1,0 +1,206 @@
+@model UniformAndEquipmentManagementSystem.Models.Request
+
+@{
+    ViewData["Title"] = "Request Details";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Request Details</h1>
+        <div>
+            @if (Model.Status == "Pending")
+            {
+                <a href="@Url.Action("Process", new { id = Model.Id })" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm mr-2">
+                    <i class="fas fa-check fa-sm text-white-50"></i> Process Request
+                </a>
+            }
+            <a href="@Url.Action("Index")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Request Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5>Employee Information</h5>
+                            <p><strong>Name:</strong> @Model.Employee?.FirstName @Model.Employee?.LastName</p>
+                            <p><strong>Department:</strong> @Model.Employee?.Department?.Name</p>
+                            <p><strong>Employee ID:</strong> @Model.Employee?.EmployeeId</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Request Information</h5>
+                            <p><strong>Request ID:</strong> @Model.Id</p>
+                            <p><strong>Request Date:</strong> @Model.RequestDate.ToString("MMM dd, yyyy HH:mm")</p>
+                            <p>
+                                <strong>Status:</strong>
+                                @switch (Model.Status)
+                                {
+                                    case "Pending":
+                                        <span class="badge badge-warning">@Model.Status</span>
+                                        break;
+                                    case "Approved":
+                                        <span class="badge badge-success">@Model.Status</span>
+                                        break;
+                                    case "Rejected":
+                                        <span class="badge badge-danger">@Model.Status</span>
+                                        break;
+                                    default:
+                                        <span class="badge badge-secondary">@Model.Status</span>
+                                        break;
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h5>Item Information</h5>
+                            <p><strong>Item Name:</strong> @Model.Item?.ItemName</p>
+                            <p><strong>Item Type:</strong> @Model.Item?.ItemType</p>
+                            <p><strong>Available Quantity:</strong> @Model.Item?.Quantity</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h5>Request Details</h5>
+                            <div class="card">
+                                <div class="card-body">
+                                    <pre class="mb-0">@Model.Reason</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.ProofImage1) || !string.IsNullOrEmpty(Model.ProofImage2) || !string.IsNullOrEmpty(Model.ProofImage3))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h5>Proof Images</h5>
+                                <div class="row">
+                                    @if (!string.IsNullOrEmpty(Model.ProofImage1))
+                                    {
+                                        <div class="col-md-4">
+                                            <img src="@Model.ProofImage1" class="img-fluid rounded" alt="Proof 1">
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.ProofImage2))
+                                    {
+                                        <div class="col-md-4">
+                                            <img src="@Model.ProofImage2" class="img-fluid rounded" alt="Proof 2">
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.ProofImage3))
+                                    {
+                                        <div class="col-md-4">
+                                            <img src="@Model.ProofImage3" class="img-fluid rounded" alt="Proof 3">
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Status != "Pending")
+                    {
+                        <div class="row">
+                            <div class="col-12">
+                                <h5>Processing Information</h5>
+                                <p><strong>Processed By:</strong> @Model.ProcessedBy?.FirstName @Model.ProcessedBy?.LastName</p>
+                                <p><strong>Processed Date:</strong> @Model.ProcessedDate?.ToString("MMM dd, yyyy HH:mm")</p>
+                                <p><strong>Remarks:</strong></p>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <pre class="mb-0">@Model.Remarks</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Request Timeline</h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">Request Submitted</h6>
+                                <small class="text-muted">@Model.RequestDate.ToString("MMM dd, yyyy HH:mm")</small>
+                            </div>
+                        </div>
+                        @if (Model.ProcessedDate.HasValue)
+                        {
+                            <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-0">Request @Model.Status</h6>
+                                    <small class="text-muted">@Model.ProcessedDate.Value.ToString("MMM dd, yyyy HH:mm")</small>
+                                    <p class="mb-0">By: @Model.ProcessedBy?.FirstName @Model.ProcessedBy?.LastName</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 40px;
+            margin-bottom: 20px;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #4e73df;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 3px #4e73df;
+        }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 15px;
+            height: calc(100% + 5px);
+            width: 2px;
+            background: #e3e6f0;
+        }
+
+        .timeline-item:last-child:before {
+            display: none;
+        }
+    </style>
+} 

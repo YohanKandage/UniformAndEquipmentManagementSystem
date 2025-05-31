@@ -9,47 +9,101 @@ using System.Linq;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
-    [Authorize(Roles = "Employee")]
+    [Authorize(Roles = "Employee,PropertyManager")]
     public class RequestController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<RequestController> _logger;
 
-        public RequestController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public RequestController(
+            ApplicationDbContext context, 
+            UserManager<ApplicationUser> userManager,
+            ILogger<RequestController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string employeeName, string department, string status, string searchString)
         {
-            var userEmail = User.Identity?.Name;
-            var employee = await _context.Employees
-                .Include(e => e.Department)
-                .FirstOrDefaultAsync(e => e.Email == userEmail);
+            var user = await _userManager.GetUserAsync(User);
+            var userEmail = user?.Email;
 
-            if (employee == null)
+            if (User.IsInRole("PropertyManager"))
             {
-                return NotFound();
+                var query = _context.Requests
+                    .Include(r => r.Employee)
+                        .ThenInclude(e => e.Department)
+                    .Include(r => r.Item)
+                    .AsQueryable();
+
+                if (!string.IsNullOrEmpty(employeeName))
+                {
+                    query = query.Where(r => 
+                        (r.Employee.FirstName + " " + r.Employee.LastName).Contains(employeeName));
+                }
+
+                if (!string.IsNullOrEmpty(department))
+                {
+                    query = query.Where(r => r.Employee.Department.Name == department);
+                }
+
+                if (!string.IsNullOrEmpty(status))
+                {
+                    query = query.Where(r => r.Status == status);
+                }
+
+                if (!string.IsNullOrEmpty(searchString))
+                {
+                    query = query.Where(r =>
+                        r.Employee.FirstName.Contains(searchString) ||
+                        r.Employee.LastName.Contains(searchString) ||
+                        r.Employee.Department.Name.Contains(searchString) ||
+                        r.Item.ItemName.Contains(searchString) ||
+                        r.Reason.Contains(searchString));
+                }
+
+                var requests = await query.ToListAsync();
+
+                // Get all departments
+                var departments = await _context.Departments
+                    .OrderBy(d => d.Name)
+                    .ToListAsync();
+
+                // Pass filter values and departments to view
+                ViewBag.EmployeeName = employeeName;
+                ViewBag.Department = department;
+                ViewBag.Status = status;
+                ViewBag.SearchString = searchString;
+                ViewBag.Departments = departments;
+
+                return View("AllRequests", requests);
             }
-
-            var requests = await _context.Requests
-                .Include(r => r.Item)
-                .Include(r => r.ProcessedBy)
-                .Where(r => r.EmployeeId == employee.Id)
-                .OrderByDescending(r => r.RequestDate)
-                .ToListAsync();
-
-            // Clear any existing TempData messages
-            if (TempData["Success"] != null)
+            else
             {
-                TempData["Success"] = null;
-            }
+                var employee = await _context.Employees
+                    .FirstOrDefaultAsync(e => e.Email == userEmail);
 
-            return View(requests);
+                if (employee == null)
+                {
+                    return NotFound();
+                }
+
+                var requests = await _context.Requests
+                    .Include(r => r.Employee)
+                        .ThenInclude(e => e.Department)
+                    .Include(r => r.Item)
+                    .Where(r => r.EmployeeId == employee.Id)
+                    .ToListAsync();
+
+                return View(requests);
+            }
         }
 
         public async Task<IActionResult> Create()
@@ -280,6 +334,116 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 .ToListAsync();
 
             return View(assignedItems);
+        }
+
+        // GET: Request/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var request = await _context.Requests
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(r => r.Item)
+                .Include(r => r.ProcessedBy)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            return View(request);
+        }
+
+        // GET: Request/Process/5
+        [Authorize(Roles = "PropertyManager")]
+        public async Task<IActionResult> Process(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var request = await _context.Requests
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(r => r.Item)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            if (request.Status != "Pending")
+            {
+                TempData["Error"] = "This request has already been processed.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(request);
+        }
+
+        // POST: Request/Process/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "PropertyManager")]
+        public async Task<IActionResult> Process(int id, string status, string remarks)
+        {
+            var request = await _context.Requests
+                .Include(r => r.Item)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            if (request.Status != "Pending")
+            {
+                TempData["Error"] = "This request has already been processed.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var userEmail = User.Identity?.Name;
+            var processedBy = await _userManager.FindByEmailAsync(userEmail);
+
+            if (processedBy == null)
+            {
+                return NotFound();
+            }
+
+            request.Status = status;
+            request.Remarks = remarks;
+            request.ProcessedById = processedBy.Id;
+            request.ProcessedDate = DateTime.Now;
+
+            if (status == "Approved" && request.Item != null)
+            {
+                // Update item quantity
+                request.Item.Quantity--;
+                if (request.Item.Quantity == 0)
+                {
+                    request.Item.Status = "Out of Stock";
+                }
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Request has been {status.ToLower()} successfully.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing request {RequestId}", id);
+                TempData["Error"] = "An error occurred while processing the request.";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 } 
