@@ -58,24 +58,32 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                         // Get user roles
                         var roles = await _userManager.GetRolesAsync(user);
                         
-                        // Redirect based on role
-                        if (roles.Contains("Employee"))
+                        // Debug logging to help identify the issue
+                        _logger.LogInformation("User roles for {Email}: {Roles}", model.Email, string.Join(", ", roles));
+                        
+                        // Redirect based on role (prioritize Admin and StockManager)
+                        if (roles.Contains("Admin"))
                         {
-                            return RedirectToAction("EmployeeDashboard", "Dashboard");
-                        }
-                        else if (roles.Contains("Admin"))
-                        {
+                            _logger.LogInformation("Redirecting {Email} to AdminDashboard", model.Email);
                             return RedirectToAction("AdminDashboard", "Dashboard");
                         }
                         else if (roles.Contains("StockManager"))
                         {
-                            return RedirectToAction("Index", "StockManager");
+                            _logger.LogInformation("Redirecting {Email} to StockManager Dashboard", model.Email);
+                            return RedirectToAction("StockManagerDashboard", "Dashboard");
                         }
                         else if (roles.Contains("PropertyManager"))
                         {
+                            _logger.LogInformation("Redirecting {Email} to PropertyManagerDashboard", model.Email);
                             return RedirectToAction("PropertyManagerDashboard", "Dashboard");
                         }
+                        else if (roles.Contains("Employee"))
+                        {
+                            _logger.LogInformation("Redirecting {Email} to EmployeeDashboard", model.Email);
+                            return RedirectToAction("EmployeeDashboard", "Dashboard");
+                        }
                         
+                        _logger.LogWarning("No matching role found for {Email}, redirecting to default", model.Email);
                         return LocalRedirect(returnUrl);
                     }
                     else
@@ -202,6 +210,22 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 ModelState.AddModelError("", error.Description);
             }
             return View();
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> DebugRoles()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Content("No user found");
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var roleList = string.Join(", ", roles);
+            
+            return Content($"User: {user.Email}\nRoles: {roleList}\nHas StockManager: {roles.Contains("StockManager")}");
         }
     }
 } 

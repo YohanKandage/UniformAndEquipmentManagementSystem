@@ -44,7 +44,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             }
             else if (roles.Contains("StockManager"))
             {
-                return RedirectToAction("Index", "StockManager");
+                return RedirectToAction("StockManagerDashboard");
             }
             else if (roles.Contains("Employee"))
             {
@@ -247,6 +247,122 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while loading property manager dashboard");
+                return View("Error");
+            }
+        }
+
+        [Authorize(Roles = "StockManager")]
+        public async Task<IActionResult> StockManagerDashboard()
+        {
+            try
+            {
+                var userEmail = User.Identity?.Name;
+                var employee = await _context.Employees
+                    .Include(e => e.Department)
+                    .FirstOrDefaultAsync(e => e.Email == userEmail);
+
+                // If no employee record found, create a default one for display purposes
+                if (employee == null)
+                {
+                    // Create a default employee object for StockManager users who might not have Employee records
+                    employee = new Employee
+                    {
+                        FirstName = "Stock",
+                        LastName = "Manager",
+                        Email = userEmail ?? "stockmanager@company.com",
+                        Department = new Department { Name = "Stock Management" }
+                    };
+                }
+
+                // Get total inventory count
+                var totalInventory = await _context.Items.CountAsync();
+
+                // Get low stock items (quantity less than 10)
+                var lowStockItems = await _context.Items.CountAsync(i => i.Quantity < 10);
+
+                // Get out of stock items
+                var outOfStockItems = await _context.Items.CountAsync(i => i.Quantity == 0);
+
+                // Get total suppliers count
+                var totalSuppliers = await _context.Suppliers.CountAsync();
+
+                // Get uniform statistics
+                var totalUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform");
+                var availableUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform" && i.Quantity > 0);
+                var lowStockUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform" && i.Quantity < 10 && i.Quantity > 0);
+
+                // Get equipment statistics
+                var totalEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment");
+                var availableEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.Quantity > 0);
+                var lowStockEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.Quantity < 10 && i.Quantity > 0);
+
+                // Get department-wise inventory count
+                var departmentInventory = await _context.Departments
+                    .Select(d => new
+                    {
+                        DepartmentName = d.Name,
+                        ItemCount = _context.Items.Count(i => i.DepartmentId == d.Id)
+                    })
+                    .ToListAsync();
+
+                // Get supplier-wise item count
+                var supplierStats = await _context.Suppliers
+                    .Select(s => new
+                    {
+                        SupplierName = s.CompanyName,
+                        ItemCount = _context.Items.Count(i => i.SupplierId == s.Id)
+                    })
+                    .OrderByDescending(s => s.ItemCount)
+                    .Take(5)
+                    .ToListAsync();
+
+                // Get recent low stock items
+                var recentLowStockItems = await _context.Items
+                    .Include(i => i.Department)
+                    .Include(i => i.Supplier)
+                    .Where(i => i.Quantity < 10)
+                    .OrderBy(i => i.Quantity)
+                    .Take(5)
+                    .Select(i => new
+                    {
+                        ItemName = i.ItemName,
+                        ItemType = i.ItemType,
+                        Quantity = i.Quantity,
+                        Department = i.Department != null ? i.Department.Name : "Unknown",
+                        Supplier = i.Supplier != null ? i.Supplier.CompanyName : "Unknown"
+                    })
+                    .ToListAsync();
+
+                // Get inventory status distribution
+                var inventoryStatus = await _context.Items
+                    .GroupBy(i => i.Quantity == 0 ? "Out of Stock" : (i.Quantity < 10 ? "Low Stock" : "In Stock"))
+                    .Select(g => new
+                    {
+                        Status = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToListAsync();
+
+                ViewBag.TotalInventory = totalInventory;
+                ViewBag.LowStockItems = lowStockItems;
+                ViewBag.OutOfStockItems = outOfStockItems;
+                ViewBag.TotalSuppliers = totalSuppliers;
+                ViewBag.TotalUniforms = totalUniforms;
+                ViewBag.AvailableUniforms = availableUniforms;
+                ViewBag.LowStockUniforms = lowStockUniforms;
+                ViewBag.TotalEquipment = totalEquipment;
+                ViewBag.AvailableEquipment = availableEquipment;
+                ViewBag.LowStockEquipment = lowStockEquipment;
+                ViewBag.DepartmentInventory = departmentInventory;
+                ViewBag.SupplierStats = supplierStats;
+                ViewBag.RecentLowStockItems = recentLowStockItems;
+                ViewBag.InventoryStatus = inventoryStatus;
+
+                return View(employee);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while loading stock manager dashboard");
                 return View("Error");
             }
         }

@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
-    [Authorize(Roles = "Employee,PropertyManager")]
+    [Authorize(Roles = "Employee,PropertyManager,StockManager")]
     public class RequestController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -360,7 +360,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         }
 
         // GET: Request/Process/5
-        [Authorize(Roles = "PropertyManager")]
+        [Authorize(Roles = "PropertyManager,StockManager")]
         public async Task<IActionResult> Process(int? id)
         {
             if (id == null)
@@ -391,7 +391,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         // POST: Request/Process/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "PropertyManager")]
+        [Authorize(Roles = "PropertyManager,StockManager")]
         public async Task<IActionResult> Process(int id, string status, string remarks)
         {
             var request = await _context.Requests

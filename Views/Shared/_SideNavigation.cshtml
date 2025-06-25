@@ -43,6 +43,21 @@
                 </a>
             </div>
         }
+        else if (isStockManager)
+        {
+            <div class="nav-item @(currentController == "Dashboard" ? "active" : "")">
+                <a asp-controller="Dashboard" asp-action="StockManagerDashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item @(currentController == "Request" ? "active" : "")">
+                <a asp-controller="Request" asp-action="Index">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Requests</span>
+                </a>
+            </div>
+        }
         else
         {
             <div class="nav-item @(currentController == "Dashboard" ? "active" : "")">
