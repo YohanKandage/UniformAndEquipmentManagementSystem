@@ -143,9 +143,13 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
         #endregion
 
+        #region Property Manager Reports
+
+        #endregion
+
         #region Inventory Reports
 
-        [Authorize(Roles = "Admin,StockManager")]
+        [Authorize(Roles = "Admin,StockManager,PropertyManager")]
         public async Task<IActionResult> InventoryReport(string itemType, int? departmentId, string status, int? minQuantity, int? maxQuantity)
         {
             var query = _context.Items
@@ -217,7 +221,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             return View(items);
         }
 
-        [Authorize(Roles = "Admin,StockManager")]
+        [Authorize(Roles = "Admin,StockManager,PropertyManager")]
         public async Task<IActionResult> LowStockReport(int? threshold = 10)
         {
             var items = await _context.Items
@@ -246,7 +250,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
         #region Supplier Reports
 
-        [Authorize(Roles = "Admin,StockManager")]
+        [Authorize(Roles = "Admin,StockManager,PropertyManager")]
         public async Task<IActionResult> SupplierReport(string category, bool? isApproved)
         {
             var query = _context.Suppliers.AsQueryable();
@@ -439,7 +443,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,StockManager")]
+        [Authorize(Roles = "Admin,StockManager,PropertyManager")]
         public async Task<IActionResult> ExportInventoryReport(string itemType, int? departmentId, string status)
         {
             var query = _context.Items
@@ -521,7 +525,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,StockManager")]
+        [Authorize(Roles = "Admin,StockManager,PropertyManager")]
         public async Task<IActionResult> ExportLowStockReport(int? threshold = 10)
         {
             var items = await _context.Items
@@ -572,7 +576,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,StockManager")]
+        [Authorize(Roles = "Admin,StockManager,PropertyManager")]
         public async Task<IActionResult> ExportSupplierReport(string category, bool? isApproved)
         {
             var query = _context.Suppliers.AsQueryable();

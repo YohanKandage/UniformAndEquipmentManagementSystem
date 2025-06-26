@@ -130,7 +130,7 @@
                     </a>
                 </div>
             }
-            @if (isAdmin || isStockManager)
+            @if (isAdmin || isStockManager || isPropertyManager)
             {
                 <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "InventoryReport" ? "active" : "")">
                     <a asp-controller="Reports" asp-action="InventoryReport">
