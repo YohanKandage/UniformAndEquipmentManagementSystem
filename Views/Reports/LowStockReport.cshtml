@@ -1,0 +1,207 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Low Stock Report";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-exclamation-triangle text-danger"></i> Low Stock Report</h2>
+        <div class="d-flex gap-2">
+            <form asp-action="ExportLowStockReport" method="post" style="display: inline;">
+                <input type="hidden" name="threshold" value="@ViewBag.Threshold" />
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Low Stock Alert</h5>
+                            <p class="card-text mb-0">Items with quantity ≤ @ViewBag.Threshold</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-times-circle fa-2x me-3"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Out of Stock</h5>
+                            <p class="card-text mb-0">Items with quantity = 0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Item ID</th>
+                            <th>Item Name</th>
+                            <th>Type</th>
+                            <th>Department</th>
+                            <th>Supplier</th>
+                            <th>Current Quantity</th>
+                            <th>Threshold</th>
+                            <th>Status</th>
+                            <th>Action Required</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr class="@(item.CurrentQuantity == 0 ? "table-danger" : "table-warning")">
+                                <td>@item.ItemId</td>
+                                <td>
+                                    <strong>@item.ItemName</strong>
+                                </td>
+                                <td>
+                                    <span class="badge @(item.ItemType == "Uniform" ? "bg-primary" : "bg-info")">
+                                        @item.ItemType
+                                    </span>
+                                </td>
+                                <td>@item.Department</td>
+                                <td>@item.Supplier</td>
+                                <td>
+                                    <span class="badge @(item.CurrentQuantity == 0 ? "bg-danger" : "bg-warning") fs-6">
+                                        @item.CurrentQuantity
+                                    </span>
+                                </td>
+                                <td>@item.Threshold</td>
+                                <td>
+                                    <span class="badge @(item.Status == "Out of Stock" ? "bg-danger" : "bg-warning")">
+                                        @item.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (item.CurrentQuantity == 0)
+                                    {
+                                        <span class="badge bg-danger">URGENT: Reorder Required</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">Consider Reordering</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="text-success">All items are well stocked!</h5>
+                    <p class="text-muted">No items found below the threshold of @ViewBag.Threshold.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Stock Status Summary</h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var outOfStock = Model.Count(i => i.CurrentQuantity == 0);
+                        var lowStock = Model.Count(i => i.CurrentQuantity > 0);
+                    }
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h3 class="text-danger">@outOfStock</h3>
+                                <p class="text-muted mb-0">Out of Stock</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="text-warning">@lowStock</h3>
+                            <p class="text-muted mb-0">Low Stock</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Recommendations</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        @if (outOfStock > 0)
+                        {
+                            <li class="mb-2">
+                                <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                                <strong>@outOfStock items</strong> need immediate reordering
+                            </li>
+                        }
+                        @if (lowStock > 0)
+                        {
+                            <li class="mb-2">
+                                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                <strong>@lowStock items</strong> should be reordered soon
+                            </li>
+                        }
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            Contact suppliers for bulk pricing
+                        </li>
+                        <li>
+                            <i class="fas fa-calendar-alt text-primary me-2"></i>
+                            Set up automatic reorder notifications
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.5rem;
+    }
+
+    .badge.fs-6 {
+        font-size: 0.875rem !important;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .table-responsive {
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+</style> 

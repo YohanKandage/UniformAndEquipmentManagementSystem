@@ -7,9 +7,15 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Department Wise Employee Report</h2>
         <div>
-            <button id="exportBtn" class="btn btn-success">
-                <i class="fas fa-file-excel"></i> Export to Excel
-            </button>
+            <form asp-action="ExportDepartmentWiseEmployeeReport" method="post" style="display: inline;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="departmentName" value="@ViewBag.DepartmentName" />
+                <input type="hidden" name="email" value="@ViewBag.Email" />
+                <input type="hidden" name="role" value="@ViewBag.Role" />
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+            </form>
         </div>
     </div>
 
@@ -92,50 +98,6 @@
                 "pageLength": 10,
                 "ordering": true,
                 "searching": true
-            });
-
-            // Handle export button click
-            $('#exportBtn').on('click', function () {
-                var departmentId = $('#departmentName').val();
-                var email = $('#email').val();
-                var role = $('#role').val();
-                var form = $('<form>', {
-                    'method': 'POST',
-                    'action': '@Url.Action("ExportDepartmentWiseEmployeeReport")'
-                });
-                // Add anti-forgery token
-                var token = $('input[name="__RequestVerificationToken"]').val();
-                if (token) {
-                    form.append($('<input>', {
-                        'type': 'hidden',
-                        'name': '__RequestVerificationToken',
-                        'value': token
-                    }));
-                }
-                if (departmentId) {
-                    form.append($('<input>', {
-                        'type': 'hidden',
-                        'name': 'departmentName',
-                        'value': departmentId
-                    }));
-                }
-                if (email) {
-                    form.append($('<input>', {
-                        'type': 'hidden',
-                        'name': 'email',
-                        'value': email
-                    }));
-                }
-                if (role) {
-                    form.append($('<input>', {
-                        'type': 'hidden',
-                        'name': 'role',
-                        'value': role
-                    }));
-                }
-                $('body').append(form);
-                form.submit();
-                form.remove();
             });
         });
     </script>

@@ -3,26 +3,29 @@
 }
 
 <div class="container-fluid">
-    <h2 class="mb-4">Reports</h2>
-
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Department Wise Employee Report</h5>
-                    <p class="card-text">View and export employee data organized by departments.</p>
-                    <a asp-action="DepartmentWiseEmployeeReport" class="btn btn-primary">View Report</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Employee Request Report</h5>
-                    <p class="card-text">View and export employee request data with filtering options.</p>
-                    <a asp-action="EmployeeRequestReport" class="btn btn-primary">View Report</a>
-                </div>
-            </div>
-        </div>
+    <div class="text-center py-5">
+        <i class="fas fa-chart-bar fa-3x text-primary mb-3"></i>
+        <h3>Redirecting to Reports...</h3>
+        <p class="text-muted">Please wait while we redirect you to the appropriate report.</p>
     </div>
-</div> 
+</div>
+
+<script>
+    // Redirect based on user role
+    @if (User.IsInRole("Admin"))
+    {
+        <text>window.location.href = '@Url.Action("DepartmentWiseEmployeeReport", "Reports")';</text>
+    }
+    else if (User.IsInRole("PropertyManager"))
+    {
+        <text>window.location.href = '@Url.Action("EmployeeRequestReport", "Reports")';</text>
+    }
+    else if (User.IsInRole("StockManager"))
+    {
+        <text>window.location.href = '@Url.Action("InventoryReport", "Reports")';</text>
+    }
+    else
+    {
+        <text>window.location.href = '@Url.Action("Index", "Dashboard")';</text>
+    }
+</script> 

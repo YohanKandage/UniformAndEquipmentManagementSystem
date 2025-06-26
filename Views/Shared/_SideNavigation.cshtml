@@ -45,66 +45,27 @@
         }
         else if (isStockManager)
         {
-            <div class="nav-item @(currentController == "Dashboard" ? "active" : "")">
+            <div class="nav-item @(currentController == "Dashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "StockManagerDashboard" ? "active" : "")">
                 <a asp-controller="Dashboard" asp-action="StockManagerDashboard">
                     <i class="fas fa-chart-line"></i>
                     <span>Dashboard</span>
                 </a>
             </div>
-            <div class="nav-item @(currentController == "Request" ? "active" : "")">
-                <a asp-controller="Request" asp-action="Index">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span>Requests</span>
-                </a>
-            </div>
         }
-        else
-        {
-            <div class="nav-item @(currentController == "Dashboard" ? "active" : "")">
-                <a asp-controller="Dashboard" asp-action="Index">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Dashboard</span>
-                </a>
-            </div>
-        }
+
         @if (isAdmin)
         {
-            <div class="nav-item @(currentController == "Employee" ? "active" : "")">
+            <div class="nav-section-title">Employee Management</div>
+            <div class="nav-subitem @(currentController == "Employee" ? "active" : "")">
                 <a asp-controller="Employee" asp-action="Index">
                     <i class="fas fa-users"></i>
                     <span>Employees</span>
                 </a>
             </div>
-            <div class="nav-item @(currentController == "AdminRequest" ? "active" : "")">
+            <div class="nav-subitem @(currentController == "AdminRequest" ? "active" : "")">
                 <a asp-controller="AdminRequest" asp-action="Index">
                     <i class="fas fa-clipboard-list"></i>
-                    <span>Request Management</span>
-                </a>
-            </div>
-            <div class="nav-section-title">Reports</div>
-            <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "DepartmentWiseEmployeeReport" ? "active" : "")">
-                <a asp-controller="Reports" asp-action="DepartmentWiseEmployeeReport">
-                    <i class="fas fa-building"></i>
-                    <span>Department Wise Employee Report</span>
-                </a>
-            </div>
-            <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "EmployeeRequestReport" ? "active" : "")">
-                <a asp-controller="Reports" asp-action="EmployeeRequestReport">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span>Employee Request Report</span>
-                </a>
-            </div>
-            <div class="nav-section-title">Master Configuration</div>
-            <div class="nav-subitem @(currentController == "Department" ? "active" : "")">
-                <a asp-controller="Department" asp-action="Index">
-                    <i class="fas fa-building"></i>
-                    <span>Departments</span>
-                </a>
-            </div>
-            <div class="nav-subitem @(currentController == "Role" ? "active" : "")">
-                <a asp-controller="Role" asp-action="Index">
-                    <i class="fas fa-user-shield"></i>
-                    <span>Roles</span>
+                    <span>All Requests</span>
                 </a>
             </div>
         }
@@ -144,6 +105,67 @@
                 <a asp-controller="Request" asp-action="Index">
                     <i class="fas fa-clipboard-list"></i>
                     <span>Employee Requests</span>
+                </a>
+            </div>
+        }
+
+        @if (isAdmin || isStockManager || isPropertyManager)
+        {
+            <div class="nav-section-title">Reports</div>
+            @if (isAdmin)
+            {
+                <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "DepartmentWiseEmployeeReport" ? "active" : "")">
+                    <a asp-controller="Reports" asp-action="DepartmentWiseEmployeeReport">
+                        <i class="fas fa-users"></i>
+                        <span>Employee Report</span>
+                    </a>
+                </div>
+            }
+            @if (isAdmin || isPropertyManager)
+            {
+                <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "EmployeeRequestReport" ? "active" : "")">
+                    <a asp-controller="Reports" asp-action="EmployeeRequestReport">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Request Report</span>
+                    </a>
+                </div>
+            }
+            @if (isAdmin || isStockManager)
+            {
+                <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "InventoryReport" ? "active" : "")">
+                    <a asp-controller="Reports" asp-action="InventoryReport">
+                        <i class="fas fa-boxes"></i>
+                        <span>Inventory Report</span>
+                    </a>
+                </div>
+                <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "LowStockReport" ? "active" : "")">
+                    <a asp-controller="Reports" asp-action="LowStockReport">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Low Stock Report</span>
+                    </a>
+                </div>
+                <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "SupplierReport" ? "active" : "")">
+                    <a asp-controller="Reports" asp-action="SupplierReport">
+                        <i class="fas fa-truck"></i>
+                        <span>Supplier Report</span>
+                    </a>
+                </div>
+            }
+        }
+
+        @if (isAdmin)
+        {
+            <div class="nav-section-title">Master Configuration</div>
+            <div class="nav-subitem @(currentController == "Department" ? "active" : "")">
+                <a asp-controller="Department" asp-action="Index">
+                    <i class="fas fa-building"></i>
+                    <span>Departments</span>
+                </a>
+            </div>
+            <div class="nav-subitem @(currentController == "Role" ? "active" : "")">
+                <a asp-controller="Role" asp-action="Index">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Roles</span>
                 </a>
             </div>
         }
