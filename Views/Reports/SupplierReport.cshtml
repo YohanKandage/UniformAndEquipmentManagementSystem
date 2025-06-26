@@ -188,25 +188,21 @@
                     @{
                         var uniformSuppliers = Model.Count(s => s.Category == "Uniform");
                         var equipmentSuppliers = Model.Count(s => s.Category == "Equipment");
-                        var generalSuppliers = Model.Count(s => s.Category == "General");
                     }
                     <div class="row text-center">
-                        <div class="col-4">
+                        <div class="col-6">
                             <div class="border-end">
                                 <h4 class="text-primary">@uniformSuppliers</h4>
                                 <p class="text-muted mb-0">Uniform</p>
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col-6">
                             <div class="border-end">
                                 <h4 class="text-info">@equipmentSuppliers</h4>
                                 <p class="text-muted mb-0">Equipment</p>
                             </div>
                         </div>
-                        <div class="col-4">
-                            <h4 class="text-secondary">@generalSuppliers</h4>
-                            <p class="text-muted mb-0">General</p>
-                        </div>
+                       
                     </div>
                 </div>
             </div>

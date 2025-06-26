@@ -67,10 +67,23 @@ body {
 .table thead th {
     background-color: #f8f9fa;
     border-bottom: 2px solid var(--border-color);
+    color: var(--text-color);
+}
+
+/* Override for table-dark class to ensure proper contrast */
+.table-dark thead th {
+    background-color: #212529 !important;
+    color: white !important;
+    border-bottom: 2px solid #495057;
 }
 
 .table-striped tbody tr:nth-of-type(odd) {
     background-color: rgba(26, 115, 232, 0.05);
+}
+
+/* Ensure table-dark striped rows work properly */
+.table-dark.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Navigation */
