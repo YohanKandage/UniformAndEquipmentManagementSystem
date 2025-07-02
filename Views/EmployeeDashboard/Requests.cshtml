@@ -47,13 +47,8 @@
                                             <td>@request.RequestDate.ToString("MMM dd, yyyy")</td>
                                             <td>@request.Reason</td>
                                             <td>
-                                                <span class="badge @(request.Status.ToLower() switch {
-                                                    "pending" => "badge-warning",
-                                                    "approved" => "badge-success",
-                                                    "cancelled" => "badge-danger",
-                                                    _ => "badge-secondary"
-                                                })">
-                                                    @request.Status
+                                                <span class="badge @(request.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.Pending ? "badge-warning" : request.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.ApprovedByPropertyManager ? "badge-success" : request.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.RejectedByPropertyManager ? "badge-danger" : "badge-secondary")">
+                                                    @request.Status.ToString()
                                                 </span>
                                             </td>
                                             <td>@(request.ProcessedBy?.FirstName ?? "-")</td>

@@ -27,6 +27,22 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 .Include(r => r.ProcessedBy)
                 .AsQueryable();
 
+            // Show both pending requests and requests processed by this admin
+            var currentUserEmail = User.Identity?.Name;
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+            
+            if (currentUser != null)
+            {
+                query = query.Where(r => 
+                    r.Status == RequestStatus.ApprovedByPropertyManager || // Pending requests
+                    (r.ProcessedById == currentUser.Id && (r.Status == RequestStatus.ApprovedByAdmin || r.Status == RequestStatus.RejectedByAdmin)) // Requests processed by this admin
+                );
+            }
+            else
+            {
+                query = query.Where(r => r.Status == RequestStatus.ApprovedByPropertyManager);
+            }
+
             if (!string.IsNullOrEmpty(employeeName))
             {
                 query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
@@ -39,7 +55,10 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             if (!string.IsNullOrEmpty(status))
             {
-                query = query.Where(r => r.Status == status);
+                if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                {
+                    query = query.Where(r => r.Status == statusEnum);
+                }
             }
 
             var requests = await query.OrderByDescending(r => r.RequestDate).ToListAsync();
@@ -55,7 +74,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcessRequest(int id, string status, string adminComment)
+        public async Task<IActionResult> ProcessRequest(int id, string status, string adminComment, decimal? cost)
         {
             var request = await _context.Requests
                 .Include(r => r.Item)
@@ -66,6 +85,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 return NotFound();
             }
 
+            if (request.Status != RequestStatus.ApprovedByPropertyManager)
+            {
+                TempData["Error"] = "This request is not ready for admin processing.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var admin = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == User.Identity.Name);
 
@@ -74,14 +99,29 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 return NotFound();
             }
 
-            request.Status = status;
+            if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+            {
+                if (statusEnum != RequestStatus.ApprovedByAdmin && statusEnum != RequestStatus.RejectedByAdmin)
+                {
+                    TempData["Error"] = "Invalid status for admin processing.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                request.Status = statusEnum;
+            }
+            else
+            {
+                TempData["Error"] = "Invalid status value.";
+                return RedirectToAction(nameof(Index));
+            }
+
             request.AdminComment = adminComment;
+            request.Cost = cost;
             request.ProcessedDate = DateTime.Now;
             request.ProcessedById = admin.Id;
 
-            if (status == "Approved")
+            if (statusEnum == RequestStatus.ApprovedByAdmin)
             {
-                // Update item quantity
                 request.Item.Quantity--;
                 if (request.Item.Quantity <= 0)
                 {
@@ -90,8 +130,33 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             }
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = $"Request has been {status.ToLower()} successfully.";
+            TempData["Success"] = $"Request has been {statusEnum.ToString().ToLower()} successfully.";
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Process(int id)
+        {
+            var request = await _context.Requests
+                .Include(r => r.Item)
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(r => r.ProcessedBy)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            // Ensure only Property Manager approved requests can be processed
+            if (request.Status != RequestStatus.ApprovedByPropertyManager)
+            {
+                TempData["Error"] = "This request is not ready for admin processing.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(request);
         }
 
         [HttpGet]

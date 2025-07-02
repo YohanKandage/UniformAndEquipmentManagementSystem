@@ -21,13 +21,16 @@ namespace UniformAndEquipmentManagementSystem.Models
         public DateTime RequestDate { get; set; } = DateTime.Now;
 
         [Required]
-        public string Status { get; set; } = "Pending"; // Pending, Approved, Cancelled
+        public RequestStatus Status { get; set; } = RequestStatus.Pending;
 
         public string? Reason { get; set; }
 
         public string? Remarks { get; set; }
 
         public string? AdminComment { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? Cost { get; set; }
 
         public DateTime? ProcessedDate { get; set; }
 

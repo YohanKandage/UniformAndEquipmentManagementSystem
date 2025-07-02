@@ -8,7 +8,7 @@
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Request Details</h1>
         <div>
-            @if (Model.Status == "Pending")
+            @if (Model.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.Pending)
             {
                 <a href="@Url.Action("Process", new { id = Model.Id })" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm mr-2">
                     <i class="fas fa-check fa-sm text-white-50"></i> Process Request
@@ -42,17 +42,17 @@
                                 <strong>Status:</strong>
                                 @switch (Model.Status)
                                 {
-                                    case "Pending":
-                                        <span class="badge badge-warning">@Model.Status</span>
+                                    case UniformAndEquipmentManagementSystem.Models.RequestStatus.Pending:
+                                        <span class="badge badge-warning">@Model.Status.ToString()</span>
                                         break;
-                                    case "Approved":
-                                        <span class="badge badge-success">@Model.Status</span>
+                                    case UniformAndEquipmentManagementSystem.Models.RequestStatus.ApprovedByPropertyManager:
+                                        <span class="badge badge-success">@Model.Status.ToString()</span>
                                         break;
-                                    case "Rejected":
-                                        <span class="badge badge-danger">@Model.Status</span>
+                                    case UniformAndEquipmentManagementSystem.Models.RequestStatus.RejectedByPropertyManager:
+                                        <span class="badge badge-danger">@Model.Status.ToString()</span>
                                         break;
                                     default:
-                                        <span class="badge badge-secondary">@Model.Status</span>
+                                        <span class="badge badge-secondary">@Model.Status.ToString()</span>
                                         break;
                                 }
                             </p>
@@ -108,7 +108,7 @@
                         </div>
                     }
 
-                    @if (Model.Status != "Pending")
+                    @if (Model.Status != UniformAndEquipmentManagementSystem.Models.RequestStatus.Pending)
                     {
                         <div class="row">
                             <div class="col-12">

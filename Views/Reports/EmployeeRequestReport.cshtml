@@ -34,9 +34,9 @@
                         <label class="form-label">Status</label>
                         <select name="status" class="form-select">
                             <option value="">All Statuses</option>
-                            @foreach (var status in ViewBag.Statuses)
+                            @foreach (var status in Enum.GetValues(typeof(UniformAndEquipmentManagementSystem.Models.RequestStatus)))
                             {
-                                <option value="@status" selected="@(ViewBag.Status == status)">@status</option>
+                                <option value="@status" selected="@(ViewBag.Status == status.ToString())">@status</option>
                             }
                         </select>
                     </div>
@@ -65,23 +65,26 @@
         @{
             var totalRequests = Model.Count();
             var pendingRequests = Model.Count(r => r.Status == "Pending");
-            var approvedRequests = Model.Count(r => r.Status == "Approved");
-            var cancelledRequests = Model.Count(r => r.Status == "Cancelled");
+            var approvedByPropertyManager = Model.Count(r => r.Status == "ApprovedByPropertyManager");
+            var rejectedByPropertyManager = Model.Count(r => r.Status == "RejectedByPropertyManager");
+            var approvedByAdmin = Model.Count(r => r.Status == "ApprovedByAdmin");
+            var rejectedByAdmin = Model.Count(r => r.Status == "RejectedByAdmin");
+            var releasedByStockManager = Model.Count(r => r.Status == "ReleasedByStockManager");
         }
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-clipboard-list fa-2x me-3"></i>
                         <div>
-                            <h5 class="card-title mb-1">Total Requests</h5>
+                            <h5 class="card-title mb-1">Total</h5>
                             <h3 class="mb-0">@totalRequests</h3>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card bg-warning text-dark">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -94,27 +97,53 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <i class="fas fa-check-circle fa-2x me-3"></i>
+                        <i class="fas fa-user-check fa-2x me-3"></i>
                         <div>
-                            <h5 class="card-title mb-1">Approved</h5>
-                            <h3 class="mb-0">@approvedRequests</h3>
+                            <h5 class="card-title mb-1">PM Approved</h5>
+                            <h3 class="mb-0">@approvedByPropertyManager</h3>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-shield fa-2x me-3"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Admin Approved</h5>
+                            <h3 class="mb-0">@approvedByAdmin</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
             <div class="card bg-danger text-white">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-times-circle fa-2x me-3"></i>
                         <div>
-                            <h5 class="card-title mb-1">Cancelled</h5>
-                            <h3 class="mb-0">@cancelledRequests</h3>
+                            <h5 class="card-title mb-1">Rejected</h5>
+                            <h3 class="mb-0">@(rejectedByPropertyManager + rejectedByAdmin)</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-box-open fa-2x me-3"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Released</h5>
+                            <h3 class="mb-0">@releasedByStockManager</h3>
                         </div>
                     </div>
                 </div>
@@ -161,19 +190,43 @@
                                     @if (request.Status == "Pending")
                                     {
                                         <span class="badge bg-warning">
-                                            <i class="fas fa-clock me-1"></i>@request.Status
+                                            <i class="fas fa-clock me-1"></i>Pending
                                         </span>
                                     }
-                                    else if (request.Status == "Approved")
+                                    else if (request.Status == "ApprovedByPropertyManager")
+                                    {
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-user-check me-1"></i>PM Approved
+                                        </span>
+                                    }
+                                    else if (request.Status == "RejectedByPropertyManager")
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times me-1"></i>PM Rejected
+                                        </span>
+                                    }
+                                    else if (request.Status == "ApprovedByAdmin")
                                     {
                                         <span class="badge bg-success">
-                                            <i class="fas fa-check me-1"></i>@request.Status
+                                            <i class="fas fa-user-shield me-1"></i>Admin Approved
+                                        </span>
+                                    }
+                                    else if (request.Status == "RejectedByAdmin")
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times me-1"></i>Admin Rejected
+                                        </span>
+                                    }
+                                    else if (request.Status == "ReleasedByStockManager")
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-box-open me-1"></i>Released
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-danger">
-                                            <i class="fas fa-times me-1"></i>@request.Status
+                                        <span class="badge bg-secondary">
+                                            @request.Status
                                         </span>
                                     }
                                 </td>
@@ -225,13 +278,13 @@
                         </div>
                         <div class="col-4">
                             <div class="border-end">
-                                <h4 class="text-success">@approvedRequests</h4>
+                                <h4 class="text-success">@(approvedByPropertyManager + approvedByAdmin)</h4>
                                 <p class="text-muted mb-0">Approved</p>
                             </div>
                         </div>
                         <div class="col-4">
-                            <h4 class="text-danger">@cancelledRequests</h4>
-                            <p class="text-muted mb-0">Cancelled</p>
+                            <h4 class="text-danger">@(rejectedByPropertyManager + rejectedByAdmin)</h4>
+                            <p class="text-muted mb-0">Rejected</p>
                         </div>
                     </div>
                 </div>
@@ -251,11 +304,18 @@
                                 <strong>@pendingRequests requests</strong> awaiting processing
                             </li>
                         }
-                        @if (approvedRequests > 0)
+                        @if (approvedByPropertyManager > 0)
                         {
                             <li class="mb-2">
                                 <i class="fas fa-check-circle text-success me-2"></i>
-                                <strong>@approvedRequests requests</strong> successfully approved
+                                <strong>@approvedByPropertyManager requests</strong> successfully approved by Property Manager
+                            </li>
+                        }
+                        @if (approvedByAdmin > 0)
+                        {
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>@approvedByAdmin requests</strong> successfully approved by Admin
                             </li>
                         }
                         <li class="mb-2">

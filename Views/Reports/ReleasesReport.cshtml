@@ -1,0 +1,292 @@
+@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Releases Report";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-box-open me-2"></i>Releases Report
+        </h2>
+        <div class="d-flex gap-2">
+            <form asp-action="ExportReleasesReport" method="post" style="display: inline;">
+                <input type="hidden" name="employeeName" value="@ViewBag.EmployeeName" />
+                <input type="hidden" name="departmentId" value="@ViewBag.DepartmentId" />
+                <input type="hidden" name="itemType" value="@ViewBag.ItemType" />
+                <input type="hidden" name="startDate" value="@ViewBag.StartDate" />
+                <input type="hidden" name="endDate" value="@ViewBag.EndDate" />
+                <input type="hidden" name="minCost" value="@ViewBag.MinCost" />
+                <input type="hidden" name="maxCost" value="@ViewBag.MaxCost" />
+                <input type="hidden" name="releasedBy" value="@ViewBag.ReleasedBy" />
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-file-excel me-1"></i>Export to Excel
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-2 col-md-4 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Releases</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalReleases</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-box-open fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Cost</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@String.Format(new System.Globalization.CultureInfo("en-LK"), "LKR {0:N2}", ViewBag.TotalCost)</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Average Cost</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@String.Format(new System.Globalization.CultureInfo("en-LK"), "LKR {0:N2}", ViewBag.AverageCost)</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Today</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TodayReleases</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 mb-3">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">This Month</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.ThisMonthReleases</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-filter me-2"></i>Filters
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="employeeName" class="form-label">Employee Name</label>
+                    <input type="text" id="employeeName" name="employeeName" class="form-control" 
+                           placeholder="Enter employee name" value="@ViewBag.EmployeeName">
+                </div>
+                <div class="col-md-3">
+                    <label for="departmentId" class="form-label">Department</label>
+                    <select id="departmentId" name="departmentId" class="form-select">
+                        <option value="">All Departments</option>
+                        @foreach (var dept in ViewBag.Departments)
+                        {
+                            <option value="@dept.Id" selected="@(ViewBag.DepartmentId == dept.Id)">@dept.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="itemType" class="form-label">Item Type</label>
+                    <select id="itemType" name="itemType" class="form-select">
+                        <option value="">All Types</option>
+                        @foreach (var type in ViewBag.ItemTypes)
+                        {
+                            <option value="@type" selected="@(ViewBag.ItemType == type)">@type</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="releasedBy" class="form-label">Released By</label>
+                    <input type="text" id="releasedBy" name="releasedBy" class="form-control" 
+                           placeholder="Enter stock manager name" value="@ViewBag.ReleasedBy">
+                </div>
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" id="startDate" name="startDate" class="form-control" value="@ViewBag.StartDate">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" id="endDate" name="endDate" class="form-control" value="@ViewBag.EndDate">
+                </div>
+                <div class="col-md-3">
+                    <label for="minCost" class="form-label">Min Cost</label>
+                    <input type="number" id="minCost" name="minCost" class="form-control" 
+                           step="0.01" min="0" placeholder="0.00" value="@ViewBag.MinCost">
+                </div>
+                <div class="col-md-3">
+                    <label for="maxCost" class="form-label">Max Cost</label>
+                    <input type="number" id="maxCost" name="maxCost" class="form-control" 
+                           step="0.01" min="0" placeholder="0.00" value="@ViewBag.MaxCost">
+                </div>
+                <div class="col-12">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>Apply Filters
+                        </button>
+                        <a asp-action="ReleasesReport" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Clear Filters
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-table me-2"></i>Released Items (@Model.Count() results)
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="releasesTable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Item</th>
+                            <th>Item Type</th>
+                            <th>Request Date</th>
+                            <th>Release Date</th>
+                            <th>Cost</th>
+                            <th>Released By</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var release in Model)
+                        {
+                            <tr>
+                                <td>@release.RequestId</td>
+                                <td>@release.EmployeeName</td>
+                                <td>@release.Department</td>
+                                <td>@release.ItemName</td>
+                                <td>
+                                    <span class="badge @(release.ItemType == "Uniform" ? "bg-primary" : "bg-info")">
+                                        @release.ItemType
+                                    </span>
+                                </td>
+                                <td>@release.RequestDate.ToString("MMM dd, yyyy")</td>
+                                <td>@release.ReleaseDate?.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td>
+                                    @if (release.Cost != null)
+                                    {
+                                        @String.Format(new System.Globalization.CultureInfo("en-LK"), "LKR {0:N2}", release.Cost)
+                                    }
+                                    else
+                                    {
+                                        <span>No Cost</span>
+                                    }
+                                </td>
+                                <td>@release.ReleasedBy</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(release.Remarks))
+                                    {
+                                        <span class="text-truncate d-inline-block" style="max-width: 150px;" 
+                                              title="@release.Remarks">@release.Remarks</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No remarks</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            var table = $('#releasesTable').DataTable({
+                "pageLength": 25,
+                "ordering": true,
+                "searching": true,
+                "order": [[6, "desc"]] // Sort by release date descending
+            });
+        });
+    </script>
+}
+
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+    .border-left-secondary {
+        border-left: 0.25rem solid #858796 !important;
+    }
+    .text-gray-300 {
+        color: #dddfeb !important;
+    }
+    .text-gray-800 {
+        color: #5a5c69 !important;
+    }
+    .card {
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style> 

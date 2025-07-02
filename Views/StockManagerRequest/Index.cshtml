@@ -1,13 +1,13 @@
 @model IEnumerable<UniformAndEquipmentManagementSystem.Models.Request>
 
 @{
-    ViewData["Title"] = "Admin Request Management";
+    ViewData["Title"] = "Stock Manager Requests";
 }
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Admin Request Management</h2>
-        <p class="text-muted">Only Property Manager approved requests are shown here</p>
+        <h2>Stock Manager Requests</h2>
+        <p class="text-muted">View and process admin-approved requests for release</p>
     </div>
 
     @if (TempData["Success"] != null)
@@ -29,11 +29,11 @@
     <div class="card mb-4">
         <div class="card-body">
             <form id="filterForm" class="row g-3" method="get">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label for="employeeName" class="form-label">Employee Name</label>
                     <input type="text" id="employeeName" name="employeeName" class="form-control" placeholder="Enter employee name" value="@ViewBag.EmployeeName">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label for="departmentId" class="form-label">Department</label>
                     <select id="departmentId" name="departmentId" class="form-select">
                         <option value="">All Departments</option>
@@ -43,7 +43,7 @@
                         }
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end gap-2">
+                <div class="col-md-4 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-primary" style="background-color: #2c2e52; border-color: #2c2e52;">
                         <i class="fas fa-search"></i> Apply Filter
                     </button>
@@ -66,7 +66,9 @@
                             <th>Department</th>
                             <th>Item</th>
                             <th>Request Date</th>
-                            <th>Status</th>
+                            <th>Admin Approval Date</th>
+                            <th>Cost</th>
+                            <th>Release Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -79,16 +81,45 @@
                                 <td>@request.Employee.Department.Name</td>
                                 <td>@request.Item.ItemName</td>
                                 <td>@request.RequestDate.ToString("MMM dd, yyyy")</td>
+                                <td>@(request.ProcessedDate?.ToString("MMM dd, yyyy") ?? "N/A")</td>
                                 <td>
-                                    <span class="badge bg-success">@request.Status.ToString()</span>
+                                    @if (request.Cost.HasValue)
+                                    {
+                                        <span class="badge bg-info">@String.Format(new System.Globalization.CultureInfo("en-LK"), "LKR {0:N2}", request.Cost)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No cost assigned</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (request.Status == RequestStatus.ApprovedByAdmin)
+                                    {
+                                        <span class="badge bg-warning">Pending Release</span>
+                                    }
+                                    else if (request.Status == RequestStatus.ReleasedByStockManager)
+                                    {
+                                        <span class="badge bg-success">Released</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@request.Status.ToString()</span>
+                                    }
                                 </td>
                                 <td>
                                     <a asp-action="Details" asp-route-id="@request.Id" class="btn btn-info btn-sm">
                                         <i class="fas fa-eye"></i> Details
                                     </a>
-                                    <a asp-action="Process" asp-route-id="@request.Id" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-cog"></i> Process
-                                    </a>
+                                    @if (request.Status == RequestStatus.ApprovedByAdmin)
+                                    {
+                                        <a asp-action="Process" asp-route-id="@request.Id" class="btn btn-success btn-sm">
+                                            <i class="fas fa-box-open"></i> Release
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Already Processed</span>
+                                    }
                                 </td>
                             </tr>
                         }

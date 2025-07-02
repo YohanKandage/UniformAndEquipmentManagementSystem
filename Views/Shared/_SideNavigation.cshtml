@@ -109,6 +109,17 @@
             </div>
         }
 
+        @if (isStockManager)
+        {
+            <div class="nav-section-title">Request Management</div>
+            <div class="nav-subitem @(currentController == "StockManagerRequest" ? "active" : "")">
+                <a asp-controller="StockManagerRequest" asp-action="Index">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Requests</span>
+                </a>
+            </div>
+        }
+
         @if (isAdmin || isStockManager || isPropertyManager)
         {
             <div class="nav-section-title">Reports</div>
@@ -121,7 +132,7 @@
                     </a>
                 </div>
             }
-            @if (isAdmin || isPropertyManager)
+            @if (isAdmin || isPropertyManager || isStockManager)
             {
                 <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "EmployeeRequestReport" ? "active" : "")">
                     <a asp-controller="Reports" asp-action="EmployeeRequestReport">
@@ -148,6 +159,15 @@
                     <a asp-controller="Reports" asp-action="SupplierReport">
                         <i class="fas fa-truck"></i>
                         <span>Supplier Report</span>
+                    </a>
+                </div>
+            }
+            @if (isStockManager)
+            {
+                <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "ReleasesReport" ? "active" : "")">
+                    <a asp-controller="Reports" asp-action="ReleasesReport">
+                        <i class="fas fa-box-open"></i>
+                        <span>Releases Report</span>
                     </a>
                 </div>
             }

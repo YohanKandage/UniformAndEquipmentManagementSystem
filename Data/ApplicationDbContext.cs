@@ -39,6 +39,12 @@ namespace UniformAndEquipmentManagementSystem.Data
                 .WithMany()
                 .HasForeignKey(u => u.DepartmentId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure RequestStatus enum
+            builder.Entity<Request>()
+                .Property(r => r.Status)
+                .HasConversion<string>()
+                .HasDefaultValue(RequestStatus.Pending);
         }
 
         public DbSet<Employee> Employees { get; set; }

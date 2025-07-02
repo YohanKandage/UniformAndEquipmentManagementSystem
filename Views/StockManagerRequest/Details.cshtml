@@ -82,6 +82,12 @@
                             <dt class="col-sm-4">Processed By</dt>
                             <dd class="col-sm-8">@Model.ProcessedBy.UserName</dd>
                         }
+
+                        @if (!string.IsNullOrEmpty(Model.Remarks))
+                        {
+                            <dt class="col-sm-4">Remarks</dt>
+                            <dd class="col-sm-8">@Model.Remarks</dd>
+                        }
                     </dl>
 
                     @if (!string.IsNullOrEmpty(Model.ProofImage1) || !string.IsNullOrEmpty(Model.ProofImage2) || !string.IsNullOrEmpty(Model.ProofImage3))
@@ -105,11 +111,11 @@
                         </div>
                     }
 
-                    @if (Model.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.ApprovedByPropertyManager)
+                    @if (Model.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.ApprovedByAdmin)
                     {
                         <div class="mt-4">
-                            <a asp-action="Process" asp-route-id="@Model.Id" class="btn btn-primary">
-                                <i class="fas fa-cog me-1"></i>Process Request
+                            <a asp-action="Process" asp-route-id="@Model.Id" class="btn btn-success">
+                                <i class="fas fa-box-open me-1"></i>Release Item
                             </a>
                         </div>
                     }
@@ -146,18 +152,9 @@
         background-color: #28a745;
         border-color: #28a745;
     }
-    .btn-danger {
-        background-color: #dc3545;
-        border-color: #dc3545;
-    }
     .btn-success:hover {
         background-color: #218838;
         border-color: #1e7e34;
-        transform: translateY(-1px);
-    }
-    .btn-danger:hover {
-        background-color: #c82333;
-        border-color: #bd2130;
         transform: translateY(-1px);
     }
     .fw-bold {

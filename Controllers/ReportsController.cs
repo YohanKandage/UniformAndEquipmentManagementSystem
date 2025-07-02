@@ -87,7 +87,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             return View(employees);
         }
 
-        [Authorize(Roles = "Admin,PropertyManager")]
+        [Authorize(Roles = "Admin,PropertyManager,StockManager")]
         public async Task<IActionResult> EmployeeRequestReport(string employeeName, string status, DateTime? startDate, DateTime? endDate)
         {
             var query = _context.Requests
@@ -103,7 +103,10 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             if (!string.IsNullOrEmpty(status))
             {
-                query = query.Where(r => r.Status == status);
+                if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                {
+                    query = query.Where(r => r.Status == statusEnum);
+                }
             }
 
             if (startDate.HasValue)
@@ -126,13 +129,13 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     ItemType = r.Item.ItemType,
                     Reason = r.Reason,
                     RequestDate = r.RequestDate,
-                    Status = r.Status,
+                    Status = r.Status.ToString(),
                     ProcessedDate = r.ProcessedDate,
                     Remarks = r.Remarks
                 })
                 .ToListAsync();
 
-            ViewBag.Statuses = new List<string> { "Pending", "Approved", "Cancelled" };
+            ViewBag.Statuses = Enum.GetValues(typeof(RequestStatus)).Cast<RequestStatus>().Select(s => s.ToString()).ToList();
             ViewBag.EmployeeName = employeeName;
             ViewBag.Status = status;
             ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
@@ -286,9 +289,767 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             return View(suppliers);
         }
 
+        [Authorize(Roles = "StockManager")]
+        public async Task<IActionResult> ReleasesReport(string employeeName, int? departmentId, string itemType, 
+            DateTime? startDate, DateTime? endDate, decimal? minCost, decimal? maxCost, string releasedBy)
+        {
+            var query = _context.Requests
+                .Include(r => r.Item)
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(r => r.ProcessedBy)
+                .Where(r => r.Status == RequestStatus.ReleasedByStockManager)
+                .AsQueryable();
+
+            // Apply filters
+            if (!string.IsNullOrEmpty(employeeName))
+            {
+                query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
+            }
+
+            if (departmentId.HasValue)
+            {
+                query = query.Where(r => r.Employee.DepartmentId == departmentId);
+            }
+
+            if (!string.IsNullOrEmpty(itemType))
+            {
+                query = query.Where(r => r.Item.ItemType == itemType);
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(r => r.ProcessedDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(r => r.ProcessedDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+            }
+
+            if (minCost.HasValue)
+            {
+                query = query.Where(r => r.Cost >= minCost.Value);
+            }
+
+            if (maxCost.HasValue)
+            {
+                query = query.Where(r => r.Cost <= maxCost.Value);
+            }
+
+            if (!string.IsNullOrEmpty(releasedBy))
+            {
+                query = query.Where(r => r.ProcessedBy.UserName.Contains(releasedBy));
+            }
+
+            var releases = await query
+                .OrderByDescending(r => r.ProcessedDate)
+                .Select(r => new
+                {
+                    RequestId = r.Id,
+                    EmployeeName = r.Employee.FirstName + " " + r.Employee.LastName,
+                    Department = r.Employee.Department.Name,
+                    ItemName = r.Item.ItemName,
+                    ItemType = r.Item.ItemType,
+                    RequestDate = r.RequestDate,
+                    ReleaseDate = r.ProcessedDate,
+                    Cost = r.Cost,
+                    ReleasedBy = r.ProcessedBy.UserName,
+                    Remarks = r.Remarks
+                })
+                .ToListAsync();
+
+            // Get statistics
+            var totalReleases = releases.Count;
+            var totalCost = releases.Where(r => r.Cost.HasValue).Sum(r => r.Cost.Value);
+            var averageCost = releases.Where(r => r.Cost.HasValue).Any() ? 
+                releases.Where(r => r.Cost.HasValue).Average(r => r.Cost.Value) : 0;
+            var todayReleases = releases.Count(r => r.ReleaseDate?.Date == DateTime.Today);
+            var thisMonthReleases = releases.Count(r => r.ReleaseDate?.Month == DateTime.Now.Month && 
+                                                       r.ReleaseDate?.Year == DateTime.Now.Year);
+
+            ViewBag.Departments = await _context.Departments.ToListAsync();
+            ViewBag.ItemTypes = new List<string> { "Uniform", "Equipment" };
+            ViewBag.EmployeeName = employeeName;
+            ViewBag.DepartmentId = departmentId;
+            ViewBag.ItemType = itemType;
+            ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+            ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+            ViewBag.MinCost = minCost;
+            ViewBag.MaxCost = maxCost;
+            ViewBag.ReleasedBy = releasedBy;
+            ViewBag.TotalReleases = totalReleases;
+            ViewBag.TotalCost = totalCost;
+            ViewBag.AverageCost = averageCost;
+            ViewBag.TodayReleases = todayReleases;
+            ViewBag.ThisMonthReleases = thisMonthReleases;
+
+            return View(releases);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "StockManager")]
+        public async Task<IActionResult> ExportReleasesReport(string employeeName, int? departmentId, string itemType, 
+            DateTime? startDate, DateTime? endDate, decimal? minCost, decimal? maxCost, string releasedBy)
+        {
+            try
+            {
+                var query = _context.Requests
+                    .Include(r => r.Item)
+                    .Include(r => r.Employee)
+                        .ThenInclude(e => e.Department)
+                    .Include(r => r.ProcessedBy)
+                    .Where(r => r.Status == RequestStatus.ReleasedByStockManager)
+                    .AsQueryable();
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(employeeName))
+                {
+                    query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
+                }
+
+                if (departmentId.HasValue)
+                {
+                    query = query.Where(r => r.Employee.DepartmentId == departmentId);
+                }
+
+                if (!string.IsNullOrEmpty(itemType))
+                {
+                    query = query.Where(r => r.Item.ItemType == itemType);
+                }
+
+                if (startDate.HasValue)
+                {
+                    query = query.Where(r => r.ProcessedDate >= startDate.Value);
+                }
+
+                if (endDate.HasValue)
+                {
+                    query = query.Where(r => r.ProcessedDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+                }
+
+                if (minCost.HasValue)
+                {
+                    query = query.Where(r => r.Cost >= minCost.Value);
+                }
+
+                if (maxCost.HasValue)
+                {
+                    query = query.Where(r => r.Cost <= maxCost.Value);
+                }
+
+                if (!string.IsNullOrEmpty(releasedBy))
+                {
+                    query = query.Where(r => r.ProcessedBy.UserName.Contains(releasedBy));
+                }
+
+                var releases = await query
+                    .OrderByDescending(r => r.ProcessedDate)
+                    .Select(r => new
+                    {
+                        RequestId = r.Id,
+                        EmployeeName = r.Employee.FirstName + " " + r.Employee.LastName,
+                        Department = r.Employee.Department.Name,
+                        ItemName = r.Item.ItemName,
+                        ItemType = r.Item.ItemType,
+                        RequestDate = r.RequestDate,
+                        ReleaseDate = r.ProcessedDate,
+                        Cost = r.Cost,
+                        ReleasedBy = r.ProcessedBy.UserName,
+                        Remarks = r.Remarks ?? ""
+                    })
+                    .ToListAsync();
+
+                var excelData = releases.Select(r => new
+                {
+                    RequestID = r.RequestId,
+                    EmployeeName = r.EmployeeName,
+                    Department = r.Department,
+                    ItemName = r.ItemName,
+                    ItemType = r.ItemType,
+                    RequestDate = r.RequestDate.ToString("MMM dd, yyyy"),
+                    ReleaseDate = r.ReleaseDate?.ToString("MMM dd, yyyy HH:mm") ?? "N/A",
+                    Cost = r.Cost?.ToString("F2") ?? "No Cost",
+                    ReleasedBy = r.ReleasedBy,
+                    Remarks = r.Remarks
+                }).ToList();
+
+                var fileName = $"ReleasesReport_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+                var excelBytes = _excelService.ExportToExcel(excelData, "Releases Report");
+
+                return File(excelBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "An error occurred while generating the Excel report.";
+                return RedirectToAction("ReleasesReport");
+            }
+        }
+
         #endregion
 
         #region Request Status Reports
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminProcessedRequestsReport(string employeeName, int? departmentId, string status, 
+            DateTime? startDate, DateTime? endDate, decimal? minCost, decimal? maxCost)
+        {
+            var currentUserEmail = User.Identity?.Name;
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+            
+            var query = _context.Requests
+                .Include(r => r.Item)
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(r => r.ProcessedBy)
+                .Where(r => r.ProcessedById == currentUser.Id && 
+                           (r.Status == RequestStatus.ApprovedByAdmin || r.Status == RequestStatus.RejectedByAdmin))
+                .AsQueryable();
+
+            // Apply filters
+            if (!string.IsNullOrEmpty(employeeName))
+            {
+                query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
+            }
+
+            if (departmentId.HasValue)
+            {
+                query = query.Where(r => r.Employee.DepartmentId == departmentId);
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                {
+                    query = query.Where(r => r.Status == statusEnum);
+                }
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(r => r.ProcessedDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(r => r.ProcessedDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+            }
+
+            if (minCost.HasValue)
+            {
+                query = query.Where(r => r.Cost >= minCost.Value);
+            }
+
+            if (maxCost.HasValue)
+            {
+                query = query.Where(r => r.Cost <= maxCost.Value);
+            }
+
+            var requests = await query
+                .OrderByDescending(r => r.ProcessedDate)
+                .Select(r => new
+                {
+                    RequestId = r.Id,
+                    EmployeeName = r.Employee.FirstName + " " + r.Employee.LastName,
+                    Department = r.Employee.Department.Name,
+                    ItemName = r.Item.ItemName,
+                    ItemType = r.Item.ItemType,
+                    RequestDate = r.RequestDate,
+                    ProcessedDate = r.ProcessedDate,
+                    Status = r.Status.ToString(),
+                    Cost = r.Cost,
+                    AdminComment = r.AdminComment,
+                    Remarks = r.Remarks
+                })
+                .ToListAsync();
+
+            // Get statistics
+            var totalProcessed = requests.Count;
+            var approvedCount = requests.Count(r => r.Status == "ApprovedByAdmin");
+            var rejectedCount = requests.Count(r => r.Status == "RejectedByAdmin");
+            var totalCost = requests.Where(r => r.Cost.HasValue).Sum(r => r.Cost.Value);
+            var averageCost = requests.Where(r => r.Cost.HasValue).Any() ? 
+                requests.Where(r => r.Cost.HasValue).Average(r => r.Cost.Value) : 0;
+            var todayProcessed = requests.Count(r => r.ProcessedDate?.Date == DateTime.Today);
+            var thisMonthProcessed = requests.Count(r => r.ProcessedDate?.Month == DateTime.Now.Month && 
+                                                       r.ProcessedDate?.Year == DateTime.Now.Year);
+
+            ViewBag.Departments = await _context.Departments.ToListAsync();
+            ViewBag.Statuses = new List<string> { "ApprovedByAdmin", "RejectedByAdmin" };
+            ViewBag.EmployeeName = employeeName;
+            ViewBag.DepartmentId = departmentId;
+            ViewBag.Status = status;
+            ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+            ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+            ViewBag.MinCost = minCost;
+            ViewBag.MaxCost = maxCost;
+            ViewBag.TotalProcessed = totalProcessed;
+            ViewBag.ApprovedCount = approvedCount;
+            ViewBag.RejectedCount = rejectedCount;
+            ViewBag.TotalCost = totalCost;
+            ViewBag.AverageCost = averageCost;
+            ViewBag.TodayProcessed = todayProcessed;
+            ViewBag.ThisMonthProcessed = thisMonthProcessed;
+
+            return View(requests);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ExportAdminProcessedRequestsReport(string employeeName, int? departmentId, string status, 
+            DateTime? startDate, DateTime? endDate, decimal? minCost, decimal? maxCost)
+        {
+            try
+            {
+                var currentUserEmail = User.Identity?.Name;
+                var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+                
+                var query = _context.Requests
+                    .Include(r => r.Item)
+                    .Include(r => r.Employee)
+                        .ThenInclude(e => e.Department)
+                    .Include(r => r.ProcessedBy)
+                    .Where(r => r.ProcessedById == currentUser.Id && 
+                               (r.Status == RequestStatus.ApprovedByAdmin || r.Status == RequestStatus.RejectedByAdmin))
+                    .AsQueryable();
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(employeeName))
+                {
+                    query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
+                }
+
+                if (departmentId.HasValue)
+                {
+                    query = query.Where(r => r.Employee.DepartmentId == departmentId);
+                }
+
+                if (!string.IsNullOrEmpty(status))
+                {
+                    if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                    {
+                        query = query.Where(r => r.Status == statusEnum);
+                    }
+                }
+
+                if (startDate.HasValue)
+                {
+                    query = query.Where(r => r.ProcessedDate >= startDate.Value);
+                }
+
+                if (endDate.HasValue)
+                {
+                    query = query.Where(r => r.ProcessedDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+                }
+
+                if (minCost.HasValue)
+                {
+                    query = query.Where(r => r.Cost >= minCost.Value);
+                }
+
+                if (maxCost.HasValue)
+                {
+                    query = query.Where(r => r.Cost <= maxCost.Value);
+                }
+
+                var requests = await query
+                    .OrderByDescending(r => r.ProcessedDate)
+                    .Select(r => new
+                    {
+                        RequestId = r.Id,
+                        EmployeeName = r.Employee.FirstName + " " + r.Employee.LastName,
+                        Department = r.Employee.Department.Name,
+                        ItemName = r.Item.ItemName,
+                        ItemType = r.Item.ItemType,
+                        RequestDate = r.RequestDate,
+                        ProcessedDate = r.ProcessedDate,
+                        Status = r.Status.ToString(),
+                        Cost = r.Cost,
+                        AdminComment = r.AdminComment ?? "",
+                        Remarks = r.Remarks ?? ""
+                    })
+                    .ToListAsync();
+
+                var excelData = requests.Select(r => new
+                {
+                    RequestID = r.RequestId,
+                    EmployeeName = r.EmployeeName,
+                    Department = r.Department,
+                    ItemName = r.ItemName,
+                    ItemType = r.ItemType,
+                    RequestDate = r.RequestDate.ToString("MMM dd, yyyy"),
+                    ProcessedDate = r.ProcessedDate?.ToString("MMM dd, yyyy HH:mm") ?? "N/A",
+                    Status = r.Status,
+                    Cost = r.Cost?.ToString("F2") ?? "No Cost",
+                    AdminComment = r.AdminComment,
+                    Remarks = r.Remarks
+                }).ToList();
+
+                var fileName = $"AdminProcessedRequestsReport_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+                var excelBytes = _excelService.ExportToExcel(excelData, "Admin Processed Requests Report");
+
+                return File(excelBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "An error occurred while generating the Excel report.";
+                return RedirectToAction("AdminProcessedRequestsReport");
+            }
+        }
+
+        [Authorize(Roles = "PropertyManager")]
+        public async Task<IActionResult> PropertyManagerProcessedRequestsReport(string employeeName, int? departmentId, string status, 
+            DateTime? startDate, DateTime? endDate)
+        {
+            var currentUserEmail = User.Identity?.Name;
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+            
+            var query = _context.Requests
+                .Include(r => r.Item)
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(r => r.ProcessedBy)
+                .Where(r => r.ProcessedById == currentUser.Id && 
+                           (r.Status == RequestStatus.ApprovedByPropertyManager || r.Status == RequestStatus.RejectedByPropertyManager))
+                .AsQueryable();
+
+            // Apply filters
+            if (!string.IsNullOrEmpty(employeeName))
+            {
+                query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
+            }
+
+            if (departmentId.HasValue)
+            {
+                query = query.Where(r => r.Employee.DepartmentId == departmentId);
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                {
+                    query = query.Where(r => r.Status == statusEnum);
+                }
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(r => r.ProcessedDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(r => r.ProcessedDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+            }
+
+            var requests = await query
+                .OrderByDescending(r => r.ProcessedDate)
+                .Select(r => new
+                {
+                    RequestId = r.Id,
+                    EmployeeName = r.Employee.FirstName + " " + r.Employee.LastName,
+                    Department = r.Employee.Department.Name,
+                    ItemName = r.Item.ItemName,
+                    ItemType = r.Item.ItemType,
+                    RequestDate = r.RequestDate,
+                    ProcessedDate = r.ProcessedDate,
+                    Status = r.Status.ToString(),
+                    Remarks = r.Remarks
+                })
+                .ToListAsync();
+
+            // Get statistics
+            var totalProcessed = requests.Count;
+            var approvedCount = requests.Count(r => r.Status == "ApprovedByPropertyManager");
+            var rejectedCount = requests.Count(r => r.Status == "RejectedByPropertyManager");
+            var todayProcessed = requests.Count(r => r.ProcessedDate?.Date == DateTime.Today);
+            var thisMonthProcessed = requests.Count(r => r.ProcessedDate?.Month == DateTime.Now.Month && 
+                                                       r.ProcessedDate?.Year == DateTime.Now.Year);
+
+            ViewBag.Departments = await _context.Departments.ToListAsync();
+            ViewBag.Statuses = new List<string> { "ApprovedByPropertyManager", "RejectedByPropertyManager" };
+            ViewBag.EmployeeName = employeeName;
+            ViewBag.DepartmentId = departmentId;
+            ViewBag.Status = status;
+            ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+            ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+            ViewBag.TotalProcessed = totalProcessed;
+            ViewBag.ApprovedCount = approvedCount;
+            ViewBag.RejectedCount = rejectedCount;
+            ViewBag.TodayProcessed = todayProcessed;
+            ViewBag.ThisMonthProcessed = thisMonthProcessed;
+
+            return View(requests);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "PropertyManager")]
+        public async Task<IActionResult> ExportPropertyManagerProcessedRequestsReport(string employeeName, int? departmentId, string status, 
+            DateTime? startDate, DateTime? endDate)
+        {
+            try
+            {
+                var currentUserEmail = User.Identity?.Name;
+                var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+                
+                var query = _context.Requests
+                    .Include(r => r.Item)
+                    .Include(r => r.Employee)
+                        .ThenInclude(e => e.Department)
+                    .Include(r => r.ProcessedBy)
+                    .Where(r => r.ProcessedById == currentUser.Id && 
+                               (r.Status == RequestStatus.ApprovedByPropertyManager || r.Status == RequestStatus.RejectedByPropertyManager))
+                    .AsQueryable();
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(employeeName))
+                {
+                    query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
+                }
+
+                if (departmentId.HasValue)
+                {
+                    query = query.Where(r => r.Employee.DepartmentId == departmentId);
+                }
+
+                if (!string.IsNullOrEmpty(status))
+                {
+                    if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                    {
+                        query = query.Where(r => r.Status == statusEnum);
+                    }
+                }
+
+                if (startDate.HasValue)
+                {
+                    query = query.Where(r => r.ProcessedDate >= startDate.Value);
+                }
+
+                if (endDate.HasValue)
+                {
+                    query = query.Where(r => r.ProcessedDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+                }
+
+                var requests = await query
+                    .OrderByDescending(r => r.ProcessedDate)
+                    .Select(r => new
+                    {
+                        RequestId = r.Id,
+                        EmployeeName = r.Employee.FirstName + " " + r.Employee.LastName,
+                        Department = r.Employee.Department.Name,
+                        ItemName = r.Item.ItemName,
+                        ItemType = r.Item.ItemType,
+                        RequestDate = r.RequestDate,
+                        ProcessedDate = r.ProcessedDate,
+                        Status = r.Status.ToString(),
+                        Remarks = r.Remarks ?? ""
+                    })
+                    .ToListAsync();
+
+                var excelData = requests.Select(r => new
+                {
+                    RequestID = r.RequestId,
+                    EmployeeName = r.EmployeeName,
+                    Department = r.Department,
+                    ItemName = r.ItemName,
+                    ItemType = r.ItemType,
+                    RequestDate = r.RequestDate.ToString("MMM dd, yyyy"),
+                    ProcessedDate = r.ProcessedDate?.ToString("MMM dd, yyyy HH:mm") ?? "N/A",
+                    Status = r.Status,
+                    Remarks = r.Remarks
+                }).ToList();
+
+                var fileName = $"PropertyManagerProcessedRequestsReport_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+                var excelBytes = _excelService.ExportToExcel(excelData, "Property Manager Processed Requests Report");
+
+                return File(excelBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "An error occurred while generating the Excel report.";
+                return RedirectToAction("PropertyManagerProcessedRequestsReport");
+            }
+        }
+
+        [Authorize(Roles = "StockManager")]
+        public async Task<IActionResult> StockManagerProcessedRequestsReport(string employeeName, int? departmentId, string status, 
+            DateTime? startDate, DateTime? endDate)
+        {
+            var currentUserEmail = User.Identity?.Name;
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+            
+            var query = _context.Requests
+                .Include(r => r.Item)
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(r => r.ProcessedBy)
+                .Where(r => r.ProcessedById == currentUser.Id && r.Status == RequestStatus.ReleasedByStockManager)
+                .AsQueryable();
+
+            // Apply filters
+            if (!string.IsNullOrEmpty(employeeName))
+            {
+                query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
+            }
+
+            if (departmentId.HasValue)
+            {
+                query = query.Where(r => r.Employee.DepartmentId == departmentId);
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                {
+                    query = query.Where(r => r.Status == statusEnum);
+                }
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(r => r.ProcessedDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(r => r.ProcessedDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+            }
+
+            var requests = await query
+                .OrderByDescending(r => r.ProcessedDate)
+                .Select(r => new
+                {
+                    RequestId = r.Id,
+                    EmployeeName = r.Employee.FirstName + " " + r.Employee.LastName,
+                    Department = r.Employee.Department.Name,
+                    ItemName = r.Item.ItemName,
+                    ItemType = r.Item.ItemType,
+                    RequestDate = r.RequestDate,
+                    ProcessedDate = r.ProcessedDate,
+                    Cost = r.Cost,
+                    Remarks = r.Remarks
+                })
+                .ToListAsync();
+
+            // Get statistics
+            var totalReleased = requests.Count;
+            var totalCost = requests.Where(r => r.Cost.HasValue).Sum(r => r.Cost.Value);
+            var averageCost = requests.Where(r => r.Cost.HasValue).Any() ? 
+                requests.Where(r => r.Cost.HasValue).Average(r => r.Cost.Value) : 0;
+            var todayReleased = requests.Count(r => r.ProcessedDate?.Date == DateTime.Today);
+            var thisMonthReleased = requests.Count(r => r.ProcessedDate?.Month == DateTime.Now.Month && 
+                                                      r.ProcessedDate?.Year == DateTime.Now.Year);
+
+            ViewBag.Departments = await _context.Departments.ToListAsync();
+            ViewBag.EmployeeName = employeeName;
+            ViewBag.DepartmentId = departmentId;
+            ViewBag.Status = status;
+            ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+            ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+            ViewBag.TotalReleased = totalReleased;
+            ViewBag.TotalCost = totalCost;
+            ViewBag.AverageCost = averageCost;
+            ViewBag.TodayReleased = todayReleased;
+            ViewBag.ThisMonthReleased = thisMonthReleased;
+
+            return View(requests);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "StockManager")]
+        public async Task<IActionResult> ExportStockManagerProcessedRequestsReport(string employeeName, int? departmentId, string status, 
+            DateTime? startDate, DateTime? endDate)
+        {
+            try
+            {
+                var currentUserEmail = User.Identity?.Name;
+                var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+                
+                var query = _context.Requests
+                    .Include(r => r.Item)
+                    .Include(r => r.Employee)
+                        .ThenInclude(e => e.Department)
+                    .Include(r => r.ProcessedBy)
+                    .Where(r => r.ProcessedById == currentUser.Id && r.Status == RequestStatus.ReleasedByStockManager)
+                    .AsQueryable();
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(employeeName))
+                {
+                    query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
+                }
+
+                if (departmentId.HasValue)
+                {
+                    query = query.Where(r => r.Employee.DepartmentId == departmentId);
+                }
+
+                if (!string.IsNullOrEmpty(status))
+                {
+                    if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                    {
+                        query = query.Where(r => r.Status == statusEnum);
+                    }
+                }
+
+                if (startDate.HasValue)
+                {
+                    query = query.Where(r => r.ProcessedDate >= startDate.Value);
+                }
+
+                if (endDate.HasValue)
+                {
+                    query = query.Where(r => r.ProcessedDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+                }
+
+                var requests = await query
+                    .OrderByDescending(r => r.ProcessedDate)
+                    .Select(r => new
+                    {
+                        RequestId = r.Id,
+                        EmployeeName = r.Employee.FirstName + " " + r.Employee.LastName,
+                        Department = r.Employee.Department.Name,
+                        ItemName = r.Item.ItemName,
+                        ItemType = r.Item.ItemType,
+                        RequestDate = r.RequestDate,
+                        ProcessedDate = r.ProcessedDate,
+                        Cost = r.Cost,
+                        Remarks = r.Remarks ?? ""
+                    })
+                    .ToListAsync();
+
+                var excelData = requests.Select(r => new
+                {
+                    RequestID = r.RequestId,
+                    EmployeeName = r.EmployeeName,
+                    Department = r.Department,
+                    ItemName = r.ItemName,
+                    ItemType = r.ItemType,
+                    RequestDate = r.RequestDate.ToString("MMM dd, yyyy"),
+                    ProcessedDate = r.ProcessedDate?.ToString("MMM dd, yyyy HH:mm") ?? "N/A",
+                    Cost = r.Cost?.ToString("F2") ?? "No Cost",
+                    Remarks = r.Remarks
+                }).ToList();
+
+                var fileName = $"StockManagerProcessedRequestsReport_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+                var excelBytes = _excelService.ExportToExcel(excelData, "Stock Manager Processed Requests Report");
+
+                return File(excelBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "An error occurred while generating the Excel report.";
+                return RedirectToAction("StockManagerProcessedRequestsReport");
+            }
+        }
 
         #endregion
 
@@ -365,7 +1126,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,PropertyManager")]
+        [Authorize(Roles = "Admin,PropertyManager,StockManager")]
         public async Task<IActionResult> ExportEmployeeRequestReport(string employeeName, string status, DateTime? startDate, DateTime? endDate)
         {
             var query = _context.Requests
@@ -380,7 +1141,10 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             if (!string.IsNullOrEmpty(status))
             {
-                query = query.Where(r => r.Status == status);
+                if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                {
+                    query = query.Where(r => r.Status == statusEnum);
+                }
             }
 
             if (startDate.HasValue)
@@ -403,7 +1167,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     ItemType = r.Item.ItemType,
                     Reason = r.Reason,
                     RequestDate = r.RequestDate,
-                    Status = r.Status,
+                    Status = r.Status.ToString(),
                     ProcessedDate = r.ProcessedDate,
                     Remarks = r.Remarks
                 })
@@ -464,17 +1228,9 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             if (!string.IsNullOrEmpty(status))
             {
-                switch (status.ToLower())
+                if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
                 {
-                    case "available":
-                        query = query.Where(i => i.AssignedToId == null && i.Quantity > 0);
-                        break;
-                    case "assigned":
-                        query = query.Where(i => i.AssignedToId != null);
-                        break;
-                    case "outofstock":
-                        query = query.Where(i => i.Quantity == 0);
-                        break;
+                    query = query.Where(i => i.AssignedToId == null && i.Quantity > 0);
                 }
             }
 

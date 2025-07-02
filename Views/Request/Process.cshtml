@@ -30,7 +30,7 @@
                             <h5>Request Information</h5>
                             <p><strong>Request ID:</strong> @Model.Id</p>
                             <p><strong>Request Date:</strong> @Model.RequestDate.ToString("MMM dd, yyyy HH:mm")</p>
-                            <p><strong>Status:</strong> <span class="badge badge-warning">@Model.Status</span></p>
+                            <p><strong>Status:</strong> <span class="badge badge-warning">@Model.Status.ToString()</span></p>
                         </div>
                     </div>
 
@@ -99,8 +99,8 @@
                             <label>Status</label>
                             <select name="status" class="form-control" required>
                                 <option value="">Select Status</option>
-                                <option value="Approved">Approve</option>
-                                <option value="Rejected">Reject</option>
+                                <option value="ApprovedByPropertyManager">Approve</option>
+                                <option value="RejectedByPropertyManager">Reject</option>
                             </select>
                         </div>
 
@@ -128,9 +128,9 @@
                 var status = $(this).val();
                 var remarksField = $('textarea[name="remarks"]');
                 
-                if (status === "Approved") {
+                if (status === "ApprovedByPropertyManager") {
                     remarksField.attr('placeholder', 'Enter approval remarks...');
-                } else if (status === "Rejected") {
+                } else if (status === "RejectedByPropertyManager") {
                     remarksField.attr('placeholder', 'Enter rejection reason...');
                 } else {
                     remarksField.attr('placeholder', 'Enter remarks...');

@@ -68,7 +68,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 var totalRequests = await _context.Requests.CountAsync();
 
                 // Get pending requests count
-                var pendingRequests = await _context.Requests.CountAsync(r => r.Status == "Pending");
+                var pendingRequests = await _context.Requests.CountAsync(r => r.Status == RequestStatus.Pending);
 
                 // Get low stock items (items with quantity less than 10)
                 var lowStockItems = await _context.Items.CountAsync(i => i.Quantity < 10);
@@ -116,16 +116,16 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                         Title = $"New {r.Item.ItemType} Request - {r.Employee.Department.Name}",
                         Description = $"{r.Employee.FirstName} {r.Employee.LastName} requested {r.Item.ItemName}",
                         Time = r.RequestDate,
-                        Status = r.Status ?? "Unknown"
+                        Status = r.Status.ToString()
                     })
                     .ToListAsync();
 
                 // Get request status distribution for chart
                 var requestStatusDistribution = await _context.Requests
-                    .GroupBy(r => r.Status ?? "Unknown")
+                    .GroupBy(r => r.Status)
                     .Select(g => new
                     {
-                        Status = g.Key,
+                        Status = g.Key.ToString(),
                         Count = g.Count()
                     })
                     .ToListAsync();
@@ -171,7 +171,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 var totalEmployees = await _context.Employees.CountAsync(e => e.IsActive);
 
                 // Get pending requests count
-                var pendingRequests = await _context.Requests.CountAsync(r => r.Status == "Pending");
+                var pendingRequests = await _context.Requests.CountAsync(r => r.Status == RequestStatus.Pending);
 
                 // Get total inventory count
                 var totalInventory = await _context.Items.CountAsync();
@@ -202,10 +202,10 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
                 // Get request status distribution
                 var requestStatusDistribution = await _context.Requests
-                    .GroupBy(r => r.Status ?? "Pending")
+                    .GroupBy(r => r.Status)
                     .Select(g => new
                     {
-                        Status = g.Key,
+                        Status = g.Key.ToString(),
                         Count = g.Count()
                     })
                     .ToListAsync();
@@ -222,7 +222,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                         EmployeeName = $"{r.Employee.FirstName} {r.Employee.LastName}",
                         ItemName = r.Item.ItemName,
                         RequestDate = r.RequestDate,
-                        Status = r.Status ?? "Pending"
+                        Status = r.Status.ToString()
                     })
                     .ToListAsync();
 
@@ -343,6 +343,17 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     })
                     .ToListAsync();
 
+                // Get request statistics for Stock Manager
+                var pendingReleaseRequests = await _context.Requests.CountAsync(r => r.Status == RequestStatus.ApprovedByAdmin);
+                var totalReleasedRequests = await _context.Requests.CountAsync(r => r.Status == RequestStatus.ReleasedByStockManager);
+                var todayReleasedRequests = await _context.Requests.CountAsync(r => r.Status == RequestStatus.ReleasedByStockManager && 
+                                                                                   r.ProcessedDate.HasValue && 
+                                                                                   r.ProcessedDate.Value.Date == DateTime.Today);
+                var thisMonthReleasedRequests = await _context.Requests.CountAsync(r => r.Status == RequestStatus.ReleasedByStockManager && 
+                                                                                       r.ProcessedDate.HasValue && 
+                                                                                       r.ProcessedDate.Value.Month == DateTime.Now.Month &&
+                                                                                       r.ProcessedDate.Value.Year == DateTime.Now.Year);
+
                 ViewBag.TotalInventory = totalInventory;
                 ViewBag.LowStockItems = lowStockItems;
                 ViewBag.OutOfStockItems = outOfStockItems;
@@ -357,6 +368,10 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 ViewBag.SupplierStats = supplierStats;
                 ViewBag.RecentLowStockItems = recentLowStockItems;
                 ViewBag.InventoryStatus = inventoryStatus;
+                ViewBag.PendingReleaseRequests = pendingReleaseRequests;
+                ViewBag.TotalReleasedRequests = totalReleasedRequests;
+                ViewBag.TodayReleasedRequests = todayReleasedRequests;
+                ViewBag.ThisMonthReleasedRequests = thisMonthReleasedRequests;
 
                 return View(employee);
             }
@@ -399,9 +414,9 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             var requestStats = new
             {
-                Pending = requests.Count(r => r.Status == "Pending"),
-                Approved = requests.Count(r => r.Status == "Approved"),
-                Cancelled = requests.Count(r => r.Status == "Cancelled")
+                Pending = requests.Count(r => r.Status == RequestStatus.Pending),
+                Approved = requests.Count(r => r.Status == RequestStatus.ApprovedByPropertyManager),
+                Cancelled = requests.Count(r => r.Status == RequestStatus.RejectedByPropertyManager)
             };
 
             ViewBag.Employee = employee;

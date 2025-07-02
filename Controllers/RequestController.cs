@@ -56,7 +56,10 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
                 if (!string.IsNullOrEmpty(status))
                 {
-                    query = query.Where(r => r.Status == status);
+                    if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                    {
+                        query = query.Where(r => r.Status == statusEnum);
+                    }
                 }
 
                 if (!string.IsNullOrEmpty(searchString))
@@ -222,7 +225,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 // Set required fields
                 request.EmployeeId = employee.Id;
                 request.RequestDate = DateTime.Now;
-                request.Status = "Pending";
+                request.Status = RequestStatus.Pending;
 
                 // Add size and department to the reason if it's a uniform request
                 if (selectedItem.ItemType == "Uniform")
@@ -329,7 +332,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             // Get approved requests for this employee
             var assignedItems = await _context.Requests
                 .Include(r => r.Item)
-                .Where(r => r.EmployeeId == employee.Id && r.Status == "Approved")
+                .Where(r => r.EmployeeId == employee.Id && r.Status == RequestStatus.ApprovedByPropertyManager)
                 .OrderByDescending(r => r.ProcessedDate)
                 .ToListAsync();
 
@@ -379,7 +382,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 return NotFound();
             }
 
-            if (request.Status != "Pending")
+            if (request.Status != RequestStatus.Pending)
             {
                 TempData["Error"] = "This request has already been processed.";
                 return RedirectToAction(nameof(Index));
@@ -403,7 +406,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 return NotFound();
             }
 
-            if (request.Status != "Pending")
+            if (request.Status != RequestStatus.Pending)
             {
                 TempData["Error"] = "This request has already been processed.";
                 return RedirectToAction(nameof(Index));
@@ -417,12 +420,21 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 return NotFound();
             }
 
-            request.Status = status;
+            if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+            {
+                request.Status = statusEnum;
+            }
+            else
+            {
+                TempData["Error"] = "Invalid status value.";
+                return RedirectToAction(nameof(Index));
+            }
+
             request.Remarks = remarks;
             request.ProcessedById = processedBy.Id;
             request.ProcessedDate = DateTime.Now;
 
-            if (status == "Approved" && request.Item != null)
+            if (statusEnum == RequestStatus.ApprovedByPropertyManager && request.Item != null)
             {
                 // Update item quantity
                 request.Item.Quantity--;
@@ -435,7 +447,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             try
             {
                 await _context.SaveChangesAsync();
-                TempData["Success"] = $"Request has been {status.ToLower()} successfully.";
+                TempData["Success"] = $"Request has been {statusEnum.ToString().ToLower()} successfully.";
             }
             catch (Exception ex)
             {

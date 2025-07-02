@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UniformAndEquipmentManagementSystem.Data;
 
@@ -11,9 +12,11 @@ using UniformAndEquipmentManagementSystem.Data;
 namespace UniformAndEquipmentManagementSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250702174209_UpdateRequestStatusEnumUsage")]
+    partial class UpdateRequestStatusEnumUsage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -406,9 +409,6 @@ namespace UniformAndEquipmentManagementSystem.Migrations
 
                     b.Property<string>("AdminComment")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("Cost")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");

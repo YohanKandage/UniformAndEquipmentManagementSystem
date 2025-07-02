@@ -53,13 +53,8 @@
                                     <td>@item.RequestDate.ToString("MMM dd, yyyy HH:mm")</td>
                                     <td>@item.Item.ItemName</td>
                                     <td>
-                                        <span class="badge bg-@(item.Status switch {
-                                            "Pending" => "warning",
-                                            "Approved" => "success",
-                                            "Cancelled" => "danger",
-                                            _ => "secondary"
-                                        })">
-                                            @item.Status
+                                        <span class="badge bg-@(item.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.Pending ? "warning" : item.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.ApprovedByPropertyManager ? "success" : item.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.RejectedByPropertyManager ? "danger" : "secondary")">
+                                            @item.Status.ToString()
                                         </span>
                                     </td>
                                     <td>
@@ -92,13 +87,8 @@
 
                                                     <dt class="col-sm-4">Status</dt>
                                                     <dd class="col-sm-8">
-                                                        <span class="badge bg-@(item.Status switch {
-                                                            "Pending" => "warning",
-                                                            "Approved" => "success",
-                                                            "Cancelled" => "danger",
-                                                            _ => "secondary"
-                                                        })">
-                                                            @item.Status
+                                                        <span class="badge bg-@(item.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.Pending ? "warning" : item.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.ApprovedByPropertyManager ? "success" : item.Status == UniformAndEquipmentManagementSystem.Models.RequestStatus.RejectedByPropertyManager ? "danger" : "secondary")">
+                                                            @item.Status.ToString()
                                                         </span>
                                                     </dd>
 

@@ -1,0 +1,141 @@
+@model UniformAndEquipmentManagementSystem.Models.Request
+
+@{
+    ViewData["Title"] = "Process Request";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>Process Request #@Model.Id
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Request Details</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Employee:</strong></td>
+                                    <td>@Model.Employee.FirstName @Model.Employee.LastName</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Department:</strong></td>
+                                    <td>@Model.Employee.Department.Name</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Item:</strong></td>
+                                    <td>@Model.Item.ItemName</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Request Date:</strong></td>
+                                    <td>@Model.RequestDate.ToString("MMM dd, yyyy")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Current Status:</strong></td>
+                                    <td><span class="badge bg-success">@Model.Status.ToString()</span></td>
+                                </tr>
+                                @if (!string.IsNullOrEmpty(Model.Reason))
+                                {
+                                    <tr>
+                                        <td><strong>Reason:</strong></td>
+                                        <td>@Model.Reason</td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Item Information</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Item Type:</strong></td>
+                                    <td>@Model.Item.ItemType</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Available Quantity:</strong></td>
+                                    <td>@Model.Item.Quantity</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Current Status:</strong></td>
+                                    <td>@Model.Item.Status</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <form asp-action="ProcessRequest" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="cost" class="form-label">Assign Cost (Optional)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">LKR</span>
+                                        <input type="number" class="form-control" id="cost" name="cost" 
+                                               step="0.01" min="0" placeholder="0.00" 
+                                               value="@(Model.Cost?.ToString("F2"))" />
+                                    </div>
+                                    <div class="form-text">Enter the cost for this request if applicable.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Admin Decision</label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="">Select Decision</option>
+                                        <option value="ApprovedByAdmin">Approve Request</option>
+                                        <option value="RejectedByAdmin">Reject Request</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="adminComment" class="form-label">Admin Comment</label>
+                            <textarea class="form-control" id="adminComment" name="adminComment" 
+                                      rows="3" placeholder="Enter your comment or reason for the decision..."
+                                      value="@Model.AdminComment"></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to List
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Process Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Form validation
+            $('form').on('submit', function(e) {
+                var status = $('#status').val();
+                if (!status) {
+                    e.preventDefault();
+                    alert('Please select a decision (Approve or Reject).');
+                    return false;
+                }
+            });
+
+            // Auto-format cost input
+            $('#cost').on('input', function() {
+                var value = $(this).val();
+                if (value && !isNaN(value)) {
+                    $(this).val(parseFloat(value).toFixed(2));
+                }
+            });
+        });
+    </script>
+} 
