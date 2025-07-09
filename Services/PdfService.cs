@@ -4,6 +4,7 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using iText.Kernel.Font;
 using iText.IO.Font.Constants;
+using iText.Kernel.Colors;
 using System.IO;
 
 namespace UniformAndEquipmentManagementSystem.Services
@@ -14,6 +15,8 @@ namespace UniformAndEquipmentManagementSystem.Services
         Style GetTitleStyle();
         Style GetSectionStyle();
         Style GetNormalStyle();
+        Style GetTableHeaderStyle();
+        Style GetTableContentStyle();
     }
 
     public class PdfService : IPdfService
@@ -39,9 +42,11 @@ namespace UniformAndEquipmentManagementSystem.Services
         public Style GetTitleStyle()
         {
             return new Style()
-                .SetFontSize(18)
+                .SetFontSize(20)
                 .SetTextAlignment(TextAlignment.CENTER)
-                .SetMarginBottom(20);
+                .SetMarginBottom(20)
+                .SetBold()
+                .SetFontColor(ColorConstants.DARK_GRAY);
         }
 
         public Style GetSectionStyle()
@@ -49,14 +54,32 @@ namespace UniformAndEquipmentManagementSystem.Services
             return new Style()
                 .SetFontSize(14)
                 .SetMarginTop(15)
-                .SetMarginBottom(10);
+                .SetMarginBottom(10)
+                .SetBold()
+                .SetFontColor(ColorConstants.BLUE);
         }
 
         public Style GetNormalStyle()
         {
             return new Style()
-                .SetFontSize(12)
+                .SetFontSize(10)
                 .SetMarginBottom(5);
+        }
+
+        public Style GetTableHeaderStyle()
+        {
+            return new Style()
+                .SetFontSize(10)
+                .SetBold()
+                .SetFontColor(ColorConstants.WHITE)
+                .SetBackgroundColor(ColorConstants.DARK_GRAY);
+        }
+
+        public Style GetTableContentStyle()
+        {
+            return new Style()
+                .SetFontSize(10)
+                .SetFontColor(ColorConstants.BLACK);
         }
     }
 } 

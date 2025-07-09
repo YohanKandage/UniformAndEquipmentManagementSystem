@@ -1,0 +1,160 @@
+@model UniformAndEquipmentManagementSystem.Models.ItemAssignment
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="item-image-container mb-3">
+            @if (!string.IsNullOrEmpty(Model.Item.ImagePath))
+            {
+                <img src="@Model.Item.ImagePath" alt="@Model.Item.ItemName" class="img-fluid rounded" style="max-height: 200px; width: 100%; object-fit: cover;">
+            }
+            else
+            {
+                <div class="placeholder-image bg-light d-flex align-items-center justify-content-center rounded" style="height: 200px;">
+                    <i class="fas fa-image fa-3x text-muted"></i>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h4 class="text-primary mb-3">@Model.Item.ItemName</h4>
+        
+        <div class="row">
+            <div class="col-12">
+                <dl class="row">
+                    <dt class="col-sm-4">Item Type</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge @(Model.Item.ItemType == "Uniform" ? "bg-primary" : "bg-success")">
+                            @Model.Item.ItemType
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Item ID</dt>
+                    <dd class="col-sm-8">@Model.Item.ItemId</dd>
+
+                    <dt class="col-sm-4">Material</dt>
+                    <dd class="col-sm-8">@Model.Item.Material</dd>
+
+                    <dt class="col-sm-4">Price</dt>
+                    <dd class="col-sm-8">$@Model.Item.Price.ToString("N2")</dd>
+
+                    <dt class="col-sm-4">Department</dt>
+                    <dd class="col-sm-8">@Model.Item.Department?.Name</dd>
+
+                    <dt class="col-sm-4">Supplier</dt>
+                    <dd class="col-sm-8">@Model.Item.Supplier?.CompanyName</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
+    <div class="col-md-6">
+        <h5 class="text-info mb-3">
+            <i class="fas fa-calendar-alt"></i> Assignment Details
+        </h5>
+        <dl class="row">
+            <dt class="col-sm-4">Assigned Date</dt>
+            <dd class="col-sm-8">@Model.AssignedDate.ToString("MMMM dd, yyyy")</dd>
+
+            <dt class="col-sm-4">Assigned Time</dt>
+            <dd class="col-sm-8">@Model.AssignedDate.ToString("hh:mm tt")</dd>
+
+            <dt class="col-sm-4">Status</dt>
+            <dd class="col-sm-8">
+                <span class="badge bg-success">@Model.Status</span>
+            </dd>
+
+            @if (!string.IsNullOrEmpty(Model.Remarks))
+            {
+                <dt class="col-sm-4">Remarks</dt>
+                <dd class="col-sm-8">@Model.Remarks</dd>
+            }
+
+            @if (Model.Cost.HasValue)
+            {
+                <dt class="col-sm-4">Cost</dt>
+                <dd class="col-sm-8">$@Model.Cost.Value.ToString("N2")</dd>
+            }
+        </dl>
+    </div>
+    
+    <div class="col-md-6">
+        <h5 class="text-info mb-3">
+            <i class="fas fa-user"></i> Employee Details
+        </h5>
+        <dl class="row">
+            <dt class="col-sm-4">Employee</dt>
+            <dd class="col-sm-8">@Model.Employee?.FirstName @Model.Employee?.LastName</dd>
+
+            <dt class="col-sm-4">Employee ID</dt>
+            <dd class="col-sm-8">@Model.Employee?.EmployeeId</dd>
+
+            <dt class="col-sm-4">Department</dt>
+            <dd class="col-sm-8">@Model.Employee?.Department?.Name</dd>
+
+            <dt class="col-sm-4">Email</dt>
+            <dd class="col-sm-8">@Model.Employee?.Email</dd>
+        </dl>
+    </div>
+</div>
+
+@if (Model.Request != null)
+{
+    <hr>
+    <div class="row">
+        <div class="col-12">
+            <h5 class="text-info mb-3">
+                <i class="fas fa-clipboard-list"></i> Request Information
+            </h5>
+            <dl class="row">
+                <dt class="col-sm-2">Request Date</dt>
+                <dd class="col-sm-4">@Model.Request.RequestDate.ToString("MMMM dd, yyyy")</dd>
+
+                <dt class="col-sm-2">Request Status</dt>
+                <dd class="col-sm-4">
+                    <span class="badge @(Model.Request.Status == RequestStatus.ReleasedByStockManager ? "bg-success" : "bg-warning")">
+                        @Model.Request.Status.ToString().Replace("By", " by ")
+                    </span>
+                </dd>
+
+                @if (!string.IsNullOrEmpty(Model.Request.Reason))
+                {
+                    <dt class="col-sm-2">Reason</dt>
+                    <dd class="col-sm-10">@Model.Request.Reason</dd>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Request.AdminComment))
+                {
+                    <dt class="col-sm-2">Admin Comment</dt>
+                    <dd class="col-sm-10">@Model.Request.AdminComment</dd>
+                }
+            </dl>
+        </div>
+    </div>
+}
+
+<style>
+    .item-image-container {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .placeholder-image {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    dl.row dt {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    dl.row dd {
+        color: #212529;
+    }
+</style> 
+
+ 

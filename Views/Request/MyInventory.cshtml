@@ -1,4 +1,4 @@
-@model IEnumerable<UniformAndEquipmentManagementSystem.Models.Request>
+@model IEnumerable<UniformAndEquipmentManagementSystem.Models.ItemAssignment>
 
 @{
     ViewData["Title"] = "My Inventory";
@@ -7,6 +7,11 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>My Inventory</h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm" onclick="refreshInventory()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
     </div>
 
     <div class="row">
@@ -16,69 +21,47 @@
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-tshirt me-2"></i>Uniforms
+                        <span class="badge bg-light text-primary ms-2" id="uniformsCount">0</span>
                     </h5>
                 </div>
                 <div class="card-body">
                     @{
-                        var uniforms = Model.Where(r => r.Item.ItemType == "Uniform");
+                        var uniforms = Model.Where(ia => ia.Item.ItemType == "Uniform");
                     }
                     @if (!uniforms.Any())
                     {
                         <div class="text-center py-4">
                             <i class="fas fa-tshirt fa-3x text-muted mb-3"></i>
                             <h6 class="text-muted">No uniforms assigned yet</h6>
+                            <p class="text-muted small">Your assigned uniforms will appear here</p>
                         </div>
                     }
                     else
                     {
                         <div class="list-group">
-                            @foreach (var item in uniforms)
+                            @foreach (var assignment in uniforms)
                             {
                                 <div class="list-group-item">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1">@item.Item.ItemName</h6>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">@assignment.Item.ItemName</h6>
                                             <small class="text-muted">
-                                                Assigned on @item.ProcessedDate?.ToString("MMM dd, yyyy")
+                                                <i class="fas fa-calendar-alt me-1"></i>
+                                                Assigned on @assignment.AssignedDate.ToString("MMM dd, yyyy")
                                             </small>
+                                            @if (!string.IsNullOrEmpty(assignment.Remarks))
+                                            {
+                                                <br><small class="text-info">
+                                                    <i class="fas fa-comment me-1"></i>
+                                                    @assignment.Remarks
+                                                </small>
+                                            }
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#itemModal@(item.Id)">
-                                            <i class="fas fa-info-circle"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Item Details Modal -->
-                                <div class="modal fade" id="itemModal@(item.Id)" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Item Details</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <dl class="row">
-                                                    <dt class="col-sm-4">Item Name</dt>
-                                                    <dd class="col-sm-8">@item.Item.ItemName</dd>
-
-                                                    <dt class="col-sm-4">Type</dt>
-                                                    <dd class="col-sm-8">@item.Item.ItemType</dd>
-
-                                                    <dt class="col-sm-4">Material</dt>
-                                                    <dd class="col-sm-8">@item.Item.Material</dd>
-
-                                                    <dt class="col-sm-4">Assigned Date</dt>
-                                                    <dd class="col-sm-8">@item.ProcessedDate?.ToString("MMM dd, yyyy")</dd>
-
-                                                    @if (!string.IsNullOrEmpty(item.AdminComment))
-                                                    {
-                                                        <dt class="col-sm-4">Admin Note</dt>
-                                                        <dd class="col-sm-8">@item.AdminComment</dd>
-                                                    }
-                                                </dl>
-                                            </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                    onclick="showItemDetails(@assignment.ItemId, @assignment.Id)">
+                                                <i class="fas fa-info-circle"></i> Details
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -95,69 +78,47 @@
                 <div class="card-header bg-success text-white">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-tools me-2"></i>Equipment
+                        <span class="badge bg-light text-success ms-2" id="equipmentCount">0</span>
                     </h5>
                 </div>
                 <div class="card-body">
                     @{
-                        var equipment = Model.Where(r => r.Item.ItemType == "Equipment");
+                        var equipment = Model.Where(ia => ia.Item.ItemType == "Equipment");
                     }
                     @if (!equipment.Any())
                     {
                         <div class="text-center py-4">
                             <i class="fas fa-tools fa-3x text-muted mb-3"></i>
                             <h6 class="text-muted">No equipment assigned yet</h6>
+                            <p class="text-muted small">Your assigned equipment will appear here</p>
                         </div>
                     }
                     else
                     {
                         <div class="list-group">
-                            @foreach (var item in equipment)
+                            @foreach (var assignment in equipment)
                             {
                                 <div class="list-group-item">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1">@item.Item.ItemName</h6>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">@assignment.Item.ItemName</h6>
                                             <small class="text-muted">
-                                                Assigned on @item.ProcessedDate?.ToString("MMM dd, yyyy")
+                                                <i class="fas fa-calendar-alt me-1"></i>
+                                                Assigned on @assignment.AssignedDate.ToString("MMM dd, yyyy")
                                             </small>
+                                            @if (!string.IsNullOrEmpty(assignment.Remarks))
+                                            {
+                                                <br><small class="text-info">
+                                                    <i class="fas fa-comment me-1"></i>
+                                                    @assignment.Remarks
+                                                </small>
+                                            }
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#itemModal@(item.Id)">
-                                            <i class="fas fa-info-circle"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Item Details Modal -->
-                                <div class="modal fade" id="itemModal@(item.Id)" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Item Details</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <dl class="row">
-                                                    <dt class="col-sm-4">Item Name</dt>
-                                                    <dd class="col-sm-8">@item.Item.ItemName</dd>
-
-                                                    <dt class="col-sm-4">Type</dt>
-                                                    <dd class="col-sm-8">@item.Item.ItemType</dd>
-
-                                                    <dt class="col-sm-4">Material</dt>
-                                                    <dd class="col-sm-8">@item.Item.Material</dd>
-
-                                                    <dt class="col-sm-4">Assigned Date</dt>
-                                                    <dd class="col-sm-8">@item.ProcessedDate?.ToString("MMM dd, yyyy")</dd>
-
-                                                    @if (!string.IsNullOrEmpty(item.AdminComment))
-                                                    {
-                                                        <dt class="col-sm-4">Admin Note</dt>
-                                                        <dd class="col-sm-8">@item.AdminComment</dd>
-                                                    }
-                                                </dl>
-                                            </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-sm btn-outline-success" 
+                                                    onclick="showItemDetails(@assignment.ItemId, @assignment.Id)">
+                                                <i class="fas fa-info-circle"></i> Details
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -168,4 +129,130 @@
             </div>
         </div>
     </div>
-</div> 
+
+    <!-- Summary Cards -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-boxes fa-2x mb-2"></i>
+                    <h4 id="totalItems">@Model.Count()</h4>
+                    <p class="mb-0">Total Items</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-tshirt fa-2x mb-2"></i>
+                    <h4 id="totalUniforms">@uniforms.Count()</h4>
+                    <p class="mb-0">Uniforms</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-tools fa-2x mb-2"></i>
+                    <h4 id="totalEquipment">@equipment.Count()</h4>
+                    <p class="mb-0">Equipment</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                    <h4 id="recentAssignments">@Model.Where(ia => ia.AssignedDate >= DateTime.Now.AddDays(-30)).Count()</h4>
+                    <p class="mb-0">This Month</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Item Details Modal -->
+<div class="modal fade" id="itemDetailsModal" tabindex="-1" aria-labelledby="itemDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemDetailsModalLabel">Item Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="itemDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading item details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="downloadPdfBtn" onclick="downloadAssignmentPdf()" style="display: none;">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Update counts on page load
+        $(document).ready(function() {
+            updateCounts();
+        });
+
+        function updateCounts() {
+            $('#uniformsCount').text(@uniforms.Count());
+            $('#equipmentCount').text(@equipment.Count());
+            $('#totalItems').text(@Model.Count());
+            $('#totalUniforms').text(@uniforms.Count());
+            $('#totalEquipment').text(@equipment.Count());
+            $('#recentAssignments').text(@Model.Where(ia => ia.AssignedDate >= DateTime.Now.AddDays(-30)).Count());
+        }
+
+        function showItemDetails(itemId, assignmentId) {
+            // Show modal
+            $('#itemDetailsModal').modal('show');
+            
+            // Store assignment ID for PDF download
+            $('#itemDetailsContent').data('assignment-id', assignmentId);
+            
+            // Load item details via AJAX
+            $.ajax({
+                url: '@Url.Action("GetItemDetails", "Request")',
+                type: 'GET',
+                data: { itemId: itemId, assignmentId: assignmentId },
+                success: function(data) {
+                    $('#itemDetailsContent').html(data);
+                    // Show download button after content loads
+                    $('#downloadPdfBtn').show();
+                },
+                error: function() {
+                    $('#itemDetailsContent').html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Error loading item details. Please try again.
+                        </div>
+                    `);
+                    $('#downloadPdfBtn').hide();
+                }
+            });
+        }
+
+        function downloadAssignmentPdf() {
+            var assignmentId = $('#itemDetailsContent').data('assignment-id');
+            if (!assignmentId) {
+                alert('Assignment ID not found.');
+                return;
+            }
+            window.open('/Request/DownloadAssignmentPdf?assignmentId=' + assignmentId, '_blank');
+        }
+
+        function refreshInventory() {
+            location.reload();
+        }
+    </script>
+} 

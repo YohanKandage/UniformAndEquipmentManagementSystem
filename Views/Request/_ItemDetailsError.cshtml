@@ -1,0 +1,17 @@
+@model string
+
+<div class="alert alert-danger">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+        <div>
+            <h5 class="alert-heading">Error Loading Item Details</h5>
+            <p class="mb-0">@Model</p>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-3">
+    <button type="button" class="btn btn-primary" onclick="location.reload()">
+        <i class="fas fa-sync-alt"></i> Try Again
+    </button>
+</div> 

@@ -10,6 +10,11 @@ using Microsoft.AspNetCore.Http;
 using System.IO;
 using System;
 using Microsoft.Extensions.Logging;
+using UniformAndEquipmentManagementSystem.Services;
+using iText.Kernel.Pdf;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using iText.Kernel.Colors;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
@@ -19,15 +24,18 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<RequestController> _logger;
+        private readonly IPdfService _pdfService;
 
         public RequestController(
             ApplicationDbContext context, 
             UserManager<ApplicationUser> userManager,
-            ILogger<RequestController> logger)
+            ILogger<RequestController> logger,
+            IPdfService pdfService)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
+            _pdfService = pdfService;
         }
 
         public async Task<IActionResult> Index(string employeeName, string department, string status, string searchString)
@@ -330,14 +338,202 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 return NotFound();
             }
 
-            // Get approved requests for this employee
-            var assignedItems = await _context.Requests
-                .Include(r => r.Item)
-                .Where(r => r.EmployeeId == employee.Id && r.Status == RequestStatus.ApprovedByPropertyManager)
-                .OrderByDescending(r => r.ProcessedDate)
+            // Get assigned items for this employee from ItemAssignment table
+            var assignedItems = await _context.ItemAssignments
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Department)
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Supplier)
+                .Where(ia => ia.EmployeeId == employee.Id && ia.Status == "Assigned")
+                .OrderByDescending(ia => ia.AssignedDate)
                 .ToListAsync();
 
             return View(assignedItems);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetItemDetails(int itemId, int assignmentId)
+        {
+            try
+            {
+                var assignment = await _context.ItemAssignments
+                    .Include(ia => ia.Item)
+                        .ThenInclude(i => i.Department)
+                    .Include(ia => ia.Item)
+                        .ThenInclude(i => i.Supplier)
+                    .Include(ia => ia.Employee)
+                    .Include(ia => ia.Request)
+                    .FirstOrDefaultAsync(ia => ia.Id == assignmentId && ia.ItemId == itemId);
+
+                if (assignment == null)
+                {
+                    return PartialView("_ItemDetailsError", "Item assignment not found.");
+                }
+
+                return PartialView("_ItemDetails", assignment);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting item details for item {ItemId} and assignment {AssignmentId}", itemId, assignmentId);
+                return PartialView("_ItemDetailsError", "Error loading item details.");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DownloadAssignmentPdf(int assignmentId)
+        {
+            var assignment = await _context.ItemAssignments
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Department)
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Supplier)
+                .Include(ia => ia.Employee)
+                .Include(ia => ia.Request)
+                .FirstOrDefaultAsync(ia => ia.Id == assignmentId);
+
+            if (assignment == null)
+            {
+                return NotFound();
+            }
+
+            var pdfBytes = _pdfService.GenerateDocument(doc =>
+            {
+                // Header with FMI Logo and Company Info
+                var headerTable = new Table(2).UseAllAvailableWidth();
+                headerTable.SetMarginBottom(20);
+                
+                // FMI Logo placeholder (you can replace with actual logo path)
+                var logoCell = new Cell().Add(new Paragraph("FMI").SetFontSize(24).SetBold().SetTextAlignment(TextAlignment.CENTER).SetFontColor(ColorConstants.WHITE));
+                logoCell.SetWidth(100);
+                logoCell.SetHeight(60);
+                logoCell.SetBackgroundColor(ColorConstants.BLUE);
+                logoCell.SetBorder(null);
+                
+                var companyInfoCell = new Cell().Add(
+                    new Paragraph("FMI Company").SetFontSize(16).SetBold().SetMarginBottom(5)
+                ).Add(
+                    new Paragraph("23, Galle Road").SetFontSize(10).SetMarginBottom(2)
+                ).Add(
+                    new Paragraph("Colombo 04").SetFontSize(10).SetMarginBottom(2)
+                ).Add(
+                    new Paragraph("Phone: (123) 456-7890").SetFontSize(10).SetMarginBottom(2)
+                ).Add(
+                    new Paragraph("Email: info@fmi.com").SetFontSize(10)
+                );
+                companyInfoCell.SetBorder(null);
+                companyInfoCell.SetTextAlignment(TextAlignment.LEFT);
+                
+                headerTable.AddCell(logoCell);
+                headerTable.AddCell(companyInfoCell);
+                doc.Add(headerTable);
+
+                // Document Title
+                doc.Add(new Paragraph("ITEM ASSIGNMENT RECEIPT").AddStyle(_pdfService.GetTitleStyle()));
+                
+                // Assignment Details Section
+                doc.Add(new Paragraph("Assignment Information").AddStyle(_pdfService.GetSectionStyle()));
+                
+                var assignmentTable = new Table(2).UseAllAvailableWidth();
+                assignmentTable.SetMarginBottom(20);
+                
+                AddTableRow(assignmentTable, "Assignment ID", $"#{assignment.Id:D6}");
+                AddTableRow(assignmentTable, "Assignment Date", assignment.AssignedDate.ToString("MMMM dd, yyyy"));
+                AddTableRow(assignmentTable, "Assignment Time", assignment.AssignedDate.ToString("hh:mm tt"));
+                AddTableRow(assignmentTable, "Status", assignment.Status);
+                if (!string.IsNullOrEmpty(assignment.Remarks))
+                    AddTableRow(assignmentTable, "Remarks", assignment.Remarks);
+                if (assignment.Cost.HasValue)
+                    AddTableRow(assignmentTable, "Cost", $"${assignment.Cost.Value:N2}");
+                
+                doc.Add(assignmentTable);
+
+                // Item Details Section
+                doc.Add(new Paragraph("Item Details").AddStyle(_pdfService.GetSectionStyle()));
+                
+                var itemTable = new Table(2).UseAllAvailableWidth();
+                itemTable.SetMarginBottom(20);
+                
+                AddTableRow(itemTable, "Item Name", assignment.Item.ItemName);
+                AddTableRow(itemTable, "Item ID", assignment.Item.ItemId);
+                AddTableRow(itemTable, "Item Type", assignment.Item.ItemType);
+                AddTableRow(itemTable, "Material", assignment.Item.Material);
+                AddTableRow(itemTable, "Price", $"${assignment.Item.Price:N2}");
+                AddTableRow(itemTable, "Department", assignment.Item.Department?.Name ?? "N/A");
+                AddTableRow(itemTable, "Supplier", assignment.Item.Supplier?.CompanyName ?? "N/A");
+                
+                doc.Add(itemTable);
+
+                // Employee Details Section
+                doc.Add(new Paragraph("Employee Information").AddStyle(_pdfService.GetSectionStyle()));
+                
+                var employeeTable = new Table(2).UseAllAvailableWidth();
+                employeeTable.SetMarginBottom(20);
+                
+                AddTableRow(employeeTable, "Employee Name", $"{assignment.Employee?.FirstName} {assignment.Employee?.LastName}");
+                AddTableRow(employeeTable, "Employee ID", assignment.Employee?.EmployeeId ?? "N/A");
+                AddTableRow(employeeTable, "Department", assignment.Employee?.Department?.Name ?? "N/A");
+                AddTableRow(employeeTable, "Email", assignment.Employee?.Email ?? "N/A");
+                
+                doc.Add(employeeTable);
+
+                // Request Information (if available)
+                if (assignment.Request != null)
+                {
+                    doc.Add(new Paragraph("Request Information").AddStyle(_pdfService.GetSectionStyle()));
+                    
+                    var requestTable = new Table(2).UseAllAvailableWidth();
+                    requestTable.SetMarginBottom(20);
+                    
+                    AddTableRow(requestTable, "Request Date", assignment.Request.RequestDate.ToString("MMMM dd, yyyy"));
+                    AddTableRow(requestTable, "Request Status", assignment.Request.Status.ToString().Replace("By", " by "));
+                    if (!string.IsNullOrEmpty(assignment.Request.Reason))
+                        AddTableRow(requestTable, "Reason", assignment.Request.Reason);
+                    if (!string.IsNullOrEmpty(assignment.Request.AdminComment))
+                        AddTableRow(requestTable, "Admin Comment", assignment.Request.AdminComment);
+                    
+                    doc.Add(requestTable);
+                }
+
+                // Terms and Conditions
+                doc.Add(new Paragraph("Terms and Conditions").AddStyle(_pdfService.GetSectionStyle()));
+                doc.Add(new Paragraph("1. This item is assigned to the employee for official use only.").AddStyle(_pdfService.GetNormalStyle()));
+                doc.Add(new Paragraph("2. The employee is responsible for the care and maintenance of the assigned item.").AddStyle(_pdfService.GetNormalStyle()));
+                doc.Add(new Paragraph("3. Items must be returned in good condition upon termination or transfer.").AddStyle(_pdfService.GetNormalStyle()));
+                doc.Add(new Paragraph("4. Any damage or loss must be reported immediately to the department supervisor.").AddStyle(_pdfService.GetNormalStyle()));
+
+                // Footer
+                doc.Add(new Paragraph("").SetMarginTop(30));
+                var footerTable = new Table(1).UseAllAvailableWidth();
+                footerTable.SetMarginTop(20);
+                
+                var footerCell = new Cell().Add(
+                    new Paragraph("Generated on: " + DateTime.Now.ToString("MMMM dd, yyyy 'at' hh:mm tt")).SetFontSize(8).SetTextAlignment(TextAlignment.CENTER)
+                ).Add(
+                    new Paragraph("This is an official FMI document").SetFontSize(8).SetTextAlignment(TextAlignment.CENTER)
+                );
+                footerCell.SetBorder(null);
+                footerCell.SetBackgroundColor(ColorConstants.LIGHT_GRAY);
+                footerTable.AddCell(footerCell);
+                
+                doc.Add(footerTable);
+            });
+
+            return File(pdfBytes, "application/pdf", $"FMI_Assignment_Receipt_{assignment.Id:D6}.pdf");
+        }
+
+        private void AddTableRow(Table table, string label, string value)
+        {
+            var labelCell = new Cell().Add(new Paragraph(label).AddStyle(_pdfService.GetTableHeaderStyle()));
+            labelCell.SetBorder(null);
+            labelCell.SetPadding(8);
+            labelCell.SetWidth(150);
+            
+            var valueCell = new Cell().Add(new Paragraph(value).AddStyle(_pdfService.GetTableContentStyle()));
+            valueCell.SetBorder(null);
+            valueCell.SetPadding(8);
+            
+            table.AddCell(labelCell);
+            table.AddCell(valueCell);
         }
 
         // GET: Request/Details/5
