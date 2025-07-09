@@ -176,5 +176,63 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             return View(request);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ViewAssignedItems(int requestId)
+        {
+            var request = await _context.Requests
+                .Include(r => r.Employee)
+                .FirstOrDefaultAsync(r => r.Id == requestId);
+
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            // Get all items assigned to this employee
+            var assignedItems = await _context.Items
+                .Include(i => i.Department)
+                .Include(i => i.Supplier)
+                .Where(i => i.AssignedToId == request.EmployeeId)
+                .OrderByDescending(i => i.AssignedDate)
+                .ToListAsync();
+
+            ViewBag.Employee = request.Employee;
+            ViewBag.RequestId = requestId;
+
+            return View(assignedItems);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ViewItemSummary(int requestId)
+        {
+            var request = await _context.Requests
+                .Include(r => r.Item)
+                    .ThenInclude(i => i.Department)
+                .Include(r => r.Item)
+                    .ThenInclude(i => i.Supplier)
+                .Include(r => r.Employee)
+                .FirstOrDefaultAsync(r => r.Id == requestId);
+
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            // Get similar items for price comparison
+            var similarItems = await _context.Items
+                .Include(i => i.Department)
+                .Include(i => i.Supplier)
+                .Where(i => i.ItemType == request.Item.ItemType && 
+                           i.DepartmentId == request.Item.DepartmentId &&
+                           i.Id != request.Item.Id)
+                .Take(5)
+                .ToListAsync();
+
+            ViewBag.SimilarItems = similarItems;
+            ViewBag.RequestId = requestId;
+
+            return View(request);
+        }
     }
 } 

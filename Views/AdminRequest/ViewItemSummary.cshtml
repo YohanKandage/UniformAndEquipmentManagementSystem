@@ -1,0 +1,219 @@
+@model UniformAndEquipmentManagementSystem.Models.Request
+
+@{
+    ViewData["Title"] = "Item Summary";
+    var similarItems = ViewBag.SimilarItems as List<Item>;
+    var requestId = ViewBag.RequestId;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Item Summary - @Model.Item.ItemName
+                        </h3>
+                        <a href="@Url.Action("Process", new { id = requestId })" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Request
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Request Information</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Employee:</strong></td>
+                                    <td>@Model.Employee.FirstName @Model.Employee.LastName</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Department:</strong></td>
+                                    <td>@Model.Employee.Department.Name</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Request Date:</strong></td>
+                                    <td>@Model.RequestDate.ToString("MMM dd, yyyy")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td><span class="badge bg-success">@Model.Status.ToString()</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">Current Price</h6>
+                                    <h2 class="mb-0">LKR @Model.Item.Price.ToString("F2")</h2>
+                                    <small>Base Price</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-box me-2"></i>Item Details
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4 text-center mb-3">
+                                            @if (!string.IsNullOrEmpty(Model.Item.ImagePath))
+                                            {
+                                                <img src="@Model.Item.ImagePath" class="img-fluid rounded" 
+                                                     style="max-height: 200px; object-fit: cover;" 
+                                                     alt="@Model.Item.ItemName">
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                     style="height: 200px;">
+                                                    <i class="fas fa-box fa-4x text-muted"></i>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="col-md-8">
+                                            <table class="table table-borderless">
+                                                <tr>
+                                                    <td><strong>Item Name:</strong></td>
+                                                    <td>@Model.Item.ItemName</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Item ID:</strong></td>
+                                                    <td>@Model.Item.ItemId</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Type:</strong></td>
+                                                    <td>
+                                                        <span class="badge @(Model.Item.ItemType == "Uniform" ? "bg-primary" : "bg-info")">
+                                                            @Model.Item.ItemType
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Material:</strong></td>
+                                                    <td>@Model.Item.Material</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Department:</strong></td>
+                                                    <td>@Model.Item.Department?.Name</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Supplier:</strong></td>
+                                                    <td>@Model.Item.Supplier?.CompanyName</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Available Quantity:</strong></td>
+                                                    <td>
+                                                        <span class="badge @(Model.Item.Quantity == 0 ? "bg-danger" : (Model.Item.Quantity < 10 ? "bg-warning" : "bg-success"))">
+                                                            @Model.Item.Quantity
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Status:</strong></td>
+                                                    <td>
+                                                        <span class="badge @(Model.Item.Status.ToLower() switch {
+                                                            "available" => "bg-success",
+                                                            "assigned" => "bg-primary",
+                                                            "maintenance" => "bg-warning",
+                                                            _ => "bg-secondary"
+                                                        })">
+                                                            @Model.Item.Status
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-chart-line me-2"></i>Price Analysis
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="text-center mb-3">
+                                        <h4 class="text-primary">LKR @Model.Item.Price.ToString("F2")</h4>
+                                        <small class="text-muted">Current Price</small>
+                                    </div>
+                                    
+                                    @if (similarItems?.Any() == true)
+                                    {
+                                        <h6>Similar Items:</h6>
+                                        <div class="list-group list-group-flush">
+                                            @foreach (var item in similarItems)
+                                            {
+                                                <div class="list-group-item d-flex justify-content-between align-items-center p-2">
+                                                    <div>
+                                                        <small class="fw-bold">@item.ItemName</small><br>
+                                                        <small class="text-muted">@item.ItemType</small>
+                                                    </div>
+                                                    <span class="badge bg-light text-dark">
+                                                        LKR @item.Price.ToString("F2")
+                                                    </span>
+                                                </div>
+                                            }
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <small class="text-muted">
+                                                Average Price: LKR @similarItems.Average(i => i.Price).ToString("F2")
+                                            </small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                            <p class="mb-0">No similar items found for comparison</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Reason))
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-comment me-2"></i>Request Reason
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0">@Model.Reason</p>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Cost Assignment Tip:</strong> Consider the current market price, item condition, and any additional costs when assigning a cost to this request.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add any additional JavaScript functionality here
+            console.log('Item Summary view loaded');
+        });
+    </script>
+} 
