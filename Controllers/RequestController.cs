@@ -437,12 +437,9 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             if (statusEnum == RequestStatus.ApprovedByPropertyManager && request.Item != null)
             {
-                // Update item quantity
-                request.Item.Quantity--;
-                if (request.Item.Quantity == 0)
-                {
-                    request.Item.Status = "Out of Stock";
-                }
+                // Property Manager approval should NOT reduce inventory
+                // Inventory will only be reduced when Admin approves
+                // Just update the status, no quantity changes
             }
 
             try

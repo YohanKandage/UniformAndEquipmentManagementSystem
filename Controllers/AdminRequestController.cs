@@ -122,11 +122,25 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             if (statusEnum == RequestStatus.ApprovedByAdmin)
             {
+                // Reduce inventory when admin approves
                 request.Item.Quantity--;
                 if (request.Item.Quantity <= 0)
                 {
                     request.Item.Status = "Unavailable";
                 }
+
+                // Create an ItemAssignment record to track the assignment
+                var assignment = new ItemAssignment
+                {
+                    ItemId = request.ItemId,
+                    EmployeeId = request.EmployeeId,
+                    RequestId = request.Id,
+                    AssignedDate = DateTime.Now,
+                    Status = "Pending Release", // Will be updated to "Assigned" when stock manager releases
+                    Remarks = adminComment,
+                    Cost = cost
+                };
+                _context.ItemAssignments.Add(assignment);
             }
 
             await _context.SaveChangesAsync();

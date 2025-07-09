@@ -150,35 +150,44 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             request.ProcessedDate = DateTime.Now;
             request.ProcessedById = stockManager.Id;
 
-            // Assign the item to the employee when released
+            // Update the assignment when released
             if (statusEnum == RequestStatus.ReleasedByStockManager && request.Item != null)
             {
-                // Check if there's available quantity
-                if (request.Item.Quantity <= 0)
+                // Check if there's available quantity (inventory was already reduced when admin approved)
+                if (request.Item.Quantity < 0)
                 {
                     TempData["Error"] = "Item is out of stock. Cannot release request.";
                     return RedirectToAction("Index", "StockManagerRequest");
                 }
 
-                // Create a new assignment record
-                var assignment = new ItemAssignment
-                {
-                    ItemId = request.ItemId,
-                    EmployeeId = request.EmployeeId,
-                    RequestId = request.Id,
-                    AssignedDate = DateTime.Now,
-                    Status = "Assigned",
-                    Remarks = stockManagerComment,
-                    Cost = request.Cost
-                };
-                _context.ItemAssignments.Add(assignment);
+                // Find and update the existing assignment record
+                var assignment = await _context.ItemAssignments
+                    .FirstOrDefaultAsync(ia => ia.RequestId == request.Id);
 
-                // Decrease inventory
-                request.Item.Quantity--;
-                if (request.Item.Quantity <= 0)
+                if (assignment != null)
                 {
-                    request.Item.Status = "Unavailable";
+                    assignment.Status = "Assigned";
+                    assignment.Remarks = stockManagerComment;
+                    assignment.Cost = request.Cost;
                 }
+                else
+                {
+                    // Create a new assignment record if one doesn't exist
+                    assignment = new ItemAssignment
+                    {
+                        ItemId = request.ItemId,
+                        EmployeeId = request.EmployeeId,
+                        RequestId = request.Id,
+                        AssignedDate = DateTime.Now,
+                        Status = "Assigned",
+                        Remarks = stockManagerComment,
+                        Cost = request.Cost
+                    };
+                    _context.ItemAssignments.Add(assignment);
+                }
+
+                // Note: Inventory was already reduced when admin approved the request
+                // No need to reduce it again here
             }
 
             try
@@ -233,35 +242,44 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             request.ProcessedDate = DateTime.Now;
             request.ProcessedById = stockManager.Id;
 
-            // Assign the item to the employee when released
+            // Update the assignment when released
             if (request.Item != null)
             {
-                // Check if there's available quantity
-                if (request.Item.Quantity <= 0)
+                // Check if there's available quantity (inventory was already reduced when admin approved)
+                if (request.Item.Quantity < 0)
                 {
                     TempData["Error"] = "Item is out of stock. Cannot release request.";
                     return RedirectToAction("Index", "StockManagerRequest");
                 }
 
-                // Create a new assignment record
-                var assignment = new ItemAssignment
-                {
-                    ItemId = request.ItemId,
-                    EmployeeId = request.EmployeeId,
-                    RequestId = request.Id,
-                    AssignedDate = DateTime.Now,
-                    Status = "Assigned",
-                    Remarks = stockManagerComment,
-                    Cost = request.Cost
-                };
-                _context.ItemAssignments.Add(assignment);
+                // Find and update the existing assignment record
+                var assignment = await _context.ItemAssignments
+                    .FirstOrDefaultAsync(ia => ia.RequestId == request.Id);
 
-                // Decrease inventory
-                request.Item.Quantity--;
-                if (request.Item.Quantity <= 0)
+                if (assignment != null)
                 {
-                    request.Item.Status = "Unavailable";
+                    assignment.Status = "Assigned";
+                    assignment.Remarks = stockManagerComment;
+                    assignment.Cost = request.Cost;
                 }
+                else
+                {
+                    // Create a new assignment record if one doesn't exist
+                    assignment = new ItemAssignment
+                    {
+                        ItemId = request.ItemId,
+                        EmployeeId = request.EmployeeId,
+                        RequestId = request.Id,
+                        AssignedDate = DateTime.Now,
+                        Status = "Assigned",
+                        Remarks = stockManagerComment,
+                        Cost = request.Cost
+                    };
+                    _context.ItemAssignments.Add(assignment);
+                }
+
+                // Note: Inventory was already reduced when admin approved the request
+                // No need to reduce it again here
             }
 
             try

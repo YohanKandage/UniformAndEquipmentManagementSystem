@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Employee Dashboard";
     var hasError = !string.IsNullOrEmpty(ViewData["ErrorMessage"]?.ToString());
+    var dashboardData = ViewBag.DashboardData as dynamic;
 }
 
 <div class="dashboard-container">
@@ -22,9 +23,9 @@
                     <i class="fas fa-box"></i>
                 </div>
                 <div class="stat-details">
-                    <span class="stat-value">5</span>
+                    <span class="stat-value" id="assignedItemsCount">@(dashboardData?.assignedItemsCount ?? 0)</span>
                     <span class="stat-label">Assigned Items</span>
-                    <span class="stat-change positive">+1 this month</span>
+                    <span class="stat-change positive" id="monthlyChange">+@(dashboardData?.thisMonthAssignments ?? 0) this month</span>
                 </div>
             </div>
             <div class="stat-card">
@@ -32,7 +33,7 @@
                     <i class="fas fa-clipboard-list"></i>
                 </div>
                 <div class="stat-details">
-                    <span class="stat-value">2</span>
+                    <span class="stat-value" id="pendingRequestsCount">@(dashboardData?.pendingRequestsCount ?? 0)</span>
                     <span class="stat-label">Pending Requests</span>
                     <span class="stat-change">This month</span>
                 </div>
@@ -42,7 +43,7 @@
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="stat-details">
-                    <span class="stat-value">8</span>
+                    <span class="stat-value" id="approvedRequestsCount">@(dashboardData?.approvedRequestsCount ?? 0)</span>
                     <span class="stat-label">Approved Requests</span>
                     <span class="stat-change approved">All time</span>
                 </div>
@@ -52,7 +53,7 @@
                     <i class="fas fa-times-circle"></i>
                 </div>
                 <div class="stat-details">
-                    <span class="stat-value">1</span>
+                    <span class="stat-value" id="rejectedRequestsCount">@(dashboardData?.rejectedRequestsCount ?? 0)</span>
                     <span class="stat-label">Cancelled Requests</span>
                     <span class="stat-change negative">This month</span>
                 </div>
@@ -124,7 +125,7 @@
                 <div class="info-content">
                     <div class="info-item">
                         <span class="info-label">Assigned</span>
-                        <span class="info-value">3 sets</span>
+                        <span class="info-value" id="uniformsCount">@(dashboardData?.uniformsCount ?? 0) sets</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Available</span>
@@ -140,7 +141,7 @@
                 <div class="info-content">
                     <div class="info-item">
                         <span class="info-label">Assigned</span>
-                        <span class="info-value">2 items</span>
+                        <span class="info-value" id="equipmentCount">@(dashboardData?.equipmentCount ?? 0) items</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Under Maintenance</span>
@@ -153,34 +154,14 @@
         <div class="recent-activities">
             <div class="section-header">
                 <h3>Recent Activities</h3>
-                <a href="@Url.Action("Index", "Request")" class="btn-link">View All</a>
-            </div>
-            <div class="activity-list">
-                <div class="activity-item">
-                    <div class="activity-icon">
-                        <i class="fas fa-plus-circle"></i>
-                    </div>
-                    <div class="activity-details">
-                        <span class="activity-title">New Uniform Assigned</span>
-                        <span class="activity-desc">You received 1 new uniform set</span>
-                        <span class="activity-time">1 hour ago</span>
-                    </div>
-                    <div class="activity-status approved">
-                        Approved
-                    </div>
+                <div class="header-actions">
+                    <span class="last-updated" id="lastUpdated">Last updated: @(dashboardData?.lastUpdated ?? "Loading...")</span>
+                    <a href="@Url.Action("Index", "Request")" class="btn-link">View All</a>
                 </div>
-                <div class="activity-item">
-                    <div class="activity-icon">
-                        <i class="fas fa-clipboard-list"></i>
-                    </div>
-                    <div class="activity-details">
-                        <span class="activity-title">Request Submitted</span>
-                        <span class="activity-desc">Requested new safety helmet</span>
-                        <span class="activity-time">3 hours ago</span>
-                    </div>
-                    <div class="activity-status pending">
-                        Pending
-                    </div>
+            </div>
+            <div class="activity-list" id="activityList">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> Loading activities...
                 </div>
             </div>
         </div>
@@ -359,6 +340,16 @@
         align-items: center;
         margin-bottom: 15px;
     }
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .last-updated {
+        font-size: 0.85rem;
+        color: #888;
+        font-style: italic;
+    }
     .btn-link {
         background: none;
         border: none;
@@ -415,6 +406,20 @@
     .activity-status.approved { background: #d4edda; color: #155724; }
     .activity-status.completed { background: #cce5ff; color: #004085; }
     .activity-status.negative { background: #f8d7da; color: #721c24; }
+    .loading-spinner {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+    }
+    .loading-spinner i {
+        margin-right: 10px;
+    }
+    .no-activities {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+        font-style: italic;
+    }
     .alert {
         padding: 15px;
         margin-bottom: 20px;
@@ -436,52 +441,121 @@
 </style>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Request Status Chart
-        const requestCtx = document.getElementById('requestChart').getContext('2d');
-        new Chart(requestCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Pending', 'Approved', 'Cancelled'],
-                datasets: [{
-                    data: [2, 8, 1],
-                    backgroundColor: ['#FFC107', '#4CAF50', '#F44336']
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
+        // Real-time dashboard functionality
+        let refreshInterval;
+        let isRefreshing = false;
+
+        // Initialize dashboard
+        $(document).ready(function() {
+            loadDashboardStats();
+            loadRecentActivities();
+            
+            // Set up auto-refresh every 30 seconds
+            refreshInterval = setInterval(function() {
+                if (!isRefreshing) {
+                    loadDashboardStats();
+                    loadRecentActivities();
                 }
-            }
+            }, 30000); // 30 seconds
         });
-        // Assignment Chart
-        const assignmentCtx = document.getElementById('assignmentChart').getContext('2d');
-        new Chart(assignmentCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
-                    label: 'Assignments',
-                    data: [1, 2, 1, 3, 2, 1],
-                    backgroundColor: '#007bff'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
+
+        // Load dashboard statistics
+        function loadDashboardStats() {
+            isRefreshing = true;
+            
+            $.ajax({
+                url: '@Url.Action("GetDashboardStats", "EmployeeDashboard")',
+                type: 'GET',
+                success: function(data) {
+                    if (data.error) {
+                        console.error('Error loading dashboard stats:', data.error);
+                        return;
                     }
+                    
+                    // Update statistics
+                    $('#assignedItemsCount').text(data.assignedItemsCount);
+                    $('#pendingRequestsCount').text(data.pendingRequestsCount);
+                    $('#approvedRequestsCount').text(data.approvedRequestsCount);
+                    $('#rejectedRequestsCount').text(data.rejectedRequestsCount);
+                    $('#uniformsCount').text(data.uniformsCount + ' sets');
+                    $('#equipmentCount').text(data.equipmentCount + ' items');
+                    $('#monthlyChange').text('+' + data.thisMonthAssignments + ' this month');
+                    
+                    // Update last updated time
+                    $('#lastUpdated').text('Last updated: ' + data.lastUpdated);
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+                error: function(xhr, status, error) {
+                    console.error('Error loading dashboard stats:', error);
+                },
+                complete: function() {
+                    isRefreshing = false;
                 }
+            });
+        }
+
+        // Load recent activities
+        function loadRecentActivities() {
+            $.ajax({
+                url: '@Url.Action("GetRecentActivities", "EmployeeDashboard")',
+                type: 'GET',
+                success: function(data) {
+                    if (data.error) {
+                        console.error('Error loading recent activities:', data.error);
+                        return;
+                    }
+                    
+                    updateActivityList(data.activities);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading recent activities:', error);
+                }
+            });
+        }
+
+        // Update activity list
+        function updateActivityList(activities) {
+            const activityList = $('#activityList');
+            
+            if (!activities || activities.length === 0) {
+                activityList.html('<div class="no-activities">No recent activities found.</div>');
+                return;
+            }
+            
+            let html = '';
+            activities.forEach(function(activity) {
+                const icon = activity.type === 'Request' ? 'fa-clipboard-list' : 'fa-box';
+                
+                html += `
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                        <div class="activity-details">
+                            <span class="activity-title">${activity.title}</span>
+                            <span class="activity-desc">${activity.description}</span>
+                            <span class="activity-time">${activity.timeAgo}</span>
+                        </div>
+                        <div class="activity-status ${activity.statusClass}">
+                            ${activity.status}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            activityList.html(html);
+        }
+
+        // Manual refresh function
+        function refreshDashboard() {
+            loadDashboardStats();
+            loadRecentActivities();
+        }
+
+        // Clean up interval when page is unloaded
+        $(window).on('beforeunload', function() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
             }
         });
     </script>
