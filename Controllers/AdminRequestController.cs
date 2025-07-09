@@ -189,12 +189,15 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 return NotFound();
             }
 
-            // Get all items assigned to this employee
-            var assignedItems = await _context.Items
-                .Include(i => i.Department)
-                .Include(i => i.Supplier)
-                .Where(i => i.AssignedToId == request.EmployeeId)
-                .OrderByDescending(i => i.AssignedDate)
+            // Get all item assignments for this employee
+            var assignedItems = await _context.ItemAssignments
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Department)
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Supplier)
+                .Include(ia => ia.Employee)
+                .Where(ia => ia.EmployeeId == request.EmployeeId && ia.Status == "Assigned")
+                .OrderByDescending(ia => ia.AssignedDate)
                 .ToListAsync();
 
             ViewBag.Employee = request.Employee;

@@ -121,11 +121,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             }
 
             var stockManager = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == User.Identity.Name);
+                .FirstOrDefaultAsync(u => u.Email == User.Identity.Name || u.UserName == User.Identity.Name);
 
             if (stockManager == null)
             {
-                return NotFound();
+                TempData["Error"] = $"Stock manager not found. User: {User.Identity?.Name}";
+                return RedirectToAction("Index", "StockManagerRequest");
             }
 
             if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
@@ -152,8 +153,32 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             // Assign the item to the employee when released
             if (statusEnum == RequestStatus.ReleasedByStockManager && request.Item != null)
             {
-                request.Item.AssignedToId = request.EmployeeId;
-                request.Item.AssignedDate = DateTime.Now;
+                // Check if there's available quantity
+                if (request.Item.Quantity <= 0)
+                {
+                    TempData["Error"] = "Item is out of stock. Cannot release request.";
+                    return RedirectToAction("Index", "StockManagerRequest");
+                }
+
+                // Create a new assignment record
+                var assignment = new ItemAssignment
+                {
+                    ItemId = request.ItemId,
+                    EmployeeId = request.EmployeeId,
+                    RequestId = request.Id,
+                    AssignedDate = DateTime.Now,
+                    Status = "Assigned",
+                    Remarks = stockManagerComment,
+                    Cost = request.Cost
+                };
+                _context.ItemAssignments.Add(assignment);
+
+                // Decrease inventory
+                request.Item.Quantity--;
+                if (request.Item.Quantity <= 0)
+                {
+                    request.Item.Status = "Unavailable";
+                }
             }
 
             try
@@ -194,11 +219,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             }
 
             var stockManager = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == User.Identity.Name);
+                .FirstOrDefaultAsync(u => u.Email == User.Identity.Name || u.UserName == User.Identity.Name);
 
             if (stockManager == null)
             {
-                return NotFound();
+                TempData["Error"] = $"Stock manager not found. User: {User.Identity?.Name}";
+                return RedirectToAction("Index", "StockManagerRequest");
             }
 
             // Update the request status
@@ -210,8 +236,32 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             // Assign the item to the employee when released
             if (request.Item != null)
             {
-                request.Item.AssignedToId = request.EmployeeId;
-                request.Item.AssignedDate = DateTime.Now;
+                // Check if there's available quantity
+                if (request.Item.Quantity <= 0)
+                {
+                    TempData["Error"] = "Item is out of stock. Cannot release request.";
+                    return RedirectToAction("Index", "StockManagerRequest");
+                }
+
+                // Create a new assignment record
+                var assignment = new ItemAssignment
+                {
+                    ItemId = request.ItemId,
+                    EmployeeId = request.EmployeeId,
+                    RequestId = request.Id,
+                    AssignedDate = DateTime.Now,
+                    Status = "Assigned",
+                    Remarks = stockManagerComment,
+                    Cost = request.Cost
+                };
+                _context.ItemAssignments.Add(assignment);
+
+                // Decrease inventory
+                request.Item.Quantity--;
+                if (request.Item.Quantity <= 0)
+                {
+                    request.Item.Status = "Unavailable";
+                }
             }
 
             try

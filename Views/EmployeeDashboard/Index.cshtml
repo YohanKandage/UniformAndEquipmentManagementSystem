@@ -1,7 +1,7 @@
 @{
     ViewData["Title"] = "Employee Dashboard";
     var employee = ViewBag.Employee as Employee;
-    var assignedItems = ViewBag.AssignedItems as List<Item>;
+    var assignedItems = ViewBag.AssignedItems as List<ItemAssignment>;
     var requestStats = ViewBag.RequestStats;
 }
 
@@ -194,20 +194,20 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var item in assignedItems.Take(5))
+                                    @foreach (var assignment in assignedItems.Take(5))
                                     {
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    @if (!string.IsNullOrEmpty(item.ImagePath))
+                                                    @if (!string.IsNullOrEmpty(assignment.Item.ImagePath))
                                                     {
-                                                        <img src="@item.ImagePath" class="rounded me-2" style="width: 32px; height: 32px; object-fit: cover;" alt="@item.ItemName">
+                                                        <img src="@assignment.Item.ImagePath" class="rounded me-2" style="width: 32px; height: 32px; object-fit: cover;" alt="@assignment.Item.ItemName">
                                                     }
-                                                    <span>@item.ItemName</span>
+                                                    <span>@assignment.Item.ItemName</span>
                                                 </div>
                                             </td>
-                                            <td>@item.ItemType</td>
-                                            <td>@item.AssignmentDate?.ToString("MMM dd, yyyy")</td>
+                                            <td>@assignment.Item.ItemType</td>
+                                            <td>@assignment.AssignedDate.ToString("MMM dd, yyyy")</td>
                                             <td>
                                                 <span class="badge bg-success">Active</span>
                                             </td>

@@ -309,9 +309,10 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 return NotFound();
             }
 
-            var assignedItems = await _context.Items
-                .Include(i => i.Department)
-                .Where(i => i.AssignedToId == employee.Id)
+            var assignedItems = await _context.ItemAssignments
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Department)
+                .Where(ia => ia.EmployeeId == employee.Id && ia.Status == "Assigned")
                 .ToListAsync();
 
             return View(assignedItems);

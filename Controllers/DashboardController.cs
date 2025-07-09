@@ -182,12 +182,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 // Get uniform statistics
                 var totalUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform");
                 var availableUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform" && i.Quantity > 0);
-                var assignedUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform" && i.AssignedToId != null);
+                var assignedUniforms = await _context.ItemAssignments.CountAsync(ia => ia.Item.ItemType == "Uniform" && ia.Status == "Assigned");
 
                 // Get equipment statistics
                 var totalEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment");
                 var availableEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.Quantity > 0);
-                var assignedEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.AssignedToId != null);
+                var assignedEquipment = await _context.ItemAssignments.CountAsync(ia => ia.Item.ItemType == "Equipment" && ia.Status == "Assigned");
 
                 // Get low stock items (quantity less than 10)
                 var lowStockItems = await _context.Items.CountAsync(i => i.Quantity < 10);
@@ -402,9 +402,10 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             }
 
             // Get employee's assigned items
-            var assignedItems = await _context.Items
-                .Include(i => i.Department)
-                .Where(i => i.AssignedToId == employee.Id)
+            var assignedItems = await _context.ItemAssignments
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Department)
+                .Where(ia => ia.EmployeeId == employee.Id && ia.Status == "Assigned")
                 .ToListAsync();
 
             // Get request statistics

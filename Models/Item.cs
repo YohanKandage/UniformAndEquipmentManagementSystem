@@ -51,16 +51,16 @@ namespace UniformAndEquipmentManagementSystem.Models
         [Display(Name = "Upload Image")]
         public IFormFile? ImageFile { get; set; }
 
-        [ForeignKey("AssignedTo")]
-        [Display(Name = "Assigned To")]
-        public int? AssignedToId { get; set; }
-        public virtual Employee? AssignedTo { get; set; }
+        // [ForeignKey("AssignedTo")]
+        // [Display(Name = "Assigned To")]
+        // public int? AssignedToId { get; set; }
+        // public virtual Employee? AssignedTo { get; set; }
 
-        [Display(Name = "Assignment Date")]
-        public DateTime? AssignmentDate { get; set; }
+        // [Display(Name = "Assignment Date")]
+        // public DateTime? AssignmentDate { get; set; }
 
-        [Display(Name = "Assigned Date")]
-        public DateTime? AssignedDate { get; set; }
+        // [Display(Name = "Assigned Date")]
+        // public DateTime? AssignedDate { get; set; }
 
         [Display(Name = "Status")]
         public string Status { get; set; } = "Available"; // Available, Assigned, Returned, Maintenance

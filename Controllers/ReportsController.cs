@@ -158,7 +158,6 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             var query = _context.Items
                 .Include(i => i.Department)
                 .Include(i => i.Supplier)
-                .Include(i => i.AssignedTo)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(itemType))
@@ -176,10 +175,15 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 switch (status.ToLower())
                 {
                     case "available":
-                        query = query.Where(i => i.AssignedToId == null && i.Quantity > 0);
+                        query = query.Where(i => i.Quantity > 0);
                         break;
                     case "assigned":
-                        query = query.Where(i => i.AssignedToId != null);
+                        // Items that have active assignments
+                        var assignedItemIds = await _context.ItemAssignments
+                            .Where(ia => ia.Status == "Assigned")
+                            .Select(ia => ia.ItemId)
+                            .ToListAsync();
+                        query = query.Where(i => assignedItemIds.Contains(i.Id));
                         break;
                     case "outofstock":
                         query = query.Where(i => i.Quantity == 0);
@@ -197,8 +201,17 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 query = query.Where(i => i.Quantity <= maxQuantity.Value);
             }
 
-            var items = await query
-                .Select(i => new
+            var items = await query.ToListAsync();
+
+            // Get assignment information for each item
+            var itemAssignments = await _context.ItemAssignments
+                .Include(ia => ia.Employee)
+                .Where(ia => ia.Status == "Assigned")
+                .ToListAsync();
+
+            var result = items.Select(i => {
+                var assignment = itemAssignments.FirstOrDefault(ia => ia.ItemId == i.Id);
+                return new
                 {
                     ItemId = i.Id,
                     ItemName = i.ItemName,
@@ -206,11 +219,11 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     Department = i.Department.Name,
                     Supplier = i.Supplier.CompanyName,
                     Quantity = i.Quantity,
-                    AssignedTo = i.AssignedTo != null ? $"{i.AssignedTo.FirstName} {i.AssignedTo.LastName}" : "Not Assigned",
-                    AssignedDate = i.AssignedDate,
-                    Status = i.AssignedToId != null ? "Assigned" : (i.Quantity > 0 ? "Available" : "Out of Stock")
-                })
-                .ToListAsync();
+                    AssignedTo = assignment?.Employee != null ? $"{assignment.Employee.FirstName} {assignment.Employee.LastName}" : "Not Assigned",
+                    AssignedDate = assignment?.AssignedDate,
+                    Status = assignment != null ? "Assigned" : (i.Quantity > 0 ? "Available" : "Out of Stock")
+                };
+            }).ToList();
 
             ViewBag.Departments = await _context.Departments.ToListAsync();
             ViewBag.ItemTypes = new List<string> { "Uniform", "Equipment" };
@@ -221,7 +234,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             ViewBag.MinQuantity = minQuantity;
             ViewBag.MaxQuantity = maxQuantity;
 
-            return View(items);
+            return View(result);
         }
 
         [Authorize(Roles = "Admin,StockManager,PropertyManager")]
@@ -1213,7 +1226,6 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             var query = _context.Items
                 .Include(i => i.Department)
                 .Include(i => i.Supplier)
-                .Include(i => i.AssignedTo)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(itemType))
@@ -1228,14 +1240,36 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             if (!string.IsNullOrEmpty(status))
             {
-                if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                switch (status.ToLower())
                 {
-                    query = query.Where(i => i.AssignedToId == null && i.Quantity > 0);
+                    case "available":
+                        query = query.Where(i => i.Quantity > 0);
+                        break;
+                    case "assigned":
+                        // Items that have active assignments
+                        var assignedItemIds = await _context.ItemAssignments
+                            .Where(ia => ia.Status == "Assigned")
+                            .Select(ia => ia.ItemId)
+                            .ToListAsync();
+                        query = query.Where(i => assignedItemIds.Contains(i.Id));
+                        break;
+                    case "outofstock":
+                        query = query.Where(i => i.Quantity == 0);
+                        break;
                 }
             }
 
-            var items = await query
-                .Select(i => new
+            var items = await query.ToListAsync();
+
+            // Get assignment information for each item
+            var itemAssignments = await _context.ItemAssignments
+                .Include(ia => ia.Employee)
+                .Where(ia => ia.Status == "Assigned")
+                .ToListAsync();
+
+            var result = items.Select(i => {
+                var assignment = itemAssignments.FirstOrDefault(ia => ia.ItemId == i.Id);
+                return new
                 {
                     ItemId = i.Id,
                     ItemName = i.ItemName,
@@ -1243,11 +1277,11 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     Department = i.Department.Name,
                     Supplier = i.Supplier.CompanyName,
                     Quantity = i.Quantity,
-                    AssignedTo = i.AssignedTo != null ? $"{i.AssignedTo.FirstName} {i.AssignedTo.LastName}" : "Not Assigned",
-                    AssignedDate = i.AssignedDate,
-                    Status = i.AssignedToId != null ? "Assigned" : (i.Quantity > 0 ? "Available" : "Out of Stock")
-                })
-                .ToListAsync();
+                    AssignedTo = assignment?.Employee != null ? $"{assignment.Employee.FirstName} {assignment.Employee.LastName}" : "Not Assigned",
+                    AssignedDate = assignment?.AssignedDate,
+                    Status = assignment != null ? "Assigned" : (i.Quantity > 0 ? "Available" : "Out of Stock")
+                };
+            }).ToList();
 
             var dataTable = new DataTable();
             dataTable.Columns.Add("Item ID");
@@ -1260,7 +1294,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             dataTable.Columns.Add("Assigned Date");
             dataTable.Columns.Add("Status");
 
-            foreach (var item in items)
+            foreach (var item in result)
             {
                 dataTable.Rows.Add(
                     item.ItemId,

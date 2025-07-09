@@ -52,5 +52,6 @@ namespace UniformAndEquipmentManagementSystem.Data
         public DbSet<Item> Items { get; set; }
         public DbSet<Request> Requests { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
+        public DbSet<ItemAssignment> ItemAssignments { get; set; }
     }
 } 
