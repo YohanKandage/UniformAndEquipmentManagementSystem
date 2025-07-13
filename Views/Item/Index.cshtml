@@ -95,6 +95,7 @@
                     <th>@Html.DisplayNameFor(model => model.Supplier)</th>
                     <th>@Html.DisplayNameFor(model => model.Price)</th>
                     <th>@Html.DisplayNameFor(model => model.Quantity)</th>
+                    <th>@Html.DisplayNameFor(model => model.ThresholdQuantity)</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -122,6 +123,7 @@
                         <td>@Html.DisplayFor(modelItem => item.Supplier.CompanyName)</td>
                         <td>@Html.DisplayFor(modelItem => item.Price)</td>
                         <td>@Html.DisplayFor(modelItem => item.Quantity)</td>
+                        <td>@Html.DisplayFor(modelItem => item.ThresholdQuantity)</td>
                         <td>
                             <div class="action-buttons">
                                 <a asp-action="Details" asp-route-id="@item.Id" class="btn-action" title="Details">

@@ -107,6 +107,13 @@
                         <input asp-for="Quantity" class="form-control" placeholder="Enter quantity" type="number" min="0" required />
                         <span asp-validation-for="Quantity" class="text-danger"></span>
                     </div>
+
+                    <div class="form-group">
+                        <label asp-for="ThresholdQuantity" class="control-label"></label>
+                        <input asp-for="ThresholdQuantity" class="form-control" placeholder="Enter threshold quantity" type="number" min="0" required />
+                        <small class="form-text text-muted">Minimum stock level before alert is triggered</small>
+                        <span asp-validation-for="ThresholdQuantity" class="text-danger"></span>
+                    </div>
                 </div>
             </div>
 
@@ -171,6 +178,11 @@
                         required: true,
                         digits: true,
                         min: 0
+                    },
+                    ThresholdQuantity: {
+                        required: true,
+                        digits: true,
+                        min: 0
                     }
                 },
                 messages: {
@@ -180,7 +192,8 @@
                     DepartmentId: "Please select a department",
                     SupplierId: "Please select a supplier",
                     Price: "Please enter a valid price",
-                    Quantity: "Please enter a valid quantity"
+                    Quantity: "Please enter a valid quantity",
+                    ThresholdQuantity: "Please enter a valid threshold quantity"
                 },
                 errorElement: 'span',
                 errorClass: 'text-danger',

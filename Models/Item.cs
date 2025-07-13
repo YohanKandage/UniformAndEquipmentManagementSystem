@@ -44,6 +44,11 @@ namespace UniformAndEquipmentManagementSystem.Models
         [Display(Name = "Quantity")]
         public int Quantity { get; set; }
 
+        [Required]
+        [Display(Name = "Threshold Quantity")]
+        [Range(0, int.MaxValue, ErrorMessage = "Threshold quantity must be a non-negative number")]
+        public int ThresholdQuantity { get; set; }
+
         [Display(Name = "Image")]
         public string? ImagePath { get; set; }
 
