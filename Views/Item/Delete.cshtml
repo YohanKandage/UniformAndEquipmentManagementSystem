@@ -1,0 +1,257 @@
+@model UniformAndEquipmentManagementSystem.Models.Item
+
+@{
+    ViewData["Title"] = "Delete Item";
+}
+
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Delete Item</h1>
+    </div>
+
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">Warning!</h4>
+        <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+    </div>
+
+    <div class="form-container">
+        <div class="item-details">
+            <div class="form-grid">
+                <!-- Left Column - Basic Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Basic Information</h3>
+                    
+                    <div class="detail-group">
+                        <label class="control-label">Item Type</label>
+                        <p class="detail-value">@Model.ItemType</p>
+                    </div>
+
+                    <div class="detail-group">
+                        <label class="control-label">Item ID</label>
+                        <p class="detail-value">@Model.ItemId</p>
+                    </div>
+
+                    <div class="detail-group">
+                        <label class="control-label">Item Name</label>
+                        <p class="detail-value">@Model.ItemName</p>
+                    </div>
+
+                    <div class="detail-group">
+                        <label class="control-label">Material</label>
+                        <p class="detail-value">@Model.Material</p>
+                    </div>
+
+                    <div class="detail-group">
+                        <label class="control-label">Status</label>
+                        <p class="detail-value">
+                            <span class="badge @(Model.Status == "Available" ? "badge-success" : "badge-warning")">
+                                @Model.Status
+                            </span>
+                        </p>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.ImagePath))
+                    {
+                        <div class="detail-group">
+                            <label class="control-label">Item Image</label>
+                            <div class="image-container">
+                                <img src="@Model.ImagePath" alt="Item Image" class="img-preview" />
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Right Column - Additional Details -->
+                <div class="form-section">
+                    <h3 class="section-title">Additional Details</h3>
+
+                    <div class="detail-group">
+                        <label class="control-label">Department</label>
+                        <p class="detail-value">@(Model.Department?.Name ?? "N/A")</p>
+                    </div>
+
+                    <div class="detail-group">
+                        <label class="control-label">Supplier</label>
+                        <p class="detail-value">@(Model.Supplier?.CompanyName ?? "N/A")</p>
+                    </div>
+
+                    <div class="detail-group">
+                        <label class="control-label">Price (LKR)</label>
+                        <p class="detail-value">@Model.Price.ToString("C")</p>
+                    </div>
+
+                    <div class="detail-group">
+                        <label class="control-label">Quantity</label>
+                        <p class="detail-value">@Model.Quantity</p>
+                    </div>
+                </div>
+            </div>
+
+            <form asp-action="Delete" method="post" class="delete-form">
+                <input type="hidden" asp-for="Id" />
+                <div class="form-actions">
+                    <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this item? This action cannot be undone.')">
+                        Delete Item
+                    </button>
+                    <a asp-action="Index" class="btn-cancel">Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .page-container {
+        padding: 20px;
+    }
+
+    .page-header {
+        margin-bottom: 20px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 500;
+        color: #333;
+        margin: 0;
+    }
+
+    .form-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 32px;
+        margin-bottom: 24px;
+    }
+
+    .form-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 6px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #dc3545;
+    }
+
+    .detail-group {
+        margin-bottom: 20px;
+    }
+
+    .control-label {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .detail-value {
+        color: #666;
+        margin: 0;
+        padding: 8px 12px;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .img-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 4px;
+        margin-top: 8px;
+    }
+
+    .image-container {
+        margin-top: 8px;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 500;
+        border-radius: 4px;
+        color: white;
+    }
+
+    .badge-success {
+        background-color: #198754;
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #333;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+    }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+
+    .btn-cancel {
+        background-color: #f8f9fa;
+        color: #666;
+        padding: 10px 20px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background-color: #e2e6ea;
+        color: #333;
+    }
+
+    .alert {
+        border-radius: 4px;
+        margin-bottom: 20px;
+        padding: 12px 16px;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+    }
+
+    .alert-heading {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+</style> 

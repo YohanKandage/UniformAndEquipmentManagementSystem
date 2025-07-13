@@ -356,7 +356,25 @@
             $('.data-table').DataTable({
                 "pageLength": 10,
                 "ordering": true,
-                "searching": true
+                "searching": true,
+                "columnDefs": [
+                    {
+                        "targets": -1, // Last column (Actions)
+                        "orderable": false,
+                        "searchable": false
+                    }
+                ],
+                "language": {
+                    "search": "Search items:",
+                    "lengthMenu": "Show _MENU_ items per page",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ items",
+                    "paginate": {
+                        "first": "First",
+                        "last": "Last",
+                        "next": "Next",
+                        "previous": "Previous"
+                    }
+                }
             });
         });
     </script>

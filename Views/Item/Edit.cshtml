@@ -1,4 +1,225 @@
+@model UniformAndEquipmentManagementSystem.Models.Item
+
+@{
+    ViewData["Title"] = "Edit Item";
+}
+
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Edit Item</h1>
+    </div>
+
+    <div class="form-container">
+        <form asp-controller="Item" asp-action="Edit" method="post" enctype="multipart/form-data" id="editItemForm">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Status" />
+            <input type="hidden" asp-for="ImagePath" id="currentImagePath" />
+
+            <div class="form-grid">
+                <!-- Left Column - Basic Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Basic Information</h3>
+                    
+                    <div class="form-group">
+                        <label asp-for="ItemType" class="control-label"></label>
+                        <select asp-for="ItemType" class="form-control" id="itemType" required>
+                            <option value="">-- Select Type --</option>
+                            <option value="Uniform">Uniform</option>
+                            <option value="Equipment">Equipment</option>
+                        </select>
+                        <span asp-validation-for="ItemType" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ItemId" class="control-label"></label>
+                        <input asp-for="ItemId" class="form-control" readonly id="itemId" />
+                        <span asp-validation-for="ItemId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ItemName" class="control-label"></label>
+                        <input asp-for="ItemName" class="form-control" placeholder="Enter item name" required />
+                        <span asp-validation-for="ItemName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Material" class="control-label"></label>
+                        <input asp-for="Material" class="form-control" placeholder="Enter material type" required />
+                        <span asp-validation-for="Material" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label">Current Image</label>
+                        <div id="currentImageContainer">
+                            @if (!string.IsNullOrEmpty(Model.ImagePath))
+                            {
+                                <img src="@Model.ImagePath" alt="Current Item Image" class="img-preview" />
+                            }
+                            else
+                            {
+                                <div class="img-preview-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label">Upload New Image (Optional)</label>
+                        <div class="custom-file">
+                            <input type="file" name="ImageFile" class="form-control" id="imageInput" accept="image/*" />
+                        </div>
+                        <div id="imagePreview" class="mt-2 d-none">
+                            <img id="preview" src="#" alt="Preview" class="img-preview" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Additional Details -->
+                <div class="form-section">
+                    <h3 class="section-title">Additional Details</h3>
+
+                    <div class="form-group">
+                        <label asp-for="DepartmentId" class="control-label"></label>
+                        <select asp-for="DepartmentId" class="form-control" asp-items="ViewBag.DepartmentId" required>
+                            <option value="">-- Select Department --</option>
+                        </select>
+                        <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="SupplierId" class="control-label"></label>
+                        <select asp-for="SupplierId" class="form-control" asp-items="ViewBag.SupplierId" required>
+                            <option value="">-- Select Supplier --</option>
+                        </select>
+                        <span asp-validation-for="SupplierId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Price" class="control-label">Price (LKR)</label>
+                        <input asp-for="Price" class="form-control" type="number" step="0.01" min="0" required />
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Quantity" class="control-label"></label>
+                        <input asp-for="Quantity" class="form-control" placeholder="Enter quantity" type="number" min="0" required />
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">Update</button>
+                <a asp-action="Index" class="btn-cancel">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Image preview for new upload
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const preview = document.getElementById('preview');
+            const previewContainer = document.getElementById('imagePreview');
+            const file = e.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = '#';
+                previewContainer.classList.add('d-none');
+            }
+        });
+
+        // Form validation
+        $(document).ready(function () {
+            $('#editItemForm').validate({
+                rules: {
+                    ItemType: {
+                        required: true
+                    },
+                    ItemId: {
+                        required: true
+                    },
+                    ItemName: {
+                        required: true
+                    },
+                    Material: {
+                        required: true
+                    },
+                    DepartmentId: {
+                        required: true
+                    },
+                    SupplierId: {
+                        required: true
+                    },
+                    Price: {
+                        required: true,
+                        number: true,
+                        min: 0
+                    },
+                    Quantity: {
+                        required: true,
+                        digits: true,
+                        min: 0
+                    }
+                },
+                messages: {
+                    ItemType: "Please select an item type",
+                    ItemName: "Please enter an item name",
+                    Material: "Please enter the material type",
+                    DepartmentId: "Please select a department",
+                    SupplierId: "Please select a supplier",
+                    Price: "Please enter a valid price",
+                    Quantity: "Please enter a valid quantity"
+                },
+                errorElement: 'span',
+                errorClass: 'text-danger',
+                highlight: function(element) {
+                    $(element).addClass('is-invalid').removeClass('is-valid');
+                },
+                unhighlight: function(element) {
+                    $(element).addClass('is-valid').removeClass('is-invalid');
+                }
+            });
+        });
+    </script>
+}
+
 <style>
+    .page-container {
+        padding: 20px;
+    }
+
+    .page-header {
+        margin-bottom: 20px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 500;
+        color: #333;
+        margin: 0;
+    }
+
+    .form-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
     .form-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -104,7 +325,7 @@
     }
 
     .btn-submit {
-        background-color: #9497A8;
+        background-color: #0d6efd;
         color: white;
         padding: 10px 20px;
         border: none;
@@ -115,7 +336,7 @@
     }
 
     .btn-submit:hover {
-        background-color: #7a7c8c;
+        background-color: #0b5ed7;
     }
 
     .btn-cancel {
@@ -133,8 +354,17 @@
         background-color: #e2e6ea;
         color: #333;
     }
-</style>
 
-@section Scripts {
-// ... existing code ...
-}
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+
+    .is-valid {
+        border-color: #198754 !important;
+    }
+
+    .alert {
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+</style>

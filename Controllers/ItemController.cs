@@ -184,6 +184,22 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             }
         }
 
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var item = await _context.Items
+                .Include(i => i.Department)
+                .Include(i => i.Supplier)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (item == null)
+                return NotFound();
+
+            return View(item);
+        }
+
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
