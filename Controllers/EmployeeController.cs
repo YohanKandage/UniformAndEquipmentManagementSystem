@@ -103,6 +103,18 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         {
             try
             {
+                // Age validation - check if employee is at least 18 years old at join date
+                var age = employee.JoinDate.Year - employee.DateOfBirth.Year;
+                if (employee.JoinDate < employee.DateOfBirth.AddYears(age))
+                    age--;
+
+                if (age < 18)
+                {
+                    ModelState.AddModelError("JoinDate", $"Employee must be at least 18 years old at the time of joining. Current age would be {age} years.");
+                    ViewData["Departments"] = new SelectList(_context.Departments, "Id", "Name", employee.DepartmentId);
+                    return View(employee);
+                }
+
                 if (!ModelState.IsValid)
                 {
                     ViewData["Departments"] = new SelectList(_context.Departments, "Id", "Name", employee.DepartmentId);
@@ -202,6 +214,18 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         {
             if (id != employee.Id)
                 return NotFound();
+
+            // Age validation - check if employee is at least 18 years old at join date
+            var age = employee.JoinDate.Year - employee.DateOfBirth.Year;
+            if (employee.JoinDate < employee.DateOfBirth.AddYears(age))
+                age--;
+
+            if (age < 18)
+            {
+                ModelState.AddModelError("JoinDate", $"Employee must be at least 18 years old at the time of joining. Current age would be {age} years.");
+                ViewData["Departments"] = new SelectList(_context.Departments, "Id", "Name", employee.DepartmentId);
+                return View(employee);
+            }
 
             if (!ModelState.IsValid)
             {

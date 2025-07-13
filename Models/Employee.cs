@@ -45,6 +45,8 @@ namespace UniformAndEquipmentManagementSystem.Models
         public string Role { get; set; } = string.Empty;
 
         [Required]
+        [StringLength(12, MinimumLength = 10, ErrorMessage = "NIC must be between 10 and 12 characters.")]
+        [RegularExpression(@"^[A-Za-z0-9]{10,12}$", ErrorMessage = "NIC must be 10 or 12 characters and contain only letters and numbers.")]
         [Display(Name = "NIC")]
         public string NIC { get; set; } = string.Empty;
 
