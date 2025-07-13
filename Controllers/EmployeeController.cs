@@ -285,13 +285,54 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee != null)
+            try
             {
+                var employee = await _context.Employees
+                    .Include(e => e.Department)
+                    .FirstOrDefaultAsync(e => e.Id == id);
+                
+                if (employee == null)
+                {
+                    TempData["Error"] = "Employee not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Check if employee has any active item assignments
+                var activeAssignments = await _context.ItemAssignments
+                    .Where(ia => ia.EmployeeId == id && ia.Status == "Assigned")
+                    .CountAsync();
+
+                if (activeAssignments > 0)
+                {
+                    TempData["Error"] = $"Cannot delete employee. They have {activeAssignments} active item assignment(s). Please return all assigned items first.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Find and delete the associated user account first
+                var user = await _userManager.FindByEmailAsync(employee.Email);
+                if (user != null)
+                {
+                    var deleteUserResult = await _userManager.DeleteAsync(user);
+                    if (!deleteUserResult.Succeeded)
+                    {
+                        TempData["Error"] = "Failed to delete user account. Employee cannot be deleted.";
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
+
+                // Now delete the employee record
+                // Note: ItemAssignments and Requests will be automatically deleted due to cascade delete
                 _context.Employees.Remove(employee);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Employee deleted successfully!";
+                
+                TempData["Success"] = $"Employee '{employee.FirstName} {employee.LastName}' and associated data deleted successfully!";
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting employee with ID: {EmployeeId}", id);
+                TempData["Error"] = "An error occurred while deleting the employee. Please ensure all related data is properly handled.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
