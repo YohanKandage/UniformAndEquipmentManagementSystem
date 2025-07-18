@@ -70,8 +70,8 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 // Get pending requests count
                 var pendingRequests = await _context.Requests.CountAsync(r => r.Status == RequestStatus.Pending);
 
-                // Get low stock items (items with quantity less than 10)
-                var lowStockItems = await _context.Items.CountAsync(i => i.Quantity < 10);
+                // Get low stock items (items with quantity less than their threshold)
+                var lowStockItems = await _context.Items.CountAsync(i => i.Quantity <= i.ThresholdQuantity);
 
                 // Get department-wise employee count
                 var departmentStats = await _context.Departments
@@ -189,8 +189,8 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 var availableEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.Quantity > 0);
                 var assignedEquipment = await _context.ItemAssignments.CountAsync(ia => ia.Item.ItemType == "Equipment" && ia.Status == "Assigned");
 
-                // Get low stock items (quantity less than 10)
-                var lowStockItems = await _context.Items.CountAsync(i => i.Quantity < 10);
+                // Get low stock items (quantity less than their threshold)
+                var lowStockItems = await _context.Items.CountAsync(i => i.Quantity <= i.ThresholdQuantity);
 
                 // Get today's requests
                 var todayRequests = await _context.Requests
@@ -277,8 +277,8 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 // Get total inventory count
                 var totalInventory = await _context.Items.CountAsync();
 
-                // Get low stock items (quantity less than 10)
-                var lowStockItems = await _context.Items.CountAsync(i => i.Quantity < 10);
+                // Get low stock items (quantity less than their threshold)
+                var lowStockItems = await _context.Items.CountAsync(i => i.Quantity <= i.ThresholdQuantity);
 
                 // Get out of stock items
                 var outOfStockItems = await _context.Items.CountAsync(i => i.Quantity == 0);
@@ -289,12 +289,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 // Get uniform statistics
                 var totalUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform");
                 var availableUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform" && i.Quantity > 0);
-                var lowStockUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform" && i.Quantity < 10 && i.Quantity > 0);
+                var lowStockUniforms = await _context.Items.CountAsync(i => i.ItemType == "Uniform" && i.Quantity <= i.ThresholdQuantity && i.Quantity > 0);
 
                 // Get equipment statistics
                 var totalEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment");
                 var availableEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.Quantity > 0);
-                var lowStockEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.Quantity < 10 && i.Quantity > 0);
+                var lowStockEquipment = await _context.Items.CountAsync(i => i.ItemType == "Equipment" && i.Quantity <= i.ThresholdQuantity && i.Quantity > 0);
 
                 // Get department-wise inventory count
                 var departmentInventory = await _context.Departments
@@ -320,7 +320,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 var recentLowStockItems = await _context.Items
                     .Include(i => i.Department)
                     .Include(i => i.Supplier)
-                    .Where(i => i.Quantity < 10)
+                    .Where(i => i.Quantity <= i.ThresholdQuantity)
                     .OrderBy(i => i.Quantity)
                     .Take(5)
                     .Select(i => new
@@ -335,7 +335,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
                 // Get inventory status distribution
                 var inventoryStatus = await _context.Items
-                    .GroupBy(i => i.Quantity == 0 ? "Out of Stock" : (i.Quantity < 10 ? "Low Stock" : "In Stock"))
+                    .GroupBy(i => i.Quantity == 0 ? "Out of Stock" : (i.Quantity <= i.ThresholdQuantity ? "Low Stock" : "In Stock"))
                     .Select(g => new
                     {
                         Status = g.Key,

@@ -219,6 +219,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     Department = i.Department.Name,
                     Supplier = i.Supplier.CompanyName,
                     Quantity = i.Quantity,
+                    ThresholdQuantity = i.ThresholdQuantity,
                     AssignedTo = assignment?.Employee != null ? $"{assignment.Employee.FirstName} {assignment.Employee.LastName}" : "Not Assigned",
                     AssignedDate = assignment?.AssignedDate,
                     Status = assignment != null ? "Assigned" : (i.Quantity > 0 ? "Available" : "Out of Stock")
@@ -238,12 +239,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         }
 
         [Authorize(Roles = "Admin,StockManager,PropertyManager")]
-        public async Task<IActionResult> LowStockReport(int? threshold = 10)
+        public async Task<IActionResult> LowStockReport()
         {
             var items = await _context.Items
                 .Include(i => i.Department)
                 .Include(i => i.Supplier)
-                .Where(i => i.Quantity <= threshold)
+                .Where(i => i.Quantity <= i.ThresholdQuantity)
                 .Select(i => new
                 {
                     ItemId = i.Id,
@@ -252,13 +253,15 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     Department = i.Department.Name,
                     Supplier = i.Supplier.CompanyName,
                     CurrentQuantity = i.Quantity,
-                    Threshold = threshold.Value,
+                    Threshold = i.ThresholdQuantity,
                     Status = i.Quantity == 0 ? "Out of Stock" : "Low Stock"
                 })
                 .OrderBy(i => i.CurrentQuantity)
                 .ToListAsync();
 
-            ViewBag.Threshold = threshold;
+            ViewBag.TotalItems = items.Count;
+            ViewBag.OutOfStockItems = items.Count(i => i.CurrentQuantity == 0);
+            ViewBag.LowStockItems = items.Count(i => i.CurrentQuantity > 0);
             return View(items);
         }
 
@@ -1316,12 +1319,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin,StockManager,PropertyManager")]
-        public async Task<IActionResult> ExportLowStockReport(int? threshold = 10)
+        public async Task<IActionResult> ExportLowStockReport()
         {
             var items = await _context.Items
                 .Include(i => i.Department)
                 .Include(i => i.Supplier)
-                .Where(i => i.Quantity <= threshold)
+                .Where(i => i.Quantity <= i.ThresholdQuantity)
                 .Select(i => new
                 {
                     ItemId = i.Id,
@@ -1330,7 +1333,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     Department = i.Department.Name,
                     Supplier = i.Supplier.CompanyName,
                     CurrentQuantity = i.Quantity,
-                    Threshold = threshold.Value,
+                    Threshold = i.ThresholdQuantity,
                     Status = i.Quantity == 0 ? "Out of Stock" : "Low Stock"
                 })
                 .OrderBy(i => i.CurrentQuantity)
@@ -1360,7 +1363,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 );
             }
 
-            var title = $"Low Stock Report (Threshold: {threshold}) - Generated on {DateTime.Now:MMM dd, yyyy HH:mm}";
+            var title = $"Low Stock Report - Generated on {DateTime.Now:MMM dd, yyyy HH:mm}";
             var excelBytes = _excelService.ExportToExcel(dataTable, "Low Stock Report", title);
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "LowStockReport.xlsx");
         }

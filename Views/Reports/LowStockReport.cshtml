@@ -8,7 +8,6 @@
         <h2><i class="fas fa-exclamation-triangle text-danger"></i> Low Stock Report</h2>
         <div class="d-flex gap-2">
             <form asp-action="ExportLowStockReport" method="post" style="display: inline;">
-                <input type="hidden" name="threshold" value="@ViewBag.Threshold" />
                 <button type="submit" class="btn btn-success">
                     <i class="fas fa-file-excel"></i> Export to Excel
                 </button>
@@ -24,7 +23,7 @@
                         <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
                         <div>
                             <h5 class="card-title mb-1">Low Stock Alert</h5>
-                            <p class="card-text mb-0">Items with quantity ≤ @ViewBag.Threshold</p>
+                            <p class="card-text mb-0">Items below their individual thresholds</p>
                         </div>
                     </div>
                 </div>
@@ -109,7 +108,7 @@
                 <div class="text-center py-4">
                     <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
                     <h5 class="text-success">All items are well stocked!</h5>
-                    <p class="text-muted">No items found below the threshold of @ViewBag.Threshold.</p>
+                    <p class="text-muted">No items found below their individual thresholds.</p>
                 </div>
             }
         </div>
@@ -123,8 +122,8 @@
                 </div>
                 <div class="card-body">
                     @{
-                        var outOfStock = Model.Count(i => i.CurrentQuantity == 0);
-                        var lowStock = Model.Count(i => i.CurrentQuantity > 0);
+                        var outOfStock = ViewBag.OutOfStockItems ?? 0;
+                        var lowStock = ViewBag.LowStockItems ?? 0;
                     }
                     <div class="row text-center">
                         <div class="col-6">

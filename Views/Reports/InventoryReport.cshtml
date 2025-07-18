@@ -107,7 +107,7 @@
                                 <td>@item.Department</td>
                                 <td>@item.Supplier</td>
                                 <td>
-                                    <span class="badge @(item.Quantity == 0 ? "bg-danger" : (item.Quantity < 10 ? "bg-warning" : "bg-success"))">
+                                    <span class="badge @(item.Quantity == 0 ? "bg-danger" : (item.Quantity <= item.ThresholdQuantity ? "bg-warning" : "bg-success"))">
                                         @item.Quantity
                                     </span>
                                 </td>

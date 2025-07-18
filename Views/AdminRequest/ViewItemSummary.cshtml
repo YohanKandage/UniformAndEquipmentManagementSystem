@@ -112,7 +112,7 @@
                                                 <tr>
                                                     <td><strong>Available Quantity:</strong></td>
                                                     <td>
-                                                        <span class="badge @(Model.Item.Quantity == 0 ? "bg-danger" : (Model.Item.Quantity < 10 ? "bg-warning" : "bg-success"))">
+                                                        <span class="badge @(Model.Item.Quantity == 0 ? "bg-danger" : (Model.Item.Quantity <= Model.Item.ThresholdQuantity ? "bg-warning" : "bg-success"))">
                                                             @Model.Item.Quantity
                                                         </span>
                                                     </td>
