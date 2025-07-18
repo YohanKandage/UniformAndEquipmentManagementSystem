@@ -9,14 +9,14 @@
 }
 
 html {
-    font-size: 14px;
+    font-size: 16px;
     position: relative;
     min-height: 100%;
 }
 
 @media (min-width: 768px) {
     html {
-        font-size: 16px;
+        font-size: 18px;
     }
 }
 
@@ -62,12 +62,15 @@ body {
 /* Table Styles */
 .table {
     border-color: var(--border-color);
+    font-size: 1rem;
 }
 
 .table thead th {
     background-color: #f8f9fa;
     border-bottom: 2px solid var(--border-color);
     color: var(--text-color);
+    font-size: 1.1rem;
+    font-weight: 600;
 }
 
 /* Override for table-dark class to ensure proper contrast */
@@ -101,12 +104,103 @@ body {
 }
 
 /* Badge Styles */
+.badge {
+    font-size: 0.9rem !important;
+    padding: 0.5rem 0.75rem !important;
+}
+
 .badge.bg-primary {
     background-color: var(--primary-color) !important;
 }
 
 .badge.bg-secondary {
     background-color: var(--secondary-color) !important;
+}
+
+/* Global Font Size Improvements */
+.page-title {
+    font-size: 28px !important;
+    font-weight: 500 !important;
+}
+
+.form-title {
+    font-size: 22px !important;
+    font-weight: 500 !important;
+}
+
+.section-title {
+    font-size: 20px !important;
+    font-weight: 500 !important;
+}
+
+.subsection-title {
+    font-size: 18px !important;
+    font-weight: 500 !important;
+}
+
+/* Form elements */
+.form-control, .form-select {
+    font-size: 1rem !important;
+}
+
+.form-label {
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+}
+
+/* Buttons */
+.btn {
+    font-size: 1rem !important;
+}
+
+/* Small text improvements */
+.text-muted {
+    font-size: 0.95rem !important;
+}
+
+small, .small {
+    font-size: 0.9rem !important;
+}
+
+/* Override common small font sizes throughout the application */
+*[style*="font-size: 14px"] {
+    font-size: 16px !important;
+}
+
+*[style*="font-size: 13px"] {
+    font-size: 15px !important;
+}
+
+*[style*="font-size: 12px"] {
+    font-size: 14px !important;
+}
+
+/* Common element improvements */
+.data-table td {
+    font-size: 1rem !important;
+}
+
+.btn-primary, .btn-secondary, .btn-danger, .btn-success {
+    font-size: 1rem !important;
+}
+
+/* Form validation messages */
+.text-danger {
+    font-size: 0.95rem !important;
+}
+
+/* Navigation improvements */
+.nav-link {
+    font-size: 1rem !important;
+}
+
+/* Card titles and headers */
+.card-title {
+    font-size: 1.2rem !important;
+}
+
+.card-header {
+    font-size: 1.1rem !important;
 }
 
 /* Alert Styles */
