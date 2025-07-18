@@ -185,6 +185,13 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     return View(employee);
                 }
 
+                // If employee role, redirect to item assignment
+                if (employee.Role == "Employee")
+                {
+                    TempData["Success"] = $"Employee created successfully! You can now assign items to {employee.FirstName} {employee.LastName}.";
+                    return RedirectToAction(nameof(AssignItems), new { id = employee.Id });
+                }
+                
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -200,11 +207,26 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             if (id == null)
                 return NotFound();
 
-            var employee = await _context.Employees.FindAsync(id);
+            var employee = await _context.Employees
+                .Include(e => e.Department)
+                .FirstOrDefaultAsync(e => e.Id == id);
+                
             if (employee == null)
                 return NotFound();
 
+            // Get assigned items for this employee
+            var assignedItems = await _context.ItemAssignments
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Department)
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Supplier)
+                .Where(ia => ia.EmployeeId == id && ia.Status == "Assigned")
+                .OrderBy(ia => ia.Item.ItemType)
+                .ThenBy(ia => ia.Item.ItemName)
+                .ToListAsync();
+
             ViewData["Departments"] = new SelectList(_context.Departments, "Id", "Name", employee.DepartmentId);
+            ViewBag.AssignedItems = assignedItems;
             return View(employee);
         }
 
@@ -351,6 +373,19 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             {
                 return NotFound();
             }
+
+            // Get assigned items for this employee
+            var assignedItems = await _context.ItemAssignments
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Department)
+                .Include(ia => ia.Item)
+                    .ThenInclude(i => i.Supplier)
+                .Where(ia => ia.EmployeeId == id && ia.Status == "Assigned")
+                .OrderBy(ia => ia.Item.ItemType)
+                .ThenBy(ia => ia.Item.ItemName)
+                .ToListAsync();
+
+            ViewBag.AssignedItems = assignedItems;
 
             return View(employee);
         }
@@ -645,6 +680,130 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         private bool EmployeeExists(int id)
         {
             return _context.Employees.Any(e => e.Id == id);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AssignItems(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var employee = await _context.Employees
+                .Include(e => e.Department)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (employee == null)
+                return NotFound();
+
+            if (employee.Role != "Employee")
+            {
+                TempData["Error"] = "Item assignment is only available for employees.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Get available items for the employee's department
+            var availableItems = await _context.Items
+                .Include(i => i.Department)
+                .Include(i => i.Supplier)
+                .Where(i => i.DepartmentId == employee.DepartmentId && i.Status == "Available" && i.Quantity > 0)
+                .ToListAsync();
+
+            ViewBag.Employee = employee;
+            ViewBag.AvailableItems = availableItems;
+
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignItems(int id, List<int> selectedItemIds)
+        {
+            var employee = await _context.Employees
+                .Include(e => e.Department)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (employee == null)
+                return NotFound();
+
+            if (employee.Role != "Employee")
+            {
+                TempData["Error"] = "Item assignment is only available for employees.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                if (selectedItemIds != null && selectedItemIds.Any())
+                {
+                    foreach (var itemId in selectedItemIds)
+                    {
+                        var item = await _context.Items.FindAsync(itemId);
+                        if (item != null && item.Quantity > 0 && item.DepartmentId == employee.DepartmentId)
+                        {
+                            // Create item assignment
+                            var assignment = new ItemAssignment
+                            {
+                                ItemId = itemId,
+                                EmployeeId = employee.Id,
+                                AssignedDate = DateTime.Now,
+                                Status = "Assigned"
+                            };
+
+                            _context.ItemAssignments.Add(assignment);
+
+                            // Update item quantity and status
+                            item.Quantity--;
+                            if (item.Quantity <= 0)
+                            {
+                                item.Status = "Out of Stock";
+                            }
+
+                            _context.Items.Update(item);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = $"Successfully assigned {selectedItemIds.Count} item(s) to {employee.FirstName} {employee.LastName}.";
+                }
+                else
+                {
+                    TempData["Info"] = "No items were selected for assignment.";
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error assigning items to employee {EmployeeId}", id);
+                TempData["Error"] = "An error occurred while assigning items. Please try again.";
+                return RedirectToAction(nameof(AssignItems), new { id = id });
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetItemsByDepartment(int departmentId)
+        {
+            var items = await _context.Items
+                .Include(i => i.Department)
+                .Include(i => i.Supplier)
+                .Where(i => i.DepartmentId == departmentId && i.Status == "Available" && i.Quantity > 0)
+                .Select(i => new
+                {
+                    i.Id,
+                    i.ItemName,
+                    i.ItemType,
+                    i.Material,
+                    i.Price,
+                    i.Quantity,
+                    DepartmentName = i.Department.Name,
+                    SupplierName = i.Supplier.CompanyName
+                })
+                .ToListAsync();
+
+            return Json(items);
         }
     }
 } 
