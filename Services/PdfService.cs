@@ -17,6 +17,12 @@ namespace UniformAndEquipmentManagementSystem.Services
         Style GetNormalStyle();
         Style GetTableHeaderStyle();
         Style GetTableContentStyle();
+        Style GetHeaderTitleStyle();
+        Style GetHeaderSubtitleStyle();
+        Style GetCompanyInfoStyle();
+        Style GetSignatureStyle();
+        Style GetSignatureLabelStyle();
+        Style GetDocumentNumberStyle();
     }
 
     public class PdfService : IPdfService
@@ -71,8 +77,8 @@ namespace UniformAndEquipmentManagementSystem.Services
             return new Style()
                 .SetFontSize(10)
                 .SetBold()
-                .SetFontColor(ColorConstants.WHITE)
-                .SetBackgroundColor(ColorConstants.DARK_GRAY);
+                .SetFontColor(ColorConstants.DARK_GRAY)
+                .SetBackgroundColor(ColorConstants.LIGHT_GRAY);
         }
 
         public Style GetTableContentStyle()
@@ -80,6 +86,62 @@ namespace UniformAndEquipmentManagementSystem.Services
             return new Style()
                 .SetFontSize(10)
                 .SetFontColor(ColorConstants.BLACK);
+        }
+
+        public Style GetHeaderTitleStyle()
+        {
+            return new Style()
+                .SetFontSize(24)
+                .SetBold()
+                .SetFontColor(ColorConstants.WHITE)
+                .SetTextAlignment(TextAlignment.CENTER);
+        }
+
+        public Style GetHeaderSubtitleStyle()
+        {
+            return new Style()
+                .SetFontSize(18)
+                .SetBold()
+                .SetFontColor(ColorConstants.DARK_GRAY)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(5);
+        }
+
+        public Style GetCompanyInfoStyle()
+        {
+            return new Style()
+                .SetFontSize(10)
+                .SetFontColor(ColorConstants.DARK_GRAY)
+                .SetMarginBottom(2);
+        }
+
+        public Style GetSignatureStyle()
+        {
+            return new Style()
+                .SetFontSize(12)
+                .SetBold()
+                .SetFontColor(ColorConstants.DARK_GRAY)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginTop(40);
+        }
+
+        public Style GetSignatureLabelStyle()
+        {
+            return new Style()
+                .SetFontSize(10)
+                .SetFontColor(ColorConstants.DARK_GRAY)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginTop(5);
+        }
+
+        public Style GetDocumentNumberStyle()
+        {
+            return new Style()
+                .SetFontSize(12)
+                .SetBold()
+                .SetFontColor(ColorConstants.BLUE)
+                .SetTextAlignment(TextAlignment.RIGHT)
+                .SetMarginBottom(10);
         }
     }
 } 

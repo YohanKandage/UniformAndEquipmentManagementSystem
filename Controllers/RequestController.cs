@@ -15,6 +15,7 @@ using iText.Kernel.Pdf;
 using iText.Layout.Element;
 using iText.Layout.Properties;
 using iText.Kernel.Colors;
+using iText.Layout.Borders;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
@@ -398,43 +399,68 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             var pdfBytes = _pdfService.GenerateDocument(doc =>
             {
-                // Header with FMI Logo and Company Info
-                var headerTable = new Table(2).UseAllAvailableWidth();
-                headerTable.SetMarginBottom(20);
+                // Professional Header with Logo and Company Information
+                var headerTable = new Table(3).UseAllAvailableWidth();
+                headerTable.SetMarginBottom(30);
                 
-                // FMI Logo placeholder (you can replace with actual logo path)
-                var logoCell = new Cell().Add(new Paragraph("FMI").SetFontSize(24).SetBold().SetTextAlignment(TextAlignment.CENTER).SetFontColor(ColorConstants.WHITE));
-                logoCell.SetWidth(100);
-                logoCell.SetHeight(60);
+                // FMI Logo Section
+                var logoCell = new Cell().Add(
+                    new Paragraph("FMI").AddStyle(_pdfService.GetHeaderTitleStyle())
+                );
+                logoCell.SetWidth(120);
+                logoCell.SetHeight(80);
                 logoCell.SetBackgroundColor(ColorConstants.BLUE);
                 logoCell.SetBorder(null);
+                logoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
                 
+                // Company Information Section
                 var companyInfoCell = new Cell().Add(
-                    new Paragraph("FMI Company").SetFontSize(16).SetBold().SetMarginBottom(5)
+                    new Paragraph("FMI COMPANY LIMITED").AddStyle(_pdfService.GetHeaderSubtitleStyle())
                 ).Add(
-                    new Paragraph("23, Galle Road").SetFontSize(10).SetMarginBottom(2)
+                    new Paragraph("23, Galle Road, Colombo 04").AddStyle(_pdfService.GetCompanyInfoStyle())
                 ).Add(
-                    new Paragraph("Colombo 04").SetFontSize(10).SetMarginBottom(2)
+                    new Paragraph("Sri Lanka").AddStyle(_pdfService.GetCompanyInfoStyle())
                 ).Add(
-                    new Paragraph("Phone: (123) 456-7890").SetFontSize(10).SetMarginBottom(2)
+                    new Paragraph("Phone: +94 11 234 5678").AddStyle(_pdfService.GetCompanyInfoStyle())
                 ).Add(
-                    new Paragraph("Email: info@fmi.com").SetFontSize(10)
+                    new Paragraph("Email: info@fmi.com").AddStyle(_pdfService.GetCompanyInfoStyle())
+                ).Add(
+                    new Paragraph("Website: www.fmi.com").AddStyle(_pdfService.GetCompanyInfoStyle())
                 );
                 companyInfoCell.SetBorder(null);
                 companyInfoCell.SetTextAlignment(TextAlignment.LEFT);
+                companyInfoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                
+                // Document Number Section
+                var documentNumberCell = new Cell().Add(
+                    new Paragraph($"Document #: {assignment.Id:D6}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Date: {DateTime.Now:MMM dd, yyyy}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Time: {DateTime.Now:HH:mm}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                );
+                documentNumberCell.SetBorder(null);
+                documentNumberCell.SetTextAlignment(TextAlignment.RIGHT);
+                documentNumberCell.SetVerticalAlignment(VerticalAlignment.TOP);
                 
                 headerTable.AddCell(logoCell);
                 headerTable.AddCell(companyInfoCell);
+                headerTable.AddCell(documentNumberCell);
                 doc.Add(headerTable);
 
-                // Document Title
+                // Document Title with decorative line
                 doc.Add(new Paragraph("ITEM ASSIGNMENT RECEIPT").AddStyle(_pdfService.GetTitleStyle()));
+                
+                // Decorative line
+                var line = new Paragraph("").SetBorderBottom(new SolidBorder(ColorConstants.BLUE, 2)).SetMarginBottom(20);
+                doc.Add(line);
                 
                 // Assignment Details Section
                 doc.Add(new Paragraph("Assignment Information").AddStyle(_pdfService.GetSectionStyle()));
                 
                 var assignmentTable = new Table(2).UseAllAvailableWidth();
-                assignmentTable.SetMarginBottom(20);
+                assignmentTable.SetMarginBottom(25);
+                assignmentTable.SetBorder(null);
                 
                 AddTableRow(assignmentTable, "Assignment ID", $"#{assignment.Id:D6}");
                 AddTableRow(assignmentTable, "Assignment Date", assignment.AssignedDate.ToString("MMMM dd, yyyy"));
@@ -451,7 +477,8 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 doc.Add(new Paragraph("Item Details").AddStyle(_pdfService.GetSectionStyle()));
                 
                 var itemTable = new Table(2).UseAllAvailableWidth();
-                itemTable.SetMarginBottom(20);
+                itemTable.SetMarginBottom(25);
+                itemTable.SetBorder(null);
                 
                 AddTableRow(itemTable, "Item Name", assignment.Item.ItemName);
                 AddTableRow(itemTable, "Item ID", assignment.Item.ItemId);
@@ -467,7 +494,8 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 doc.Add(new Paragraph("Employee Information").AddStyle(_pdfService.GetSectionStyle()));
                 
                 var employeeTable = new Table(2).UseAllAvailableWidth();
-                employeeTable.SetMarginBottom(20);
+                employeeTable.SetMarginBottom(25);
+                employeeTable.SetBorder(null);
                 
                 AddTableRow(employeeTable, "Employee Name", $"{assignment.Employee?.FirstName} {assignment.Employee?.LastName}");
                 AddTableRow(employeeTable, "Employee ID", assignment.Employee?.EmployeeId ?? "N/A");
@@ -482,7 +510,8 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     doc.Add(new Paragraph("Request Information").AddStyle(_pdfService.GetSectionStyle()));
                     
                     var requestTable = new Table(2).UseAllAvailableWidth();
-                    requestTable.SetMarginBottom(20);
+                    requestTable.SetMarginBottom(25);
+                    requestTable.SetBorder(null);
                     
                     AddTableRow(requestTable, "Request Date", assignment.Request.RequestDate.ToString("MMMM dd, yyyy"));
                     AddTableRow(requestTable, "Request Status", assignment.Request.Status.ToString().Replace("By", " by "));
@@ -500,16 +529,62 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 doc.Add(new Paragraph("2. The employee is responsible for the care and maintenance of the assigned item.").AddStyle(_pdfService.GetNormalStyle()));
                 doc.Add(new Paragraph("3. Items must be returned in good condition upon termination or transfer.").AddStyle(_pdfService.GetNormalStyle()));
                 doc.Add(new Paragraph("4. Any damage or loss must be reported immediately to the department supervisor.").AddStyle(_pdfService.GetNormalStyle()));
+                doc.Add(new Paragraph("5. The assigned item remains the property of FMI Company Limited.").AddStyle(_pdfService.GetNormalStyle()));
+
+                // Signature Section
+                doc.Add(new Paragraph("").SetMarginTop(40));
+                
+                var signatureTable = new Table(2).UseAllAvailableWidth();
+                signatureTable.SetMarginBottom(30);
+                signatureTable.SetBorder(null);
+                
+                // Administrator Signature
+                var adminSignatureCell = new Cell();
+                adminSignatureCell.SetBorder(null);
+                adminSignatureCell.SetTextAlignment(TextAlignment.CENTER);
+                adminSignatureCell.Add(new Paragraph("_________________________").AddStyle(_pdfService.GetSignatureStyle()));
+                adminSignatureCell.Add(new Paragraph("Administrator").AddStyle(_pdfService.GetSignatureLabelStyle()));
+                adminSignatureCell.Add(new Paragraph("FMI Company Limited").AddStyle(_pdfService.GetSignatureLabelStyle()));
+                
+                // Stock Manager Signature
+                var stockManagerSignatureCell = new Cell();
+                stockManagerSignatureCell.SetBorder(null);
+                stockManagerSignatureCell.SetTextAlignment(TextAlignment.CENTER);
+                stockManagerSignatureCell.Add(new Paragraph("_________________________").AddStyle(_pdfService.GetSignatureStyle()));
+                stockManagerSignatureCell.Add(new Paragraph("Stock Manager").AddStyle(_pdfService.GetSignatureLabelStyle()));
+                stockManagerSignatureCell.Add(new Paragraph("FMI Company Limited").AddStyle(_pdfService.GetSignatureLabelStyle()));
+                
+                signatureTable.AddCell(adminSignatureCell);
+                signatureTable.AddCell(stockManagerSignatureCell);
+                doc.Add(signatureTable);
+
+                // Employee Acknowledgment
+                doc.Add(new Paragraph("").SetMarginTop(20));
+                var acknowledgmentTable = new Table(1).UseAllAvailableWidth();
+                acknowledgmentTable.SetBorder(null);
+                
+                var acknowledgmentCell = new Cell();
+                acknowledgmentCell.SetBorder(null);
+                acknowledgmentCell.SetTextAlignment(TextAlignment.CENTER);
+                acknowledgmentCell.Add(new Paragraph("_________________________").AddStyle(_pdfService.GetSignatureStyle()));
+                acknowledgmentCell.Add(new Paragraph("Employee Signature").AddStyle(_pdfService.GetSignatureLabelStyle()));
+                acknowledgmentCell.Add(new Paragraph($"{assignment.Employee?.FirstName} {assignment.Employee?.LastName}").AddStyle(_pdfService.GetSignatureLabelStyle()));
+                acknowledgmentCell.Add(new Paragraph("I acknowledge receipt of the above assigned item(s)").AddStyle(_pdfService.GetSignatureLabelStyle()));
+                
+                acknowledgmentTable.AddCell(acknowledgmentCell);
+                doc.Add(acknowledgmentTable);
 
                 // Footer
-                doc.Add(new Paragraph("").SetMarginTop(30));
+                doc.Add(new Paragraph("").SetMarginTop(40));
                 var footerTable = new Table(1).UseAllAvailableWidth();
                 footerTable.SetMarginTop(20);
                 
                 var footerCell = new Cell().Add(
                     new Paragraph("Generated on: " + DateTime.Now.ToString("MMMM dd, yyyy 'at' hh:mm tt")).SetFontSize(8).SetTextAlignment(TextAlignment.CENTER)
                 ).Add(
-                    new Paragraph("This is an official FMI document").SetFontSize(8).SetTextAlignment(TextAlignment.CENTER)
+                    new Paragraph("This is an official FMI document - Keep for your records").SetFontSize(8).SetTextAlignment(TextAlignment.CENTER)
+                ).Add(
+                    new Paragraph("FMI Company Limited - Uniform and Equipment Management System").SetFontSize(8).SetTextAlignment(TextAlignment.CENTER)
                 );
                 footerCell.SetBorder(null);
                 footerCell.SetBackgroundColor(ColorConstants.LIGHT_GRAY);
@@ -525,12 +600,14 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         {
             var labelCell = new Cell().Add(new Paragraph(label).AddStyle(_pdfService.GetTableHeaderStyle()));
             labelCell.SetBorder(null);
-            labelCell.SetPadding(8);
+            labelCell.SetPadding(10);
             labelCell.SetWidth(150);
+            labelCell.SetBackgroundColor(ColorConstants.LIGHT_GRAY);
             
             var valueCell = new Cell().Add(new Paragraph(value).AddStyle(_pdfService.GetTableContentStyle()));
             valueCell.SetBorder(null);
-            valueCell.SetPadding(8);
+            valueCell.SetPadding(10);
+            valueCell.SetBackgroundColor(ColorConstants.WHITE);
             
             table.AddCell(labelCell);
             table.AddCell(valueCell);
