@@ -170,7 +170,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     imagePath = i.ImagePath ?? "/images/default-item.png",
                     price = i.Price,
                     details = $"Department: {employee.Department.Name} | Material: {i.Material} | Price: Rs. {i.Price:F2} | Available: {i.Quantity}" + 
-                             (i.Price > 1000 ? "\n\nNote: Please handover the previous fault items within 7 days to proceed the request" : "")
+                             (i.ItemType == "Equipment" ? "\n\nNote: Please handover the previous fault items within 7 days to proceed the request" : "")
                 })
                 .ToListAsync();
 
