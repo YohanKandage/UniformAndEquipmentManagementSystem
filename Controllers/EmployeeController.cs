@@ -288,6 +288,8 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             }
         }
 
+        // Delete functionality disabled for security
+        /*
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -357,6 +359,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+        */
 
         public async Task<IActionResult> Details(int? id)
         {
