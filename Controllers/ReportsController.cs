@@ -311,6 +311,52 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             return View(suppliers);
         }
 
+        [Authorize(Roles = "Admin,PropertyManager,StockManager")]
+        public async Task<IActionResult> IssuedItemsReport(string itemType, DateTime? startDate, DateTime? endDate)
+        {
+            var query = _context.ItemAssignments
+                .Include(ia => ia.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(ia => ia.Item)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(itemType))
+            {
+                query = query.Where(ia => ia.Item.ItemType == itemType);
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(ia => ia.AssignedDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(ia => ia.AssignedDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+            }
+
+            var issuedItems = await query
+                .OrderByDescending(ia => ia.AssignedDate)
+                .Select(ia => new
+                {
+                    AssignmentId = ia.Id,
+                    EmployeeName = $"{ia.Employee.FirstName} {ia.Employee.LastName}",
+                    Department = ia.Employee.Department.Name,
+                    ItemName = ia.Item.ItemName,
+                    ItemType = ia.Item.ItemType,
+                    AssignedDate = ia.AssignedDate,
+                    Status = ia.Status,
+                    ReturnDate = ia.ReturnedDate
+                })
+                .ToListAsync();
+
+            ViewBag.ItemType = itemType;
+            ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+            ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+
+            return View(issuedItems);
+        }
+
         [Authorize(Roles = "StockManager")]
         public async Task<IActionResult> ReleasesReport(string employeeName, int? departmentId, string itemType, 
             DateTime? startDate, DateTime? endDate, decimal? minCost, decimal? maxCost, string releasedBy)
@@ -2247,6 +2293,280 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             });
 
             return File(pdfBytes, "application/pdf", $"SupplierReport_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin,PropertyManager,StockManager")]
+        public async Task<IActionResult> ExportIssuedItemsReport(string itemType, DateTime? startDate, DateTime? endDate)
+        {
+            var query = _context.ItemAssignments
+                .Include(ia => ia.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(ia => ia.Item)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(itemType))
+            {
+                query = query.Where(ia => ia.Item.ItemType == itemType);
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(ia => ia.AssignedDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(ia => ia.AssignedDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+            }
+
+            var issuedItems = await query
+                .OrderByDescending(ia => ia.AssignedDate)
+                .Select(ia => new
+                {
+                    AssignmentId = ia.Id,
+                    EmployeeName = $"{ia.Employee.FirstName} {ia.Employee.LastName}",
+                    Department = ia.Employee.Department.Name,
+                    ItemName = ia.Item.ItemName,
+                    ItemType = ia.Item.ItemType,
+                    AssignedDate = ia.AssignedDate,
+                    Status = ia.Status,
+                    ReturnDate = ia.ReturnedDate
+                })
+                .ToListAsync();
+
+            var dataTable = new DataTable();
+            dataTable.Columns.Add("Assignment ID");
+            dataTable.Columns.Add("Employee Name");
+            dataTable.Columns.Add("Department");
+            dataTable.Columns.Add("Item Name");
+            dataTable.Columns.Add("Item Type");
+            dataTable.Columns.Add("Assigned Date");
+            dataTable.Columns.Add("Status");
+            dataTable.Columns.Add("Return Date");
+
+            foreach (var item in issuedItems)
+            {
+                dataTable.Rows.Add(
+                    item.AssignmentId,
+                    item.EmployeeName,
+                    item.Department,
+                    item.ItemName,
+                    item.ItemType,
+                    item.AssignedDate.ToString("MMM dd, yyyy"),
+                    item.Status,
+                    item.ReturnDate?.ToString("MMM dd, yyyy") ?? "N/A"
+                );
+            }
+
+            var title = $"Issued Items Report - Generated on {DateTime.Now:MMM dd, yyyy HH:mm}";
+            var excelBytes = _excelService.ExportToExcel(dataTable, "Issued Items Report", title);
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "IssuedItemsReport.xlsx");
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin,PropertyManager,StockManager")]
+        public async Task<IActionResult> ExportIssuedItemsReportPdf(string itemType, DateTime? startDate, DateTime? endDate)
+        {
+            var query = _context.ItemAssignments
+                .Include(ia => ia.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(ia => ia.Item)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(itemType))
+            {
+                query = query.Where(ia => ia.Item.ItemType == itemType);
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(ia => ia.AssignedDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(ia => ia.AssignedDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+            }
+
+            var issuedItems = await query
+                .OrderByDescending(ia => ia.AssignedDate)
+                .Select(ia => new
+                {
+                    AssignmentId = ia.Id,
+                    EmployeeName = $"{ia.Employee.FirstName} {ia.Employee.LastName}",
+                    Department = ia.Employee.Department.Name,
+                    ItemName = ia.Item.ItemName,
+                    ItemType = ia.Item.ItemType,
+                    AssignedDate = ia.AssignedDate,
+                    Status = ia.Status,
+                    ReturnDate = ia.ReturnedDate
+                })
+                .ToListAsync();
+
+            // Get current user for signature
+            var currentUserEmail = User.Identity?.Name;
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+            var preparedBy = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "N/A";
+
+            var pdfBytes = _pdfService.GenerateDocument(doc =>
+            {
+                // Header with FMI Logo and Company Information
+                var headerTable = new Table(3).UseAllAvailableWidth();
+                headerTable.SetMarginBottom(30);
+                
+                // FMI Logo Section (Blue background with FMI text)
+                var logoCell = new Cell().Add(
+                    new Paragraph("FMI").AddStyle(_pdfService.GetHeaderTitleStyle())
+                );
+                logoCell.SetWidth(120);
+                logoCell.SetHeight(80);
+                logoCell.SetBackgroundColor(ColorConstants.BLUE);
+                logoCell.SetBorder(null);
+                logoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                
+                // Company Information Section
+                var companyInfoCell = new Cell().Add(
+                    new Paragraph("Facilities Management Integrated (Pvt) Ltd.").AddStyle(_pdfService.GetHeaderSubtitleStyle())
+                ).Add(
+                    new Paragraph("Telephone: (+94) 11 59 40740").AddStyle(_pdfService.GetCompanyInfoStyle())
+                ).Add(
+                    new Paragraph("Address: No. 490, Oceanica Towers, Colombo 03").AddStyle(_pdfService.GetCompanyInfoStyle())
+                );
+                companyInfoCell.SetBorder(null);
+                companyInfoCell.SetTextAlignment(TextAlignment.LEFT);
+                companyInfoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                
+                // Document Number Section
+                var documentNumberCell = new Cell().Add(
+                    new Paragraph($"Document #: {DateTime.Now:yyyyMMddHHmmss}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Date: {DateTime.Now:MMM dd, yyyy}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Time: {DateTime.Now:HH:mm}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                );
+                documentNumberCell.SetBorder(null);
+                documentNumberCell.SetTextAlignment(TextAlignment.RIGHT);
+                documentNumberCell.SetVerticalAlignment(VerticalAlignment.TOP);
+                
+                headerTable.AddCell(logoCell);
+                headerTable.AddCell(companyInfoCell);
+                headerTable.AddCell(documentNumberCell);
+                doc.Add(headerTable);
+
+                // Filter Information Section
+                var filterTable = new Table(2).UseAllAvailableWidth();
+                filterTable.SetMarginBottom(20);
+                filterTable.SetBorder(null);
+                
+                AddTableRow(filterTable, "Item Type:", !string.IsNullOrEmpty(itemType) ? itemType : "ALL");
+                AddTableRow(filterTable, "Start Date:", startDate?.ToString("MMM dd, yyyy") ?? "ALL");
+                AddTableRow(filterTable, "End Date:", endDate?.ToString("MMM dd, yyyy") ?? "ALL");
+                
+                doc.Add(filterTable);
+
+                // Document Title
+                doc.Add(new Paragraph("Issued Items Report").AddStyle(_pdfService.GetTitleStyle()));
+                
+                // Decorative line
+                var line = new Paragraph("").SetBorderBottom(new SolidBorder(ColorConstants.BLUE, 2)).SetMarginBottom(20);
+                doc.Add(line);
+
+                // Issued Items Details Table
+                if (issuedItems.Any())
+                {
+                    var issuedItemsTable = new Table(6).UseAllAvailableWidth();
+                    issuedItemsTable.SetMarginBottom(25);
+                    
+                    // Add headers
+                    var headers = new[] { "Assignment ID", "Employee", "Department", "Item", "Assigned Date", "Status" };
+                    foreach (var header in headers)
+                    {
+                        var headerCell = new Cell().Add(new Paragraph(header).AddStyle(_pdfService.GetTableHeaderStyle()));
+                        headerCell.SetBackgroundColor(ColorConstants.LIGHT_GRAY);
+                        issuedItemsTable.AddCell(headerCell);
+                    }
+                    
+                    // Add data rows
+                    foreach (var item in issuedItems.Take(50)) // Limit to 50 rows for PDF
+                    {
+                        issuedItemsTable.AddCell(new Cell().Add(new Paragraph(item.AssignmentId.ToString()).AddStyle(_pdfService.GetTableContentStyle())));
+                        issuedItemsTable.AddCell(new Cell().Add(new Paragraph(item.EmployeeName).AddStyle(_pdfService.GetTableContentStyle())));
+                        issuedItemsTable.AddCell(new Cell().Add(new Paragraph(item.Department).AddStyle(_pdfService.GetTableContentStyle())));
+                        issuedItemsTable.AddCell(new Cell().Add(new Paragraph(item.ItemName).AddStyle(_pdfService.GetTableContentStyle())));
+                        issuedItemsTable.AddCell(new Cell().Add(new Paragraph(item.AssignedDate.ToString("MMM dd, yyyy")).AddStyle(_pdfService.GetTableContentStyle())));
+                        issuedItemsTable.AddCell(new Cell().Add(new Paragraph(item.Status).AddStyle(_pdfService.GetTableContentStyle())));
+                    }
+                    
+                    doc.Add(issuedItemsTable);
+                    
+                    if (issuedItems.Count > 50)
+                    {
+                        doc.Add(new Paragraph($"Note: Showing first 50 of {issuedItems.Count} issued items").AddStyle(_pdfService.GetNormalStyle()));
+                    }
+                }
+                else
+                {
+                    doc.Add(new Paragraph("No issued items found matching the specified criteria.").AddStyle(_pdfService.GetNormalStyle()));
+                }
+
+                // Summary Section
+                if (issuedItems.Any())
+                {
+                    doc.Add(new Paragraph("").SetMarginTop(20));
+                    doc.Add(new Paragraph("Summary:").AddStyle(_pdfService.GetTableHeaderStyle()));
+                    
+                    var uniformsCount = issuedItems.Count(i => i.ItemType == "Uniform");
+                    var equipmentCount = issuedItems.Count(i => i.ItemType == "Equipment");
+                    var activeAssignments = issuedItems.Count(i => i.Status == "Assigned");
+                    
+                    doc.Add(new Paragraph($"• Total Items Issued: {issuedItems.Count}").AddStyle(_pdfService.GetNormalStyle()));
+                    doc.Add(new Paragraph($"• Uniforms: {uniformsCount}").AddStyle(_pdfService.GetNormalStyle()));
+                    doc.Add(new Paragraph($"• Equipment: {equipmentCount}").AddStyle(_pdfService.GetNormalStyle()));
+                    doc.Add(new Paragraph($"• Active Assignments: {activeAssignments}").AddStyle(_pdfService.GetNormalStyle()));
+                }
+
+                // Signature Footer with Dotted Lines
+                doc.Add(new Paragraph("").SetMarginTop(40));
+                
+                var signatureTable = new Table(3).UseAllAvailableWidth();
+                signatureTable.SetMarginTop(20);
+                
+                // Prepared By
+                var preparedByCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Prepared By").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                preparedByCell.SetBorder(null);
+                preparedByCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                // Authorized By
+                var authorizedByCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Authorized By").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                authorizedByCell.SetBorder(null);
+                authorizedByCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                // Issued Date
+                var issuedDateCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Issued Date").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                issuedDateCell.SetBorder(null);
+                issuedDateCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                signatureTable.AddCell(preparedByCell);
+                signatureTable.AddCell(authorizedByCell);
+                signatureTable.AddCell(issuedDateCell);
+                
+                doc.Add(signatureTable);
+            });
+
+            return File(pdfBytes, "application/pdf", $"IssuedItemsReport_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
         }
 
         #endregion

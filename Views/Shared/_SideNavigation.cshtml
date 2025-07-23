@@ -161,6 +161,12 @@
                         <span>Supplier Report</span>
                     </a>
                 </div>
+                <div class="nav-subitem @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "IssuedItemsReport" ? "active" : "")">
+                    <a asp-controller="Reports" asp-action="IssuedItemsReport">
+                        <i class="fas fa-box-open"></i>
+                        <span>Issued Items Report</span>
+                    </a>
+                </div>
             }
             @if (isStockManager)
             {
