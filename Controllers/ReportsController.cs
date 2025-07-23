@@ -1868,6 +1868,184 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SupplierReport.xlsx");
         }
 
+        [HttpPost]
+        [Authorize(Roles = "Admin,StockManager,PropertyManager")]
+        public async Task<IActionResult> ExportSupplierReportPdf(string category, bool? isApproved)
+        {
+            var query = _context.Suppliers.AsQueryable();
+
+            if (!string.IsNullOrEmpty(category))
+            {
+                query = query.Where(s => s.SupplierCategory == category);
+            }
+
+            if (isApproved.HasValue)
+            {
+                query = query.Where(s => s.ApprovalState == (isApproved.Value ? "Approved" : "Pending"));
+            }
+
+            var suppliers = await query
+                .Select(s => new
+                {
+                    SupplierId = s.Id,
+                    CompanyName = s.CompanyName,
+                    ContactPerson = s.ContactPerson,
+                    Email = s.ContactPersonEmail,
+                    Phone = s.ContactNo,
+                    Category = s.SupplierCategory,
+                    IsApproved = s.ApprovalState == "Approved",
+                    ApprovalDate = s.ApprovalState == "Approved" ? s.ContractStartDate : (DateTime?)null
+                })
+                .ToListAsync();
+
+            // Get current user for signature
+            var currentUserEmail = User.Identity?.Name;
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+            var preparedBy = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "N/A";
+
+            var pdfBytes = _pdfService.GenerateDocument(doc =>
+            {
+                // Header with FMI Logo and Company Information
+                var headerTable = new Table(3).UseAllAvailableWidth();
+                headerTable.SetMarginBottom(30);
+                
+                // FMI Logo Section (Blue background with FMI text)
+                var logoCell = new Cell().Add(
+                    new Paragraph("FMI").AddStyle(_pdfService.GetHeaderTitleStyle())
+                );
+                logoCell.SetWidth(120);
+                logoCell.SetHeight(80);
+                logoCell.SetBackgroundColor(ColorConstants.BLUE);
+                logoCell.SetBorder(null);
+                logoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                
+                // Company Information Section
+                var companyInfoCell = new Cell().Add(
+                    new Paragraph("Facilities Management Integrated (Pvt) Ltd.").AddStyle(_pdfService.GetHeaderSubtitleStyle())
+                ).Add(
+                    new Paragraph("Telephone: (+94) 11 59 40740").AddStyle(_pdfService.GetCompanyInfoStyle())
+                ).Add(
+                    new Paragraph("Address: No. 490, Oceanica Towers, Colombo 03").AddStyle(_pdfService.GetCompanyInfoStyle())
+                );
+                companyInfoCell.SetBorder(null);
+                companyInfoCell.SetTextAlignment(TextAlignment.LEFT);
+                companyInfoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                
+                // Document Number Section
+                var documentNumberCell = new Cell().Add(
+                    new Paragraph($"Document #: {DateTime.Now:yyyyMMddHHmmss}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Date: {DateTime.Now:MMM dd, yyyy}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Time: {DateTime.Now:HH:mm}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                );
+                documentNumberCell.SetBorder(null);
+                documentNumberCell.SetTextAlignment(TextAlignment.RIGHT);
+                documentNumberCell.SetVerticalAlignment(VerticalAlignment.TOP);
+                
+                headerTable.AddCell(logoCell);
+                headerTable.AddCell(companyInfoCell);
+                headerTable.AddCell(documentNumberCell);
+                doc.Add(headerTable);
+
+                // Filter Information Section
+                var filterTable = new Table(2).UseAllAvailableWidth();
+                filterTable.SetMarginBottom(20);
+                filterTable.SetBorder(null);
+                
+                AddTableRow(filterTable, "Category:", !string.IsNullOrEmpty(category) ? category : "ALL");
+                AddTableRow(filterTable, "Approval Status:", isApproved.HasValue ? (isApproved.Value ? "Approved" : "Pending") : "ALL");
+                
+                doc.Add(filterTable);
+
+                // Document Title
+                doc.Add(new Paragraph("Supplier Report").AddStyle(_pdfService.GetTitleStyle()));
+                
+                // Decorative line
+                var line = new Paragraph("").SetBorderBottom(new SolidBorder(ColorConstants.BLUE, 2)).SetMarginBottom(20);
+                doc.Add(line);
+
+                // Supplier Details Table
+                if (suppliers.Any())
+                {
+                    var supplierTable = new Table(6).UseAllAvailableWidth();
+                    supplierTable.SetMarginBottom(25);
+                    
+                    // Add headers
+                    var headers = new[] { "Supplier ID", "Company Name", "Contact Person", "Email", "Category", "Status" };
+                    foreach (var header in headers)
+                    {
+                        var headerCell = new Cell().Add(new Paragraph(header).AddStyle(_pdfService.GetTableHeaderStyle()));
+                        headerCell.SetBackgroundColor(ColorConstants.LIGHT_GRAY);
+                        supplierTable.AddCell(headerCell);
+                    }
+                    
+                    // Add data rows
+                    foreach (var supplier in suppliers.Take(50)) // Limit to 50 rows for PDF
+                    {
+                        supplierTable.AddCell(new Cell().Add(new Paragraph(supplier.SupplierId.ToString()).AddStyle(_pdfService.GetTableContentStyle())));
+                        supplierTable.AddCell(new Cell().Add(new Paragraph(supplier.CompanyName).AddStyle(_pdfService.GetTableContentStyle())));
+                        supplierTable.AddCell(new Cell().Add(new Paragraph(supplier.ContactPerson).AddStyle(_pdfService.GetTableContentStyle())));
+                        supplierTable.AddCell(new Cell().Add(new Paragraph(supplier.Email).AddStyle(_pdfService.GetTableContentStyle())));
+                        supplierTable.AddCell(new Cell().Add(new Paragraph(supplier.Category).AddStyle(_pdfService.GetTableContentStyle())));
+                        supplierTable.AddCell(new Cell().Add(new Paragraph(supplier.IsApproved ? "Approved" : "Pending").AddStyle(_pdfService.GetTableContentStyle())));
+                    }
+                    
+                    doc.Add(supplierTable);
+                    
+                    if (suppliers.Count > 50)
+                    {
+                        doc.Add(new Paragraph($"Note: Showing first 50 of {suppliers.Count} suppliers").AddStyle(_pdfService.GetNormalStyle()));
+                    }
+                }
+                else
+                {
+                    doc.Add(new Paragraph("No suppliers found matching the specified criteria.").AddStyle(_pdfService.GetNormalStyle()));
+                }
+
+                // Signature Footer with Dotted Lines
+                doc.Add(new Paragraph("").SetMarginTop(40));
+                
+                var signatureTable = new Table(3).UseAllAvailableWidth();
+                signatureTable.SetMarginTop(20);
+                
+                // Prepared By
+                var preparedByCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Prepared By").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                preparedByCell.SetBorder(null);
+                preparedByCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                // Authorized By
+                var authorizedByCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Authorized By").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                authorizedByCell.SetBorder(null);
+                authorizedByCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                // Issued Date
+                var issuedDateCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Issued Date").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                issuedDateCell.SetBorder(null);
+                issuedDateCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                signatureTable.AddCell(preparedByCell);
+                signatureTable.AddCell(authorizedByCell);
+                signatureTable.AddCell(issuedDateCell);
+                
+                doc.Add(signatureTable);
+            });
+
+            return File(pdfBytes, "application/pdf", $"SupplierReport_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+        }
+
         #endregion
     }
 } 
