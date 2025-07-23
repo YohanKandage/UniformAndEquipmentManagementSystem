@@ -1539,6 +1539,227 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin,StockManager,PropertyManager")]
+        public async Task<IActionResult> ExportInventoryReportPdf(string itemType, int? departmentId, string status)
+        {
+            var query = _context.Items
+                .Include(i => i.Department)
+                .Include(i => i.Supplier)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(itemType))
+            {
+                query = query.Where(i => i.ItemType == itemType);
+            }
+
+            if (departmentId.HasValue)
+            {
+                query = query.Where(i => i.DepartmentId == departmentId);
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                switch (status.ToLower())
+                {
+                    case "available":
+                        query = query.Where(i => i.Quantity > 0);
+                        break;
+                    case "assigned":
+                        // Items that have active assignments
+                        var assignedItemIds = await _context.ItemAssignments
+                            .Where(ia => ia.Status == "Assigned")
+                            .Select(ia => ia.ItemId)
+                            .ToListAsync();
+                        query = query.Where(i => assignedItemIds.Contains(i.Id));
+                        break;
+                    case "outofstock":
+                        query = query.Where(i => i.Quantity == 0);
+                        break;
+                }
+            }
+
+            var items = await query.ToListAsync();
+
+            // Get assignment information for each item
+            var itemAssignments = await _context.ItemAssignments
+                .Include(ia => ia.Employee)
+                .Where(ia => ia.Status == "Assigned")
+                .ToListAsync();
+
+            var result = items.Select(i => {
+                var assignment = itemAssignments.FirstOrDefault(ia => ia.ItemId == i.Id);
+                return new
+                {
+                    ItemId = i.Id,
+                    ItemName = i.ItemName,
+                    ItemType = i.ItemType,
+                    Department = i.Department.Name,
+                    Supplier = i.Supplier.CompanyName,
+                    Quantity = i.Quantity,
+                    AssignedTo = assignment?.Employee != null ? $"{assignment.Employee.FirstName} {assignment.Employee.LastName}" : "Not Assigned",
+                    AssignedDate = assignment?.AssignedDate,
+                    Status = assignment != null ? "Assigned" : (i.Quantity > 0 ? "Available" : "Out of Stock")
+                };
+            }).ToList();
+
+            // Get current user for signature
+            var currentUserEmail = User.Identity?.Name;
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+            var preparedBy = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "N/A";
+
+            // Get department name for filter display
+            var departmentName = "ALL";
+            if (departmentId.HasValue)
+            {
+                var department = await _context.Departments.FirstOrDefaultAsync(d => d.Id == departmentId.Value);
+                departmentName = department?.Name ?? "ALL";
+            }
+
+            var pdfBytes = _pdfService.GenerateDocument(doc =>
+            {
+                // Header with FMI Logo and Company Information
+                var headerTable = new Table(3).UseAllAvailableWidth();
+                headerTable.SetMarginBottom(30);
+                
+                // FMI Logo Section (Blue background with FMI text)
+                var logoCell = new Cell().Add(
+                    new Paragraph("FMI").AddStyle(_pdfService.GetHeaderTitleStyle())
+                );
+                logoCell.SetWidth(120);
+                logoCell.SetHeight(80);
+                logoCell.SetBackgroundColor(ColorConstants.BLUE);
+                logoCell.SetBorder(null);
+                logoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                
+                // Company Information Section
+                var companyInfoCell = new Cell().Add(
+                    new Paragraph("Facilities Management Integrated (Pvt) Ltd.").AddStyle(_pdfService.GetHeaderSubtitleStyle())
+                ).Add(
+                    new Paragraph("Telephone: (+94) 11 59 40740").AddStyle(_pdfService.GetCompanyInfoStyle())
+                ).Add(
+                    new Paragraph("Address: No. 490, Oceanica Towers, Colombo 03").AddStyle(_pdfService.GetCompanyInfoStyle())
+                );
+                companyInfoCell.SetBorder(null);
+                companyInfoCell.SetTextAlignment(TextAlignment.LEFT);
+                companyInfoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                
+                // Document Number Section
+                var documentNumberCell = new Cell().Add(
+                    new Paragraph($"Document #: {DateTime.Now:yyyyMMddHHmmss}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Date: {DateTime.Now:MMM dd, yyyy}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Time: {DateTime.Now:HH:mm}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                );
+                documentNumberCell.SetBorder(null);
+                documentNumberCell.SetTextAlignment(TextAlignment.RIGHT);
+                documentNumberCell.SetVerticalAlignment(VerticalAlignment.TOP);
+                
+                headerTable.AddCell(logoCell);
+                headerTable.AddCell(companyInfoCell);
+                headerTable.AddCell(documentNumberCell);
+                doc.Add(headerTable);
+
+                // Filter Information Section
+                var filterTable = new Table(2).UseAllAvailableWidth();
+                filterTable.SetMarginBottom(20);
+                filterTable.SetBorder(null);
+                
+                AddTableRow(filterTable, "Item Type:", !string.IsNullOrEmpty(itemType) ? itemType : "ALL");
+                AddTableRow(filterTable, "Department:", departmentName);
+                AddTableRow(filterTable, "Status:", !string.IsNullOrEmpty(status) ? status : "ALL");
+                
+                doc.Add(filterTable);
+
+                // Document Title
+                doc.Add(new Paragraph("Inventory Report").AddStyle(_pdfService.GetTitleStyle()));
+                
+                // Decorative line
+                var line = new Paragraph("").SetBorderBottom(new SolidBorder(ColorConstants.BLUE, 2)).SetMarginBottom(20);
+                doc.Add(line);
+
+                // Inventory Details Table
+                if (result.Any())
+                {
+                    var inventoryTable = new Table(6).UseAllAvailableWidth();
+                    inventoryTable.SetMarginBottom(25);
+                    
+                    // Add headers
+                    var headers = new[] { "Item ID", "Item Name", "Type", "Department", "Quantity", "Status" };
+                    foreach (var header in headers)
+                    {
+                        var headerCell = new Cell().Add(new Paragraph(header).AddStyle(_pdfService.GetTableHeaderStyle()));
+                        headerCell.SetBackgroundColor(ColorConstants.LIGHT_GRAY);
+                        inventoryTable.AddCell(headerCell);
+                    }
+                    
+                    // Add data rows
+                    foreach (var item in result.Take(50)) // Limit to 50 rows for PDF
+                    {
+                        inventoryTable.AddCell(new Cell().Add(new Paragraph(item.ItemId.ToString()).AddStyle(_pdfService.GetTableContentStyle())));
+                        inventoryTable.AddCell(new Cell().Add(new Paragraph(item.ItemName).AddStyle(_pdfService.GetTableContentStyle())));
+                        inventoryTable.AddCell(new Cell().Add(new Paragraph(item.ItemType).AddStyle(_pdfService.GetTableContentStyle())));
+                        inventoryTable.AddCell(new Cell().Add(new Paragraph(item.Department).AddStyle(_pdfService.GetTableContentStyle())));
+                        inventoryTable.AddCell(new Cell().Add(new Paragraph(item.Quantity.ToString()).AddStyle(_pdfService.GetTableContentStyle())));
+                        inventoryTable.AddCell(new Cell().Add(new Paragraph(item.Status).AddStyle(_pdfService.GetTableContentStyle())));
+                    }
+                    
+                    doc.Add(inventoryTable);
+                    
+                    if (result.Count > 50)
+                    {
+                        doc.Add(new Paragraph($"Note: Showing first 50 of {result.Count} items").AddStyle(_pdfService.GetNormalStyle()));
+                    }
+                }
+                else
+                {
+                    doc.Add(new Paragraph("No inventory items found matching the specified criteria.").AddStyle(_pdfService.GetNormalStyle()));
+                }
+
+                // Signature Footer with Dotted Lines
+                doc.Add(new Paragraph("").SetMarginTop(40));
+                
+                var signatureTable = new Table(3).UseAllAvailableWidth();
+                signatureTable.SetMarginTop(20);
+                
+                // Prepared By
+                var preparedByCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Prepared By").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                preparedByCell.SetBorder(null);
+                preparedByCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                // Authorized By
+                var authorizedByCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Authorized By").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                authorizedByCell.SetBorder(null);
+                authorizedByCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                // Issued Date
+                var issuedDateCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Issued Date").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                issuedDateCell.SetBorder(null);
+                issuedDateCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                signatureTable.AddCell(preparedByCell);
+                signatureTable.AddCell(authorizedByCell);
+                signatureTable.AddCell(issuedDateCell);
+                
+                doc.Add(signatureTable);
+            });
+
+            return File(pdfBytes, "application/pdf", $"InventoryReport_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin,StockManager,PropertyManager")]
         public async Task<IActionResult> ExportLowStockReport()
         {
             var items = await _context.Items

@@ -18,6 +18,14 @@
                     <i class="fas fa-file-excel"></i> Export to Excel
                 </button>
             </form>
+            <form asp-action="ExportInventoryReportPdf" method="post" style="display: inline;">
+                <input type="hidden" name="itemType" value="@ViewBag.ItemType" />
+                <input type="hidden" name="departmentId" value="@ViewBag.DepartmentId" />
+                <input type="hidden" name="status" value="@ViewBag.Status" />
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-file-pdf"></i> Export to PDF
+                </button>
+            </form>
         </div>
     </div>
 
