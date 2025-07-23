@@ -613,6 +613,181 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             table.AddCell(valueCell);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> DownloadRequestPdf(int id)
+        {
+            var request = await _context.Requests
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.Department)
+                .Include(r => r.Item)
+                .Include(r => r.ProcessedBy)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            var pdfBytes = _pdfService.GenerateDocument(doc =>
+            {
+                // Header with FMI Logo and Company Information
+                var headerTable = new Table(3).UseAllAvailableWidth();
+                headerTable.SetMarginBottom(30);
+                
+                // FMI Logo Section (Blue background with FMI text)
+                var logoCell = new Cell().Add(
+                    new Paragraph("FMI").AddStyle(_pdfService.GetHeaderTitleStyle())
+                );
+                logoCell.SetWidth(120);
+                logoCell.SetHeight(80);
+                logoCell.SetBackgroundColor(ColorConstants.BLUE);
+                logoCell.SetBorder(null);
+                logoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                
+                // Company Information Section
+                var companyInfoCell = new Cell().Add(
+                    new Paragraph("Facilities Management Integrated (Pvt) Ltd.").AddStyle(_pdfService.GetHeaderSubtitleStyle())
+                ).Add(
+                    new Paragraph("Telephone: (+94) 11 59 40740").AddStyle(_pdfService.GetCompanyInfoStyle())
+                ).Add(
+                    new Paragraph("Address: No. 490, Oceanica Towers, Colombo 03").AddStyle(_pdfService.GetCompanyInfoStyle())
+                );
+                companyInfoCell.SetBorder(null);
+                companyInfoCell.SetTextAlignment(TextAlignment.LEFT);
+                companyInfoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                
+                // Document Number Section
+                var documentNumberCell = new Cell().Add(
+                    new Paragraph($"Document #: {request.Id:D6}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Date: {DateTime.Now:MMM dd, yyyy}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Time: {DateTime.Now:HH:mm}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                );
+                documentNumberCell.SetBorder(null);
+                documentNumberCell.SetTextAlignment(TextAlignment.RIGHT);
+                documentNumberCell.SetVerticalAlignment(VerticalAlignment.TOP);
+                
+                headerTable.AddCell(logoCell);
+                headerTable.AddCell(companyInfoCell);
+                headerTable.AddCell(documentNumberCell);
+                doc.Add(headerTable);
+
+                // Filter Information Section
+                var filterTable = new Table(2).UseAllAvailableWidth();
+                filterTable.SetMarginBottom(20);
+                filterTable.SetBorder(null);
+                
+                AddTableRow(filterTable, "Start Date:", "ALL");
+                AddTableRow(filterTable, "Status:", "ALL");
+                AddTableRow(filterTable, "End Date:", "ALL");
+                
+                doc.Add(filterTable);
+
+                // Document Title
+                doc.Add(new Paragraph("Request Report").AddStyle(_pdfService.GetTitleStyle()));
+                
+                // Decorative line
+                var line = new Paragraph("").SetBorderBottom(new SolidBorder(ColorConstants.BLUE, 2)).SetMarginBottom(20);
+                doc.Add(line);
+                
+                // Request Details Section
+                doc.Add(new Paragraph("Request Information").AddStyle(_pdfService.GetSectionStyle()));
+                
+                var requestTable = new Table(2).UseAllAvailableWidth();
+                requestTable.SetMarginBottom(25);
+                requestTable.SetBorder(null);
+                
+                AddTableRow(requestTable, "Request ID", $"#{request.Id:D6}");
+                AddTableRow(requestTable, "Request Date", request.RequestDate.ToString("MMMM dd, yyyy"));
+                AddTableRow(requestTable, "Request Time", request.RequestDate.ToString("hh:mm tt"));
+                AddTableRow(requestTable, "Status", request.Status.ToString().Replace("By", " by "));
+                if (request.ProcessedDate.HasValue)
+                {
+                    AddTableRow(requestTable, "Processed Date", request.ProcessedDate.Value.ToString("MMMM dd, yyyy"));
+                    AddTableRow(requestTable, "Processed Time", request.ProcessedDate.Value.ToString("hh:mm tt"));
+                }
+                if (!string.IsNullOrEmpty(request.Reason))
+                    AddTableRow(requestTable, "Reason", request.Reason);
+                if (!string.IsNullOrEmpty(request.Remarks))
+                    AddTableRow(requestTable, "Remarks", request.Remarks);
+                if (request.Cost.HasValue)
+                    AddTableRow(requestTable, "Cost", $"Rs. {request.Cost.Value:N2}");
+                
+                doc.Add(requestTable);
+
+                // Employee Details Section
+                doc.Add(new Paragraph("Employee Information").AddStyle(_pdfService.GetSectionStyle()));
+                
+                var employeeTable = new Table(2).UseAllAvailableWidth();
+                employeeTable.SetMarginBottom(25);
+                employeeTable.SetBorder(null);
+                
+                AddTableRow(employeeTable, "Employee Name", $"{request.Employee?.FirstName} {request.Employee?.LastName}");
+                AddTableRow(employeeTable, "Employee ID", request.Employee?.EmployeeId ?? "N/A");
+                AddTableRow(employeeTable, "Department", request.Employee?.Department?.Name ?? "N/A");
+                AddTableRow(employeeTable, "Email", request.Employee?.Email ?? "N/A");
+                
+                doc.Add(employeeTable);
+
+                // Item Details Section
+                doc.Add(new Paragraph("Item Information").AddStyle(_pdfService.GetSectionStyle()));
+                
+                var itemTable = new Table(2).UseAllAvailableWidth();
+                itemTable.SetMarginBottom(25);
+                itemTable.SetBorder(null);
+                
+                AddTableRow(itemTable, "Item Name", request.Item?.ItemName ?? "N/A");
+                AddTableRow(itemTable, "Item ID", request.Item?.ItemId ?? "N/A");
+                AddTableRow(itemTable, "Item Type", request.Item?.ItemType ?? "N/A");
+                AddTableRow(itemTable, "Material", request.Item?.Material ?? "N/A");
+                AddTableRow(itemTable, "Price", request.Item?.Price != null ? $"Rs. {request.Item.Price:N2}" : "N/A");
+                
+                doc.Add(itemTable);
+
+                // Signature Footer with Dotted Lines
+                doc.Add(new Paragraph("").SetMarginTop(40));
+                
+                var signatureTable = new Table(3).UseAllAvailableWidth();
+                signatureTable.SetMarginTop(20);
+                
+                // Prepared By
+                var preparedByCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Prepared By").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                preparedByCell.SetBorder(null);
+                preparedByCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                // Authorized By
+                var authorizedByCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Authorized By").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                authorizedByCell.SetBorder(null);
+                authorizedByCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                // Issued Date
+                var issuedDateCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Issued Date").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                issuedDateCell.SetBorder(null);
+                issuedDateCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                signatureTable.AddCell(preparedByCell);
+                signatureTable.AddCell(authorizedByCell);
+                signatureTable.AddCell(issuedDateCell);
+                
+                doc.Add(signatureTable);
+            });
+
+            return File(pdfBytes, "application/pdf", $"FMI_Request_Report_{request.Id:D6}.pdf");
+        }
+
         // GET: Request/Details/5
         public async Task<IActionResult> Details(int? id)
         {

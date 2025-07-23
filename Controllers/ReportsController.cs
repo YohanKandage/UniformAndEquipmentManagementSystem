@@ -5,6 +5,10 @@ using UniformAndEquipmentManagementSystem.Data;
 using UniformAndEquipmentManagementSystem.Models;
 using UniformAndEquipmentManagementSystem.Services;
 using System.Data;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using iText.Kernel.Colors;
+using iText.Layout.Borders;
 
 namespace UniformAndEquipmentManagementSystem.Controllers
 {
@@ -13,11 +17,13 @@ namespace UniformAndEquipmentManagementSystem.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IExcelService _excelService;
+        private readonly IPdfService _pdfService;
 
-        public ReportsController(ApplicationDbContext context, IExcelService excelService)
+        public ReportsController(ApplicationDbContext context, IExcelService excelService, IPdfService pdfService)
         {
             _context = context;
             _excelService = excelService;
+            _pdfService = pdfService;
         }
 
         public IActionResult Index()
@@ -1220,6 +1226,220 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             var title = $"Employee Request Report - Generated on {DateTime.Now:MMM dd, yyyy HH:mm}";
             var excelBytes = _excelService.ExportToExcel(dataTable, "Employee Request Report", title);
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "EmployeeRequestReport.xlsx");
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin,PropertyManager,StockManager")]
+        public async Task<IActionResult> ExportEmployeeRequestReportPdf(string employeeName, string status, DateTime? startDate, DateTime? endDate)
+        {
+            var query = _context.Requests
+                .Include(r => r.Employee)
+                .Include(r => r.Item)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(employeeName))
+            {
+                query = query.Where(r => r.Employee.FirstName.Contains(employeeName) || r.Employee.LastName.Contains(employeeName));
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                if (Enum.TryParse<RequestStatus>(status, out var statusEnum))
+                {
+                    query = query.Where(r => r.Status == statusEnum);
+                }
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(r => r.RequestDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(r => r.RequestDate <= endDate.Value);
+            }
+
+            var requests = await query
+                .Select(r => new
+                {
+                    RequestId = r.Id,
+                    EmployeeName = $"{r.Employee.FirstName} {r.Employee.LastName}",
+                    Department = r.Employee.Department.Name,
+                    ItemName = r.Item.ItemName,
+                    ItemType = r.Item.ItemType,
+                    Reason = r.Reason,
+                    RequestDate = r.RequestDate,
+                    Status = r.Status.ToString(),
+                    ProcessedDate = r.ProcessedDate,
+                    Remarks = r.Remarks
+                })
+                .ToListAsync();
+
+            // Get current user for signature
+            var currentUserEmail = User.Identity?.Name;
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+            var preparedBy = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "N/A";
+
+            var pdfBytes = _pdfService.GenerateDocument(doc =>
+            {
+                // Header with FMI Logo and Company Information
+                var headerTable = new Table(3).UseAllAvailableWidth();
+                headerTable.SetMarginBottom(30);
+                
+                // FMI Logo Section (Blue background with FMI text)
+                var logoCell = new Cell().Add(
+                    new Paragraph("FMI").AddStyle(_pdfService.GetHeaderTitleStyle())
+                );
+                logoCell.SetWidth(120);
+                logoCell.SetHeight(80);
+                logoCell.SetBackgroundColor(ColorConstants.BLUE);
+                logoCell.SetBorder(null);
+                logoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                
+                // Company Information Section
+                var companyInfoCell = new Cell().Add(
+                    new Paragraph("Facilities Management Integrated (Pvt) Ltd.").AddStyle(_pdfService.GetHeaderSubtitleStyle())
+                ).Add(
+                    new Paragraph("Telephone: (+94) 11 59 40740").AddStyle(_pdfService.GetCompanyInfoStyle())
+                ).Add(
+                    new Paragraph("Address: No. 490, Oceanica Towers, Colombo 03").AddStyle(_pdfService.GetCompanyInfoStyle())
+                );
+                companyInfoCell.SetBorder(null);
+                companyInfoCell.SetTextAlignment(TextAlignment.LEFT);
+                companyInfoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                
+                // Document Number Section
+                var documentNumberCell = new Cell().Add(
+                    new Paragraph($"Document #: {DateTime.Now:yyyyMMddHHmmss}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Date: {DateTime.Now:MMM dd, yyyy}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                ).Add(
+                    new Paragraph($"Time: {DateTime.Now:HH:mm}").AddStyle(_pdfService.GetDocumentNumberStyle())
+                );
+                documentNumberCell.SetBorder(null);
+                documentNumberCell.SetTextAlignment(TextAlignment.RIGHT);
+                documentNumberCell.SetVerticalAlignment(VerticalAlignment.TOP);
+                
+                headerTable.AddCell(logoCell);
+                headerTable.AddCell(companyInfoCell);
+                headerTable.AddCell(documentNumberCell);
+                doc.Add(headerTable);
+
+                // Filter Information Section
+                var filterTable = new Table(2).UseAllAvailableWidth();
+                filterTable.SetMarginBottom(20);
+                filterTable.SetBorder(null);
+                
+                AddTableRow(filterTable, "Start Date:", startDate?.ToString("MMM dd, yyyy") ?? "ALL");
+                AddTableRow(filterTable, "Status:", !string.IsNullOrEmpty(status) ? status : "ALL");
+                AddTableRow(filterTable, "End Date:", endDate?.ToString("MMM dd, yyyy") ?? "ALL");
+                
+                doc.Add(filterTable);
+
+                // Document Title
+                doc.Add(new Paragraph("Request Report").AddStyle(_pdfService.GetTitleStyle()));
+                
+                // Decorative line
+                var line = new Paragraph("").SetBorderBottom(new SolidBorder(ColorConstants.BLUE, 2)).SetMarginBottom(20);
+                doc.Add(line);
+
+                // Request Details Table
+                if (requests.Any())
+                {
+                    var requestTable = new Table(6).UseAllAvailableWidth();
+                    requestTable.SetMarginBottom(25);
+                    
+                    // Add headers
+                    var headers = new[] { "Request ID", "Employee", "Department", "Item", "Request Date", "Status" };
+                    foreach (var header in headers)
+                    {
+                        var headerCell = new Cell().Add(new Paragraph(header).AddStyle(_pdfService.GetTableHeaderStyle()));
+                        headerCell.SetBackgroundColor(ColorConstants.LIGHT_GRAY);
+                        requestTable.AddCell(headerCell);
+                    }
+                    
+                    // Add data rows
+                    foreach (var request in requests.Take(50)) // Limit to 50 rows for PDF
+                    {
+                        requestTable.AddCell(new Cell().Add(new Paragraph(request.RequestId.ToString()).AddStyle(_pdfService.GetTableContentStyle())));
+                        requestTable.AddCell(new Cell().Add(new Paragraph(request.EmployeeName).AddStyle(_pdfService.GetTableContentStyle())));
+                        requestTable.AddCell(new Cell().Add(new Paragraph(request.Department).AddStyle(_pdfService.GetTableContentStyle())));
+                        requestTable.AddCell(new Cell().Add(new Paragraph(request.ItemName).AddStyle(_pdfService.GetTableContentStyle())));
+                        requestTable.AddCell(new Cell().Add(new Paragraph(request.RequestDate.ToString("MMM dd, yyyy")).AddStyle(_pdfService.GetTableContentStyle())));
+                        requestTable.AddCell(new Cell().Add(new Paragraph(request.Status).AddStyle(_pdfService.GetTableContentStyle())));
+                    }
+                    
+                    doc.Add(requestTable);
+                    
+                    if (requests.Count > 50)
+                    {
+                        doc.Add(new Paragraph($"Note: Showing first 50 of {requests.Count} requests").AddStyle(_pdfService.GetNormalStyle()));
+                    }
+                }
+                else
+                {
+                    doc.Add(new Paragraph("No requests found matching the specified criteria.").AddStyle(_pdfService.GetNormalStyle()));
+                }
+
+                // Signature Footer with Dotted Lines
+                doc.Add(new Paragraph("").SetMarginTop(40));
+                
+                var signatureTable = new Table(3).UseAllAvailableWidth();
+                signatureTable.SetMarginTop(20);
+                
+                // Prepared By
+                var preparedByCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Prepared By").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                preparedByCell.SetBorder(null);
+                preparedByCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                // Authorized By
+                var authorizedByCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Authorized By").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                authorizedByCell.SetBorder(null);
+                authorizedByCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                // Issued Date
+                var issuedDateCell = new Cell().Add(
+                    new Paragraph("").SetBorderBottom(new DottedBorder(ColorConstants.BLACK, 1)).SetHeight(30)
+                ).Add(
+                    new Paragraph("Issued Date").AddStyle(_pdfService.GetSignatureLabelStyle())
+                );
+                issuedDateCell.SetBorder(null);
+                issuedDateCell.SetTextAlignment(TextAlignment.CENTER);
+                
+                signatureTable.AddCell(preparedByCell);
+                signatureTable.AddCell(authorizedByCell);
+                signatureTable.AddCell(issuedDateCell);
+                
+                doc.Add(signatureTable);
+            });
+
+            return File(pdfBytes, "application/pdf", $"EmployeeRequestReport_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+        }
+
+        private void AddTableRow(Table table, string label, string value)
+        {
+            var labelCell = new Cell().Add(new Paragraph(label).AddStyle(_pdfService.GetTableHeaderStyle()));
+            labelCell.SetBorder(null);
+            labelCell.SetPadding(10);
+            labelCell.SetWidth(150);
+            labelCell.SetBackgroundColor(ColorConstants.LIGHT_GRAY);
+            
+            var valueCell = new Cell().Add(new Paragraph(value).AddStyle(_pdfService.GetTableContentStyle()));
+            valueCell.SetBorder(null);
+            valueCell.SetPadding(10);
+            valueCell.SetBackgroundColor(ColorConstants.WHITE);
+            
+            table.AddCell(labelCell);
+            table.AddCell(valueCell);
         }
 
         [HttpPost]

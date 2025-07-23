@@ -128,6 +128,12 @@
                                                     </div>
                                                 }
                                             </div>
+                                            <div class="modal-footer">
+                                                <a href="@Url.Action("DownloadRequestPdf", new { id = item.Id })" class="btn btn-danger">
+                                                    <i class="fas fa-file-pdf me-2"></i>Download PDF
+                                                </a>
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

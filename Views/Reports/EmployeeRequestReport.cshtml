@@ -19,6 +19,15 @@
                     <i class="fas fa-file-excel"></i> Export to Excel
                 </button>
             </form>
+            <form asp-action="ExportEmployeeRequestReportPdf" method="post" style="display: inline;">
+                <input type="hidden" name="employeeName" value="@ViewBag.EmployeeName" />
+                <input type="hidden" name="status" value="@ViewBag.Status" />
+                <input type="hidden" name="startDate" value="@ViewBag.StartDate" />
+                <input type="hidden" name="endDate" value="@ViewBag.EndDate" />
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-file-pdf"></i> Export to PDF
+                </button>
+            </form>
         </div>
     </div>
 
