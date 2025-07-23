@@ -610,9 +610,14 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         [Authorize(Roles = "Admin,Manager,Employee")]
         public async Task<IActionResult> UpdateProfile(Employee model)
         {
+            _logger.LogInformation("UpdateProfile action called");
+            _logger.LogInformation("Request method: {Method}", Request.Method);
+            _logger.LogInformation("Request path: {Path}", Request.Path);
+            
             try
             {
                 _logger.LogInformation("Starting profile update for employee ID: {EmployeeId}", model.Id);
+                _logger.LogInformation("Model received: {@Model}", model);
 
                 if (!ModelState.IsValid)
                 {
@@ -621,6 +626,20 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     {
                         _logger.LogWarning("Model error: {ErrorMessage}", error.ErrorMessage);
                     }
+                    
+                    // Repopulate the model with department information for the view
+                    var currentUser = await _userManager.GetUserAsync(User);
+                    if (currentUser != null)
+                    {
+                        var currentEmployee = await _context.Employees
+                            .Include(e => e.Department)
+                            .FirstOrDefaultAsync(e => e.Email == currentUser.Email);
+                        if (currentEmployee != null)
+                        {
+                            model.Department = currentEmployee.Department;
+                        }
+                    }
+                    
                     return View("EditProfile", model);
                 }
 
