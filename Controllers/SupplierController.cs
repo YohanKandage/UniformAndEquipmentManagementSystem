@@ -148,6 +148,8 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             return View(supplier);
         }
 
+        // Delete functionality disabled for security
+        /*
         // GET: Supplier/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -179,6 +181,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+        */
 
         // GET: Supplier/DownloadPdf/5
         public async Task<IActionResult> DownloadPdf(int? id)

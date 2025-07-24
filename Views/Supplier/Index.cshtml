@@ -90,9 +90,11 @@
                             <a asp-action="Details" asp-route-id="@supplier.Id" class="btn-action">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            @* Delete button hidden for security
                             <a asp-action="Delete" asp-route-id="@supplier.Id" class="btn-action delete">
                                 <i class="fas fa-trash"></i>
                             </a>
+                            *@
                         </td>
                     </tr>
                 }
