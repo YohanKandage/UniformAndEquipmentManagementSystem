@@ -114,7 +114,7 @@
 
                     <div class="form-group">
                         <label asp-for="UserName"></label>
-                        <input asp-for="UserName" class="form-control" placeholder="Enter username" />
+                        <input asp-for="UserName" class="form-control" placeholder="Enter username" pattern="[A-Za-z]+" title="Username cannot contain numbers. Only letters are allowed." />
                         <span asp-validation-for="UserName" class="text-danger"></span>
                     </div>
 
@@ -339,6 +339,22 @@
 
         // Form submission handling
         $(document).ready(function() {
+            // Username validation
+            $('#UserName').on('input', function() {
+                var username = $(this).val();
+                var hasNumbers = /\d/.test(username);
+                
+                if (hasNumbers) {
+                    $(this).addClass('is-invalid');
+                    if (!$(this).next('.text-danger').length) {
+                        $(this).after('<span class="text-danger">Username cannot contain numbers. Only letters are allowed.</span>');
+                    }
+                } else {
+                    $(this).removeClass('is-invalid');
+                    $(this).next('.text-danger').remove();
+                }
+            });
+
             $('form').on('submit', function() {
                 if ($(this).valid()) {
                     // Disable submit button to prevent double submission

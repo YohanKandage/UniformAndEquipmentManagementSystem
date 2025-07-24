@@ -115,6 +115,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     return View(employee);
                 }
 
+                // Additional username validation
+                if (!string.IsNullOrEmpty(employee.UserName) && employee.UserName.Any(char.IsDigit))
+                {
+                    ModelState.AddModelError("UserName", "Username cannot contain numbers. Only letters are allowed.");
+                }
+
                 if (!ModelState.IsValid)
                 {
                     ViewData["Departments"] = new SelectList(_context.Departments, "Id", "Name", employee.DepartmentId);
@@ -247,6 +253,12 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 ModelState.AddModelError("JoinDate", $"Employee must be at least 18 years old at the time of joining. Current age would be {age} years.");
                 ViewData["Departments"] = new SelectList(_context.Departments, "Id", "Name", employee.DepartmentId);
                 return View(employee);
+            }
+
+            // Additional username validation
+            if (!string.IsNullOrEmpty(employee.UserName) && employee.UserName.Any(char.IsDigit))
+            {
+                ModelState.AddModelError("UserName", "Username cannot contain numbers. Only letters are allowed.");
             }
 
             if (!ModelState.IsValid)

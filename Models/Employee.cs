@@ -22,6 +22,7 @@ namespace UniformAndEquipmentManagementSystem.Models
 
         [Required]
         [Display(Name = "Username")]
+        [RegularExpression(@"^[A-Za-z]+$", ErrorMessage = "Username cannot contain numbers. Only letters are allowed.")]
         public string UserName { get; set; } = string.Empty;
 
         [Required]
