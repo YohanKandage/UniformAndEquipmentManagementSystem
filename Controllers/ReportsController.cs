@@ -209,14 +209,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             var items = await query.ToListAsync();
 
-            // Get assignment information for each item
-            var itemAssignments = await _context.ItemAssignments
-                .Include(ia => ia.Employee)
-                .Where(ia => ia.Status == "Assigned")
-                .ToListAsync();
-
             var result = items.Select(i => {
-                var assignment = itemAssignments.FirstOrDefault(ia => ia.ItemId == i.Id);
                 return new
                 {
                     ItemId = i.Id,
@@ -225,10 +218,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     Department = i.Department.Name,
                     Supplier = i.Supplier.CompanyName,
                     Quantity = i.Quantity,
-                    ThresholdQuantity = i.ThresholdQuantity,
-                    AssignedTo = assignment?.Employee != null ? $"{assignment.Employee.FirstName} {assignment.Employee.LastName}" : "Not Assigned",
-                    AssignedDate = assignment?.AssignedDate,
-                    Status = assignment != null ? "Assigned" : (i.Quantity > 0 ? "Available" : "Out of Stock")
+                    ThresholdQuantity = i.ThresholdQuantity
                 };
             }).ToList();
 
@@ -1530,14 +1520,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             var items = await query.ToListAsync();
 
-            // Get assignment information for each item
-            var itemAssignments = await _context.ItemAssignments
-                .Include(ia => ia.Employee)
-                .Where(ia => ia.Status == "Assigned")
-                .ToListAsync();
-
             var result = items.Select(i => {
-                var assignment = itemAssignments.FirstOrDefault(ia => ia.ItemId == i.Id);
                 return new
                 {
                     ItemId = i.Id,
@@ -1545,10 +1528,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     ItemType = i.ItemType,
                     Department = i.Department.Name,
                     Supplier = i.Supplier.CompanyName,
-                    Quantity = i.Quantity,
-                    AssignedTo = assignment?.Employee != null ? $"{assignment.Employee.FirstName} {assignment.Employee.LastName}" : "Not Assigned",
-                    AssignedDate = assignment?.AssignedDate,
-                    Status = assignment != null ? "Assigned" : (i.Quantity > 0 ? "Available" : "Out of Stock")
+                    Quantity = i.Quantity
                 };
             }).ToList();
 
@@ -1559,9 +1539,6 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             dataTable.Columns.Add("Department");
             dataTable.Columns.Add("Supplier");
             dataTable.Columns.Add("Quantity");
-            dataTable.Columns.Add("Assigned To");
-            dataTable.Columns.Add("Assigned Date");
-            dataTable.Columns.Add("Status");
 
             foreach (var item in result)
             {
@@ -1571,10 +1548,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     item.ItemType,
                     item.Department,
                     item.Supplier,
-                    item.Quantity,
-                    item.AssignedTo,
-                    item.AssignedDate,
-                    item.Status
+                    item.Quantity
                 );
             }
 
@@ -1625,14 +1599,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
 
             var items = await query.ToListAsync();
 
-            // Get assignment information for each item
-            var itemAssignments = await _context.ItemAssignments
-                .Include(ia => ia.Employee)
-                .Where(ia => ia.Status == "Assigned")
-                .ToListAsync();
-
             var result = items.Select(i => {
-                var assignment = itemAssignments.FirstOrDefault(ia => ia.ItemId == i.Id);
                 return new
                 {
                     ItemId = i.Id,
@@ -1640,10 +1607,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     ItemType = i.ItemType,
                     Department = i.Department.Name,
                     Supplier = i.Supplier.CompanyName,
-                    Quantity = i.Quantity,
-                    AssignedTo = assignment?.Employee != null ? $"{assignment.Employee.FirstName} {assignment.Employee.LastName}" : "Not Assigned",
-                    AssignedDate = assignment?.AssignedDate,
-                    Status = assignment != null ? "Assigned" : (i.Quantity > 0 ? "Available" : "Out of Stock")
+                    Quantity = i.Quantity
                 };
             }).ToList();
 
@@ -1726,11 +1690,11 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 // Inventory Details Table
                 if (result.Any())
                 {
-                    var inventoryTable = new Table(6).UseAllAvailableWidth();
+                    var inventoryTable = new Table(5).UseAllAvailableWidth();
                     inventoryTable.SetMarginBottom(25);
                     
                     // Add headers
-                    var headers = new[] { "Item ID", "Item Name", "Type", "Department", "Quantity", "Status" };
+                    var headers = new[] { "Item ID", "Item Name", "Type", "Department", "Quantity" };
                     foreach (var header in headers)
                     {
                         var headerCell = new Cell().Add(new Paragraph(header).AddStyle(_pdfService.GetTableHeaderStyle()));
@@ -1746,7 +1710,6 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                         inventoryTable.AddCell(new Cell().Add(new Paragraph(item.ItemType).AddStyle(_pdfService.GetTableContentStyle())));
                         inventoryTable.AddCell(new Cell().Add(new Paragraph(item.Department).AddStyle(_pdfService.GetTableContentStyle())));
                         inventoryTable.AddCell(new Cell().Add(new Paragraph(item.Quantity.ToString()).AddStyle(_pdfService.GetTableContentStyle())));
-                        inventoryTable.AddCell(new Cell().Add(new Paragraph(item.Status).AddStyle(_pdfService.GetTableContentStyle())));
                     }
                     
                     doc.Add(inventoryTable);

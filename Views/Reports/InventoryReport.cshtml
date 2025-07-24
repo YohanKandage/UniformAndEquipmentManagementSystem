@@ -96,9 +96,6 @@
                             <th>Department</th>
                             <th>Supplier</th>
                             <th>Quantity</th>
-                            <th>Assigned To</th>
-                            <th>Assigned Date</th>
-                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -117,13 +114,6 @@
                                 <td>
                                     <span class="badge @(item.Quantity == 0 ? "bg-danger" : (item.Quantity <= item.ThresholdQuantity ? "bg-warning" : "bg-success"))">
                                         @item.Quantity
-                                    </span>
-                                </td>
-                                <td>@item.AssignedTo</td>
-                                <td>@(item.AssignedDate?.ToString("MMM dd, yyyy") ?? "-")</td>
-                                <td>
-                                    <span class="badge @(item.Status == "Assigned" ? "bg-primary" : (item.Status == "Available" ? "bg-success" : "bg-danger"))">
-                                        @item.Status
                                     </span>
                                 </td>
                             </tr>
