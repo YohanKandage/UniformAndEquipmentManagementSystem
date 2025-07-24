@@ -469,7 +469,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 if (!string.IsNullOrEmpty(assignment.Remarks))
                     AddTableRow(assignmentTable, "Remarks", assignment.Remarks);
                 if (assignment.Cost.HasValue)
-                    AddTableRow(assignmentTable, "Cost", $"${assignment.Cost.Value:N2}");
+                    AddTableRow(assignmentTable, "Cost", $"Rs. {assignment.Cost.Value:N2}");
                 
                 doc.Add(assignmentTable);
 
@@ -484,7 +484,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 AddTableRow(itemTable, "Item ID", assignment.Item.ItemId);
                 AddTableRow(itemTable, "Item Type", assignment.Item.ItemType);
                 AddTableRow(itemTable, "Material", assignment.Item.Material);
-                AddTableRow(itemTable, "Price", $"${assignment.Item.Price:N2}");
+                AddTableRow(itemTable, "Price", $"Rs. {assignment.Item.Price:N2}");
                 AddTableRow(itemTable, "Department", assignment.Item.Department?.Name ?? "N/A");
                 AddTableRow(itemTable, "Supplier", assignment.Item.Supplier?.CompanyName ?? "N/A");
                 

@@ -537,7 +537,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     ItemType = r.ItemType,
                     RequestDate = r.RequestDate.ToString("MMM dd, yyyy"),
                     ReleaseDate = r.ReleaseDate?.ToString("MMM dd, yyyy HH:mm") ?? "N/A",
-                    Cost = r.Cost?.ToString("F2") ?? "No Cost",
+                    Cost = r.Cost.HasValue ? $"Rs. {r.Cost.Value.ToString("N2")}" : "No Cost",
                     ReleasedBy = r.ReleasedBy,
                     Remarks = r.Remarks
                 }).ToList();
@@ -750,7 +750,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     RequestDate = r.RequestDate.ToString("MMM dd, yyyy"),
                     ProcessedDate = r.ProcessedDate?.ToString("MMM dd, yyyy HH:mm") ?? "N/A",
                     Status = r.Status,
-                    Cost = r.Cost?.ToString("F2") ?? "No Cost",
+                    Cost = r.Cost.HasValue ? $"Rs. {r.Cost.Value.ToString("N2")}" : "No Cost",
                     AdminComment = r.AdminComment,
                     Remarks = r.Remarks
                 }).ToList();
@@ -1101,7 +1101,7 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     ItemType = r.ItemType,
                     RequestDate = r.RequestDate.ToString("MMM dd, yyyy"),
                     ProcessedDate = r.ProcessedDate?.ToString("MMM dd, yyyy HH:mm") ?? "N/A",
-                    Cost = r.Cost?.ToString("F2") ?? "No Cost",
+                    Cost = r.Cost.HasValue ? $"Rs. {r.Cost.Value.ToString("N2")}" : "No Cost",
                     Remarks = r.Remarks
                 }).ToList();
 

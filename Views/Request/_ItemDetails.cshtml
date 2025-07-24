@@ -35,7 +35,7 @@
                     <dd class="col-sm-8">@Model.Item.Material</dd>
 
                     <dt class="col-sm-4">Price</dt>
-                    <dd class="col-sm-8">$@Model.Item.Price.ToString("N2")</dd>
+                    <dd class="col-sm-8">Rs. @Model.Item.Price.ToString("N2")</dd>
 
                     <dt class="col-sm-4">Department</dt>
                     <dd class="col-sm-8">@Model.Item.Department?.Name</dd>
@@ -76,7 +76,7 @@
             @if (Model.Cost.HasValue)
             {
                 <dt class="col-sm-4">Cost</dt>
-                <dd class="col-sm-8">$@Model.Cost.Value.ToString("N2")</dd>
+                <dd class="col-sm-8">Rs. @Model.Cost.Value.ToString("N2")</dd>
             }
         </dl>
     </div>

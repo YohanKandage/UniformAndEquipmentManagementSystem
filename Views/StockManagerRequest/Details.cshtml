@@ -68,7 +68,7 @@
                         @if (Model.Cost.HasValue)
                         {
                             <dt class="col-sm-4">Assigned Cost</dt>
-                            <dd class="col-sm-8">@String.Format(new System.Globalization.CultureInfo("en-LK"), "LKR {0:N2}", Model.Cost)</dd>
+                            <dd class="col-sm-8">Rs. @Model.Cost?.ToString("N2")</dd>
                         }
 
                         @if (Model.ProcessedDate.HasValue)

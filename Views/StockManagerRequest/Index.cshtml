@@ -85,7 +85,7 @@
                                 <td>
                                     @if (request.Cost.HasValue)
                                     {
-                                        <span class="badge bg-info">@String.Format(new System.Globalization.CultureInfo("en-LK"), "LKR {0:N2}", request.Cost)</span>
+                                        <span class="badge bg-info">Rs. @request.Cost?.ToString("N2")</span>
                                     }
                                     else
                                     {
