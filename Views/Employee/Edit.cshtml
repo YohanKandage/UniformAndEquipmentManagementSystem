@@ -657,6 +657,38 @@
                 }
             });
 
+            // FirstName validation
+            $('#FirstName').on('input', function() {
+                var firstName = $(this).val();
+                var hasNumbers = /\d/.test(firstName);
+                
+                if (hasNumbers) {
+                    $(this).addClass('is-invalid');
+                    if (!$(this).next('.text-danger').length) {
+                        $(this).after('<span class="text-danger">First name cannot contain numbers. Only letters are allowed.</span>');
+                    }
+                } else {
+                    $(this).removeClass('is-invalid');
+                    $(this).next('.text-danger').remove();
+                }
+            });
+
+            // LastName validation
+            $('#LastName').on('input', function() {
+                var lastName = $(this).val();
+                var hasNumbers = /\d/.test(lastName);
+                
+                if (hasNumbers) {
+                    $(this).addClass('is-invalid');
+                    if (!$(this).next('.text-danger').length) {
+                        $(this).after('<span class="text-danger">Last name cannot contain numbers. Only letters are allowed.</span>');
+                    }
+                } else {
+                    $(this).removeClass('is-invalid');
+                    $(this).next('.text-danger').remove();
+                }
+            });
+
             $('form').on('submit', function() {
                 if ($(this).valid()) {
                     // Disable submit button to prevent double submission

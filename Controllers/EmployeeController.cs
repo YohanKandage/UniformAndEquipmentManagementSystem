@@ -121,6 +121,18 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     ModelState.AddModelError("UserName", "Username cannot contain numbers. Only letters are allowed.");
                 }
 
+                // FirstName validation
+                if (!string.IsNullOrEmpty(employee.FirstName) && employee.FirstName.Any(char.IsDigit))
+                {
+                    ModelState.AddModelError("FirstName", "First name cannot contain numbers. Only letters are allowed.");
+                }
+
+                // LastName validation
+                if (!string.IsNullOrEmpty(employee.LastName) && employee.LastName.Any(char.IsDigit))
+                {
+                    ModelState.AddModelError("LastName", "Last name cannot contain numbers. Only letters are allowed.");
+                }
+
                 if (!ModelState.IsValid)
                 {
                     ViewData["Departments"] = new SelectList(_context.Departments, "Id", "Name", employee.DepartmentId);
@@ -259,6 +271,18 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             if (!string.IsNullOrEmpty(employee.UserName) && employee.UserName.Any(char.IsDigit))
             {
                 ModelState.AddModelError("UserName", "Username cannot contain numbers. Only letters are allowed.");
+            }
+
+            // FirstName validation
+            if (!string.IsNullOrEmpty(employee.FirstName) && employee.FirstName.Any(char.IsDigit))
+            {
+                ModelState.AddModelError("FirstName", "First name cannot contain numbers. Only letters are allowed.");
+            }
+
+            // LastName validation
+            if (!string.IsNullOrEmpty(employee.LastName) && employee.LastName.Any(char.IsDigit))
+            {
+                ModelState.AddModelError("LastName", "Last name cannot contain numbers. Only letters are allowed.");
             }
 
             if (!ModelState.IsValid)
@@ -630,6 +654,18 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             {
                 _logger.LogInformation("Starting profile update for employee ID: {EmployeeId}", model.Id);
                 _logger.LogInformation("Model received: {@Model}", model);
+
+                // FirstName validation
+                if (!string.IsNullOrEmpty(model.FirstName) && model.FirstName.Any(char.IsDigit))
+                {
+                    ModelState.AddModelError("FirstName", "First name cannot contain numbers. Only letters are allowed.");
+                }
+
+                // LastName validation
+                if (!string.IsNullOrEmpty(model.LastName) && model.LastName.Any(char.IsDigit))
+                {
+                    ModelState.AddModelError("LastName", "Last name cannot contain numbers. Only letters are allowed.");
+                }
 
                 if (!ModelState.IsValid)
                 {
