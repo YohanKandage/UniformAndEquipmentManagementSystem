@@ -68,14 +68,15 @@
 
                     <div class="form-group">
                         <label asp-for="DateOfBirth"></label>
-                        <input asp-for="DateOfBirth" class="form-control" type="date" />
+                        <input asp-for="DateOfBirth" class="form-control" type="date" id="dateOfBirth" />
                         <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
                         <label asp-for="JoinDate"></label>
-                        <input asp-for="JoinDate" class="form-control" type="date" />
+                        <input asp-for="JoinDate" class="form-control" type="date" id="joinDate" />
                         <span asp-validation-for="JoinDate" class="text-danger"></span>
+                        <span id="ageValidationMessage" class="age-validation-message"></span>
                     </div>
                 </div>
 
@@ -316,6 +317,47 @@
     }
 
     .validation-summary:empty { display: none; }
+
+    .age-validation-message {
+        display: block;
+        font-size: 12px;
+        margin-top: 4px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .age-validation-message.error {
+        color: #dc3545;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+    }
+
+    .age-validation-message.success {
+        color: #155724;
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+    }
+
+    .age-validation-message.warning {
+        color: #856404;
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+    }
+
+    .age-validation-message:empty {
+        display: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+
+    .form-control.is-valid {
+        border-color: #28a745;
+    }
 </style>
 
 @section Scripts {
@@ -339,6 +381,72 @@
 
         // Form submission handling
         $(document).ready(function() {
+            // Age validation function
+            function validateAge() {
+                var dobInput = $('#dateOfBirth').val();
+                var joinDateInput = $('#joinDate').val();
+                var messageElement = $('#ageValidationMessage');
+                var joinDateField = $('#joinDate');
+                var dobField = $('#dateOfBirth');
+                
+                // Clear previous validation states
+                messageElement.removeClass('error success warning').text('');
+                joinDateField.removeClass('is-invalid is-valid');
+                dobField.removeClass('is-invalid is-valid');
+                
+                // Check if both dates are provided
+                if (!dobInput || !joinDateInput) {
+                    if (dobInput && !joinDateInput) {
+                        messageElement.addClass('warning').html('<i class="fas fa-info-circle"></i> Please select a join date to validate age');
+                    }
+                    return true; // Allow empty fields (server-side validation will catch required fields)
+                }
+                
+                var dob = new Date(dobInput);
+                var joinDate = new Date(joinDateInput);
+                
+                // Validate that join date is after date of birth
+                if (joinDate <= dob) {
+                    messageElement.addClass('error').html('<i class="fas fa-exclamation-circle"></i> Join date must be after date of birth');
+                    joinDateField.addClass('is-invalid');
+                    dobField.addClass('is-invalid');
+                    return false;
+                }
+                
+                // Calculate age at join date
+                var age = joinDate.getFullYear() - dob.getFullYear();
+                var monthDiff = joinDate.getMonth() - dob.getMonth();
+                var dayDiff = joinDate.getDate() - dob.getDate();
+                
+                // Adjust age if birthday hasn't occurred yet in the join year
+                if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+                    age--;
+                }
+                
+                // Validate minimum age of 18
+                if (age < 18) {
+                    messageElement.addClass('error').html('<i class="fas fa-exclamation-triangle"></i> Employee must be at least 18 years old at join date. Current age: <strong>' + age + ' years</strong>');
+                    joinDateField.addClass('is-invalid');
+                    dobField.addClass('is-invalid');
+                    return false;
+                } else if (age === 18) {
+                    messageElement.addClass('success').html('<i class="fas fa-check-circle"></i> Valid age: <strong>' + age + ' years old</strong> at join date');
+                    joinDateField.addClass('is-valid');
+                    dobField.addClass('is-valid');
+                    return true;
+                } else {
+                    messageElement.addClass('success').html('<i class="fas fa-check-circle"></i> Valid age: <strong>' + age + ' years old</strong> at join date');
+                    joinDateField.addClass('is-valid');
+                    dobField.addClass('is-valid');
+                    return true;
+                }
+            }
+            
+            // Attach age validation to date field changes
+            $('#dateOfBirth, #joinDate').on('change input', function() {
+                validateAge();
+            });
+
             // Username validation
             $('#UserName').on('input', function() {
                 var username = $(this).val();
@@ -387,7 +495,20 @@
                 }
             });
 
-            $('form').on('submit', function() {
+            // Form submission with age validation
+            $('form').on('submit', function(e) {
+                // Validate age before submission
+                var ageIsValid = validateAge();
+                
+                if (!ageIsValid) {
+                    e.preventDefault();
+                    // Scroll to the age validation message
+                    $('html, body').animate({
+                        scrollTop: $('#ageValidationMessage').offset().top - 100
+                    }, 500);
+                    return false;
+                }
+                
                 if ($(this).valid()) {
                     // Disable submit button to prevent double submission
                     $('button[type="submit"]').prop('disabled', true);
