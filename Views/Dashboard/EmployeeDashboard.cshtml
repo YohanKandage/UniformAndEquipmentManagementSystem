@@ -28,6 +28,23 @@
                     <span class="stat-change positive" id="monthlyChange">+@(dashboardData?.thisMonthAssignments ?? 0) this month</span>
                 </div>
             </div>
+            <div class="stat-card @(ViewBag.CanCreateRequest == false ? "stat-card-warning" : "")">
+                <div class="stat-icon @(ViewBag.CanCreateRequest == false ? "stat-icon-warning" : "")">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div class="stat-details">
+                    <span class="stat-value">@(ViewBag.RequestStats?.ActiveRequests ?? 0) / @(ViewBag.MaxActiveRequests ?? 5)</span>
+                    <span class="stat-label">Active Requests</span>
+                    @if (ViewBag.CanCreateRequest == false)
+                    {
+                        <span class="stat-change urgent">⚠️ Limit reached!</span>
+                    }
+                    else
+                    {
+                        <span class="stat-change">@(ViewBag.RemainingRequests ?? 5) remaining</span>
+                    }
+                </div>
+            </div>
             <div class="stat-card">
                 <div class="stat-icon">
                     <i class="fas fa-clipboard-list"></i>
@@ -230,7 +247,18 @@
     .stat-change.positive { color: #28a745; }
     .stat-change.negative { color: #dc3545; }
     .stat-change.approved { color: #007bff; }
-    .stat-change.urgent { color: #ffc107; }
+    .stat-change.urgent { 
+        color: #dc3545;
+        font-weight: 600;
+    }
+    .stat-card-warning {
+        border: 2px solid #ffc107;
+        background: #fff9e6;
+    }
+    .stat-icon-warning {
+        background: #ffc107;
+        color: white;
+    }
     .info-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

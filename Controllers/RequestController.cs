@@ -26,6 +26,9 @@ namespace UniformAndEquipmentManagementSystem.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<RequestController> _logger;
         private readonly IPdfService _pdfService;
+        
+        // Request limit for employees
+        private const int MaxActiveRequestsPerEmployee = 5;
 
         public RequestController(
             ApplicationDbContext context, 
@@ -37,6 +40,20 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             _userManager = userManager;
             _logger = logger;
             _pdfService = pdfService;
+        }
+        
+        /// <summary>
+        /// Get the count of active requests for an employee
+        /// Active requests are: Pending, ApprovedByPropertyManager, ApprovedByAdmin
+        /// </summary>
+        private async Task<int> GetActiveRequestCountAsync(int employeeId)
+        {
+            return await _context.Requests
+                .Where(r => r.EmployeeId == employeeId && 
+                           (r.Status == RequestStatus.Pending || 
+                            r.Status == RequestStatus.ApprovedByPropertyManager || 
+                            r.Status == RequestStatus.ApprovedByAdmin))
+                .CountAsync();
         }
 
         public async Task<IActionResult> Index(string employeeName, string department, string status, string searchString)
@@ -114,6 +131,13 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                     .Where(r => r.EmployeeId == employee.Id)
                     .ToListAsync();
 
+                // Check active request count for employee
+                var activeRequestCount = await GetActiveRequestCountAsync(employee.Id);
+                ViewBag.ActiveRequestCount = activeRequestCount;
+                ViewBag.MaxRequests = MaxActiveRequestsPerEmployee;
+                ViewBag.RemainingRequests = MaxActiveRequestsPerEmployee - activeRequestCount;
+                ViewBag.CanCreateRequest = activeRequestCount < MaxActiveRequestsPerEmployee;
+
                 return View(requests);
             }
         }
@@ -130,6 +154,15 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 return NotFound();
             }
 
+            // Check if employee has reached the request limit
+            var activeRequestCount = await GetActiveRequestCountAsync(employee.Id);
+            
+            if (activeRequestCount >= MaxActiveRequestsPerEmployee)
+            {
+                TempData["Error"] = $"Request limit reached! You have {activeRequestCount} active requests. The maximum allowed is {MaxActiveRequestsPerEmployee}. Please wait for your pending requests to be processed before creating new ones.";
+                return RedirectToAction(nameof(Index));
+            }
+
             // Get department-specific items count for initial display
             var uniformCount = await _context.Items
                 .CountAsync(i => i.DepartmentId == employee.DepartmentId && 
@@ -144,6 +177,9 @@ namespace UniformAndEquipmentManagementSystem.Controllers
             ViewBag.UniformCount = uniformCount;
             ViewBag.EquipmentCount = equipmentCount;
             ViewBag.DepartmentName = employee.Department?.Name;
+            ViewBag.ActiveRequestCount = activeRequestCount;
+            ViewBag.RemainingRequests = MaxActiveRequestsPerEmployee - activeRequestCount;
+            ViewBag.MaxRequests = MaxActiveRequestsPerEmployee;
 
             return View();
         }
@@ -192,6 +228,15 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 if (employee == null)
                 {
                     return NotFound();
+                }
+
+                // Check if employee has reached the request limit
+                var activeRequestCount = await GetActiveRequestCountAsync(employee.Id);
+                
+                if (activeRequestCount >= MaxActiveRequestsPerEmployee)
+                {
+                    TempData["Error"] = $"Request limit reached! You have {activeRequestCount} active requests. The maximum allowed is {MaxActiveRequestsPerEmployee}. Please wait for your pending requests to be processed before creating new ones.";
+                    return RedirectToAction(nameof(Index));
                 }
 
                 // Log the incoming request data

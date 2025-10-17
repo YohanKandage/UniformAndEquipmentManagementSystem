@@ -413,16 +413,26 @@ namespace UniformAndEquipmentManagementSystem.Controllers
                 .Where(r => r.EmployeeId == employee.Id)
                 .ToListAsync();
 
+            // Calculate active requests (Pending, ApprovedByPropertyManager, ApprovedByAdmin)
+            var activeRequestCount = requests.Count(r => 
+                r.Status == RequestStatus.Pending || 
+                r.Status == RequestStatus.ApprovedByPropertyManager || 
+                r.Status == RequestStatus.ApprovedByAdmin);
+
             var requestStats = new
             {
                 Pending = requests.Count(r => r.Status == RequestStatus.Pending),
                 Approved = requests.Count(r => r.Status == RequestStatus.ApprovedByPropertyManager),
-                Cancelled = requests.Count(r => r.Status == RequestStatus.RejectedByPropertyManager)
+                Cancelled = requests.Count(r => r.Status == RequestStatus.RejectedByPropertyManager),
+                ActiveRequests = activeRequestCount
             };
 
             ViewBag.Employee = employee;
             ViewBag.AssignedItems = assignedItems;
             ViewBag.RequestStats = requestStats;
+            ViewBag.MaxActiveRequests = 5; // Same as MaxActiveRequestsPerEmployee in RequestController
+            ViewBag.RemainingRequests = 5 - activeRequestCount;
+            ViewBag.CanCreateRequest = activeRequestCount < 5;
 
             return View(employee);
         }
